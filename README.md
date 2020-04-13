@@ -5,6 +5,7 @@ AutoPPL is a C++ library providing high-level support for probabilistic programm
 ## Installation
 
 First, clone the repository:
+
 ```
 git clone --recurse-submodules https://github.com/JamesYang007/autoppl
 ```

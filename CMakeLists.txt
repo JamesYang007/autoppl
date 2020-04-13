@@ -28,7 +28,17 @@ message(STATUS "Compiling in ${CMAKE_BUILD_TYPE} mode")
 set(GTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/benchmark/googletest/googletest)
 set(GBENCH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/benchmark)
 
-# TODO: don't think this is necessary since it will be header-only
 add_subdirectory(${PROJECT_SOURCE_DIR}/autoppl ${PROJECT_BINARY_DIR}/autoppl)
 add_subdirectory(${PROJECT_SOURCE_DIR}/tests ${PROJECT_BINARY_DIR}/tests)
 add_subdirectory(${PROJECT_SOURCE_DIR}/libs ${PROJECT_BINARY_DIR}/libs)
+
+# TODO: since this is probably gonna be header-only library,
+# not building tests will basically mean there's nothing to build.
+# Commenting out this portion because it may still be useful if it doesn't turn
+# out to be a header-only library.
+# option(PACKAGE_TESTS "Build the tests" ON)
+# if(PACKAGE_TESTS)
+#     enable_testing()
+#     add_subdirectory(lib/googletest)
+#     add_subdirectory(tests)
+# endif()
