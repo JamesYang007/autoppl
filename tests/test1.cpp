@@ -1,7 +1,11 @@
 #include "gtest/gtest.h"
-#include "autoppl.h"
+#include "autoppl.hpp"
+
+namespace {
 
 TEST(blaTest, test1) {
-    int n = fib(10);
+    int n = ppl::fib(10);
     EXPECT_EQ(n, 89);
+}
+
 }
