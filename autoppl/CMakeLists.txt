@@ -1,13 +1,15 @@
-set(BINARY ${CMAKE_PROJECT_NAME})
+# Add this library as interface (header-only)
+add_library(${PROJECT_NAME} INTERFACE)
 
-set(AUTOPPL_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
-set(AUTOPPL_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
+target_include_directories(${PROJECT_NAME}
+    INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-file(GLOB AUTOPPL_SOURCE_FILES src/*.cpp)
-file(GLOB AUTOPPL_HEADER_FILES include/*.h)
+# Set C++17 standard for project target
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 
-add_library(${BINARY}_lib ${AUTOPPL_SOURCE_FILES} ${AUTOPPL_HEADER_FILES})
-target_include_directories(${BINARY}_lib PUBLIC ${AUTOPPL_INCLUDE_DIR})
+#set(AUTOPPL_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
+#file(GLOB_RECURSE AUTOPPL_SOURCE_FILES RELATIVE src LIST_DIRECTORIES false *.cpp)
 
-add_executable(${BINARY} main.cpp)
-target_link_libraries(${BINARY} PUBLIC autoppl_lib)
+#set(AUTOPPL_SOURCE_FILES ${AUTOPPL_SOURCE_DIR}/autoppl.cpp)
+#set(AUTOPPL_HEADER_FILES ${AUTOPPL_INCLUDE_DIR}/autoppl.h)
