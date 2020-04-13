@@ -81,7 +81,9 @@ script:
 
     # setup, clean build, and test
     - ./setup.sh
-    - ./build_and_test.sh debug ${CMAKE_OPTIONS}
+    - ./clean-build.sh debug ${CMAKE_OPTIONS}
+    - cd build/debug
+    - ctest ${CTEST_OPTIONS} -j12
 
     # if testing valgrind
     - if [[ "${VALGRIND}" == "ON" ]]; then

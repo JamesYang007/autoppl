@@ -28,4 +28,3 @@ fi
 rm -rf *
 cmake ../../ "$@"
 cmake --build . -- -j12
-ctest -j12
