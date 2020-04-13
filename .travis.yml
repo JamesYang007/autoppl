@@ -37,7 +37,7 @@ jobs:
           env:
               - COMPILER="g++-7"
               - COVERALL="ON"
-              - CMAKE_OPTIONS="-DCOVERAGE=ON"
+              - CMAKE_OPTIONS="-DAUTOPPL_ENABLE_TEST_COVERAGE=ON"
 
         # Linux/GCC>=5
 
@@ -81,7 +81,8 @@ script:
 
     # setup, clean build, and test
     - ./setup.sh
-    - ./clean-build.sh debug ${CMAKE_OPTIONS}
+    - ./clean-build.sh debug ${CMAKE_OPTIONS} -DAUTOPPL_ENABLE_BENCHMARK=OFF \
+      -DAUTOPPL_ENABLE_TEST=ON
     - cd build/debug
     - ctest ${CTEST_OPTIONS} -j12
 

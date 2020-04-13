@@ -1,18 +1,14 @@
 #!/bin/bash
 
+gbenchpath="lib/benchmark"
+gtestpath="$gbenchpath/googletest"
+
 # Update submodule if needed
-git submodule update --remote
+git submodule update --recursive --remote
 
 # Setup google benchmark and googletest
-if [ -d "libs/benchmark/googletest" ]; then
-    cd libs/benchmark/googletest
-    git pull
-    cd -
+if [ -d "$gtestpath" ]; then
+    cd $gtestpath && git pull && cd - 2&>1 /dev/null
 else
-    git clone https://github.com/google/googletest.git libs/benchmark/googletest
+    git clone https://github.com/google/googletest.git $gtestpath
 fi
-
-cd libs/benchmark
-mkdir -p build && cd build
-cmake ../
-cmake --build . -- -j12

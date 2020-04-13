@@ -4,11 +4,10 @@ project("autoppl"
         DESCRIPTION "C++ template library for probabilistic programming."
         LANGUAGES C CXX)
 
-# This will perform memcheck
-include(CTest)
-
-# enables testing
-enable_testing()
+option(AUTOPPL_ENABLE_TEST "Enable unit tests to be built." ON)
+# TODO: later when we make benchmarks, this should be ON
+option(AUTOPPL_ENABLE_BENCHMARK "Enable benchmarks to be built." OFF)
+option(AUTOPPL_ENABLE_TEST_COVERAGE "Build with test coverage (AUTOPPL_ENABLE_TEST must be ON)" OFF)
 
 # Automate the choosing of config
 # if CMAKE_BUILD_TYPE not defined
@@ -23,22 +22,26 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "Compiling in ${CMAKE_BUILD_TYPE} mode")
 
-# Set directories for third-party libraries
-# tests in other subdirectories require access to these as well
-set(GTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/benchmark/googletest/googletest)
-set(GBENCH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/benchmark)
+# Configure tests
+if (AUTOPPL_ENABLE_TEST)
+    include(CTest) # enable memcheck
+    enable_testing()
 
+    # Set directories for third-party libraries
+    # tests in other subdirectories require access to these as well
+    set(GTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/benchmark/googletest/googletest)
+    set(GBENCH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/benchmark)
+
+    # Configure test coverage
+    if (AUTOPPL_ENABLE_TEST_COVERAGE)
+        message(STATUS "Building test suite with coverage information")
+        add_compile_options(--coverage -O0 -fno-inline -fno-inline-small-functions
+                            -fno-default-inline)
+    endif()
+
+    add_subdirectory(${PROJECT_SOURCE_DIR}/test ${PROJECT_BINARY_DIR}/test)
+endif()
+
+# Add subdirectories
 add_subdirectory(${PROJECT_SOURCE_DIR}/autoppl ${PROJECT_BINARY_DIR}/autoppl)
-add_subdirectory(${PROJECT_SOURCE_DIR}/tests ${PROJECT_BINARY_DIR}/tests)
-add_subdirectory(${PROJECT_SOURCE_DIR}/libs ${PROJECT_BINARY_DIR}/libs)
-
-# TODO: since this is probably gonna be header-only library,
-# not building tests will basically mean there's nothing to build.
-# Commenting out this portion because it may still be useful if it doesn't turn
-# out to be a header-only library.
-# option(PACKAGE_TESTS "Build the tests" ON)
-# if(PACKAGE_TESTS)
-#     enable_testing()
-#     add_subdirectory(lib/googletest)
-#     add_subdirectory(tests)
-# endif()
+add_subdirectory(${PROJECT_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
