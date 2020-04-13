@@ -33,7 +33,9 @@ jobs:
           before_install:
               - pip install --user cpp-coveralls
           after_success:
-              - coveralls --root ../../ --build-root ./ --include autoppl/include --gcov 'gcov-7' --gcov-options '\-lp'
+              - |
+                  coveralls --root ../../ --build-root ./ 
+                  --include autoppl/include --gcov 'gcov-7' --gcov-options '\-lp'
           env:
               - COMPILER="g++-7"
               - COVERALL="ON"
@@ -81,8 +83,10 @@ script:
 
     # setup, clean build, and test
     - ./setup.sh
-    - ./clean-build.sh debug ${CMAKE_OPTIONS} -DAUTOPPL_ENABLE_BENCHMARK=OFF \
-      -DAUTOPPL_ENABLE_TEST=ON
+    - |
+        ./clean-build.sh debug ${CMAKE_OPTIONS} 
+        -DAUTOPPL_ENABLE_BENCHMARK=OFF 
+        -DAUTOPPL_ENABLE_TEST=ON
     - cd build/debug
     - ctest ${CTEST_OPTIONS} -j12
 
