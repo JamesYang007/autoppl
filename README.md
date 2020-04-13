@@ -13,5 +13,7 @@ git clone --recurse-submodules https://github.com/JamesYang007/autoppl
 To build and run tests, run the following:
 ```
 ./setup.sh
-./build_and_test.sh debug
+./clean-build.sh debug
+cd build/debug
+ctest
 ```
