@@ -33,9 +33,13 @@ jobs:
           before_install:
               - pip install --user cpp-coveralls
           after_success:
-              - |
-                  coveralls --root ../../ --build-root ./ 
-                  --include autoppl/include --gcov 'gcov-7' --gcov-options '\-lp'
+              - >
+                coveralls 
+                --root ../../ 
+                --build-root ./ 
+                --include autoppl/include 
+                --gcov 'gcov-7' 
+                --gcov-options '\-lp'
           env:
               - COMPILER="g++-7"
               - COVERALL="ON"

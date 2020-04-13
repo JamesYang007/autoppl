@@ -32,13 +32,6 @@ if (AUTOPPL_ENABLE_TEST)
     set(GTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/benchmark/googletest/googletest)
     set(GBENCH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/benchmark)
 
-    # Configure test coverage
-    if (AUTOPPL_ENABLE_TEST_COVERAGE)
-        message(STATUS "Building test suite with coverage information")
-        add_compile_options(--coverage -O0 -fno-inline -fno-inline-small-functions
-                            -fno-default-inline)
-    endif()
-
     add_subdirectory(${PROJECT_SOURCE_DIR}/test ${PROJECT_BINARY_DIR}/test)
 endif()
 
