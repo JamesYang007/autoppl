@@ -19,12 +19,9 @@ struct rv_tag
 
     /*
      * Binds storage pointer to storage_ptr.
-     * Resets pointer to original source to be storage_ptr.
      */
     void bind_storage(pointer_t storage_ptr) 
-    {
-        storage_ptr_ = storage_ptr; 
-    }
+    { storage_ptr_ = storage_ptr; }
 
 private:
     pointer_t storage_ptr_;     // points to beginning of storage
