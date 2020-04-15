@@ -39,8 +39,8 @@ struct EqNode
     { return dist_.pdf(tag_.get_value()); }
 
     /*
-     * Compute log-pdf of dist_ with value x.
-     * Assumes that value_ has been assigned with a proper value.
+     * Compute log-pdf of underlying distribution with underlying value.
+     * Assumes that underlying value has been assigned properly.
      */
     dist_value_t log_pdf() const
     { return dist_.log_pdf(tag_.get_value()); }
