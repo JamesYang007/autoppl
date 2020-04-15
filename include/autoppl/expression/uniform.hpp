@@ -6,6 +6,8 @@
 
 namespace ppl {
 
+// TODO: change name to UniformDist and make class template.
+// uniform should be a function that creates this kind of object.
 struct uniform 
 {
     using value_t = double;
@@ -13,11 +15,9 @@ struct uniform
 
     uniform(value_t min, value_t max)
         : min_{min}, max_{max}
-    {
-        assert(min_ < max_);
-    }
+    { assert(min_ < max_); }
 
-    // TODO: tag this class as "TriviallySamplable"
+    // TODO: tag this class as "TriviallySamplable"?
     template <class GeneratorType>
     value_t sample(GeneratorType& gen) const
     {

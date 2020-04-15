@@ -1,20 +1,9 @@
 #pragma once
+#include <type_traits>
 #include <functional>
 #include <autoppl/expression/traits.hpp>
 
 namespace ppl {
-namespace details {
-
-/*
- * The possible states for a node expression.
- * By default, all nodes should be a parameter.
- */
-enum class node_state : bool {
-    data,
-    parameter
-};
-
-} // namespace details
 
 /*
  * This class represents a "node" in the model expression
@@ -24,45 +13,92 @@ template <class TagType, class DistType>
 struct EqNode
 {
     using tag_t = TagType;
-    using tag_cref_t = std::reference_wrapper<const tag_t>;
-    using value_t = typename tag_traits<tag_t>::value_t;
-    using pointer_t = typename tag_traits<tag_t>::pointer_t;
-
-    using state_t = details::node_state;
-
     using dist_t = DistType;
-    using gen_value_t = typename tag_traits<tag_t>::value_t;
     using dist_value_t = typename dist_traits<dist_t>::dist_value_t;
 
-    EqNode(const tag_t& tag, dist_t dist) noexcept
-        : value_{}
-        , tag_{}
-        , state_{state_t::parameter}
+    EqNode(const tag_t& tag, 
+           const dist_t& dist) noexcept
+        : tag_{}
         , tag_cref_{tag}
         , dist_{dist}
     {}
 
     /*
-     * Compute pdf of dist_ with value x.
+     * Updates underlying tag by copying from referenced tag.
+     * This must be called before the model is used, if
+     * any members of the referenced tag changed.
      */
-    dist_value_t pdf(gen_value_t x) const
-    { return dist_.pdf(x); }
+    void update()
+    { tag_ = tag_cref_; }
+
+    /*
+     * Compute pdf of dist_ with value_.
+     * Assumes that value_ has been assigned with a proper value.
+     */
+    dist_value_t pdf() const
+    { return dist_.pdf(tag_.get_value()); }
 
     /*
      * Compute log-pdf of dist_ with value x.
+     * Assumes that value_ has been assigned with a proper value.
      */
-    dist_value_t log_pdf(gen_value_t x) const
-    { return dist_.log_pdf(x); }
+    dist_value_t log_pdf() const
+    { return dist_.log_pdf(tag_.get_value()); }
 
 private:
-    // cache optimization
-    value_t value_;         // value to store during computation
-    tag_t tag_;             // tag to manage the storage: get/put values
-
-    state_t state_;         // state to determine if data or param
-    tag_cref_t tag_cref_;   // (const) reference of the tag since
-                            // storage of tag may be bound right before some computation
+    using tag_cref_t = std::reference_wrapper<const tag_t>;
+    
+    tag_t tag_;             // cache optimization
+    tag_cref_t tag_cref_;   // (const) reference of the tag since any configuration
+                            // may be changed until right before update 
     dist_t dist_;           // distribution associated with tag
+};
+
+/*
+ * This class represents a "node" in a model expression that
+ * "glues" two sub-model expressions.
+ */
+template <class LHSNodeType, class RHSNodeType>
+struct GlueNode
+{
+    using left_node_t = LHSNodeType;
+    using right_node_t = RHSNodeType;
+    using dist_value_t = std::common_type_t<
+        typename node_traits<left_node_t>::dist_value_t,
+        typename node_traits<right_node_t>::dist_value_t
+            >;
+
+    GlueNode(const left_node_t& lhs,
+             const right_node_t& rhs)
+        : left_node_{lhs}
+        , right_node_{rhs}
+    {}
+
+    /*
+     * Updates left node first then right node by calling "update" on each.
+     * This must be called before the model is used, 
+     * if either left or right must be updated.
+     */
+    void update()
+    { left_node_.update(); right_node_.update(); }
+
+    /*
+     * Computes left node joint pdf then right node joint pdf
+     * and returns the product of the two.
+     */
+    dist_value_t pdf() const
+    { return left_node_.pdf() * right_node_.pdf(); }
+
+    /*
+     * Computes left node joint log-pdf then right node joint log-pdf
+     * and returns the sum of the two.
+     */
+    dist_value_t log_pdf() const
+    { return left_node_.log_pdf() + right_node_.log_pdf(); }
+
+private:
+    left_node_t left_node_;
+    right_node_t right_node_;
 };
 
 } // namespace ppl
