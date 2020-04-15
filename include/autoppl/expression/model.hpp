@@ -1,9 +1,21 @@
 #pragma once
 #include <type_traits>
 #include <functional>
+#include <optional>
 #include <autoppl/expression/traits.hpp>
 
 namespace ppl {
+namespace details {
+
+template <class Iter>
+struct IdentityTagFunctor
+{
+    using value_t = typename std::iterator_traits<Iter>::value_type;
+    value_t& operator()(value_t& tag)
+    { return tag; }
+};
+
+} // namespace details
 
 /*
  * This class represents a "node" in the model expression
@@ -18,40 +30,51 @@ struct EqNode
 
     EqNode(const tag_t& tag, 
            const dist_t& dist) noexcept
-        : tag_{}
-        , tag_cref_{tag}
+        : orig_tag_cref_{tag}
+        , comp_tag_cref_{}
         , dist_{dist}
     {}
 
     /*
-     * Updates underlying tag by copying from referenced tag.
-     * This must be called before the model is used, if
-     * any members of the referenced tag changed.
+     * Binds computation-required data with this model.
+     * Underlying reference to computation data for this random variable
+     * will reference the next data (*begin).
+     * The next data (*begin) will be initialized with original tag.
+     * The functor getter MUST return an lvalue reference to the tag.
+     * TODO: set up compile-time checks for this ^.
+     * The tag must be the same type as tag_t.
      */
-    void update()
-    { tag_ = tag_cref_; }
+    template <class Iter, class F = details::IdentityTagFunctor<Iter>>
+    Iter bind_comp_data(Iter begin, Iter end, F getter = F()) 
+    {
+        assert(begin != end);                   // MUST have a value to get
+        getter(*begin) = orig_tag_cref_.get();  // initialize comp data
+        comp_tag_cref_ = getter(*begin);        // set reference to comp data
+        return ++begin;
+    }
 
     /*
      * Compute pdf of underlying distribution with underlying value.
      * Assumes that underlying value has been assigned properly.
      */
     dist_value_t pdf() const
-    { return dist_.pdf(tag_.get_value()); }
+    { return dist_.pdf(comp_tag_cref_->get().get_value()); }
 
     /*
      * Compute log-pdf of underlying distribution with underlying value.
      * Assumes that underlying value has been assigned properly.
      */
     dist_value_t log_pdf() const
-    { return dist_.log_pdf(tag_.get_value()); }
+    { return dist_.log_pdf(comp_tag_cref_->get().get_value()); }
 
 private:
     using tag_cref_t = std::reference_wrapper<const tag_t>;
+    using opt_tag_cref_t = std::optional<tag_cref_t>;
     
-    tag_t tag_;             // cache optimization
-    tag_cref_t tag_cref_;   // (const) reference of the tag since any configuration
-                            // may be changed until right before update 
-    dist_t dist_;           // distribution associated with tag
+    tag_cref_t orig_tag_cref_;      // (const) reference of the original tag since 
+                                    // any configuration may be changed until right before update 
+    opt_tag_cref_t comp_tag_cref_;  // reference the tag needed in computation 
+    dist_t dist_;                   // distribution associated with tag
 };
 
 /*
@@ -69,18 +92,21 @@ struct GlueNode
             >;
 
     GlueNode(const left_node_t& lhs,
-             const right_node_t& rhs)
+             const right_node_t& rhs) noexcept
         : left_node_{lhs}
         , right_node_{rhs}
     {}
 
     /*
-     * Updates left node first then right node by calling "update" on each.
-     * This must be called before the model is used, 
-     * if either left or right must be updated.
+     * Binds computational data in order from left to right.
+     * In other words, same order as user would list the model expressions.
      */
-    void update()
-    { left_node_.update(); right_node_.update(); }
+    template <class Iter, class F = details::IdentityTagFunctor<Iter>>
+    Iter bind_comp_data(Iter begin, Iter end, F getter = F()) 
+    {
+        Iter new_begin = left_node_.bind_comp_data(begin, end, getter);
+        return right_node_.bind_comp_data(new_begin, end, getter);
+    }
 
     /*
      * Computes left node joint pdf then right node joint pdf
