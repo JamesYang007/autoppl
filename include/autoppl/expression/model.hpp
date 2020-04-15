@@ -101,4 +101,33 @@ private:
     right_node_t right_node_;
 };
 
+/////////////////////////////////////////////////////////
+// Operator overloads
+/////////////////////////////////////////////////////////
+
+// TODO: all these template parameters should be constrained 
+// with concepts!
+
+/*
+ * Builds an EqNode to associate tag with dist.
+ * Ex. x |= uniform(0,1)
+ */
+template <class TagType, class DistType>
+constexpr inline auto operator|=(const TagType& tag,
+                                 const DistType& dist)
+{
+    return EqNode<TagType, DistType>(tag, dist);
+}
+
+/*
+ * Builds a GlueNode to "glue" the left expression with the right.
+ * Ex. (x |= uniform(0,1), y |= uniform(0, 2))
+ */
+template <class LHSNodeType, class RHSNodeType>
+constexpr inline auto operator,(const LHSNodeType& lhs,
+                                const RHSNodeType& rhs)
+{
+    return GlueNode<LHSNodeType, RHSNodeType>(lhs, rhs);
+}
+
 } // namespace ppl
