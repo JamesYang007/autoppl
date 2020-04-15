@@ -150,35 +150,36 @@ TEST_F(many_tag_dist_fixture, two_tags)
         y |= MockDist()
     );
 
-    auto reconfigure = [&](double xv, double yv) {
-        x.set_value(xv);
-        y.set_value(yv);
-        model.update();
-    };
-
-    // both within range
     xv = 0.2; yv = 1.8;
-    reconfigure(xv, yv);
-    EXPECT_EQ(model.pdf(), xv * yv);
-    EXPECT_EQ(model.log_pdf(), std::log(xv) + std::log(yv));
 
-    // first out of range
-    xv = 0.000542431; yv = 0.99999;
-    reconfigure(xv, yv);
-    EXPECT_EQ(model.pdf(), xv * yv);
-    EXPECT_EQ(model.log_pdf(), std::log(xv) + std::log(yv));
+    x.set_value(xv);
+    y.set_value(yv);
+    model.update();
 
-    // second out of range
-    xv = 0.5142; yv = 2.0000123;
-    reconfigure(xv, yv);
     EXPECT_EQ(model.pdf(), xv * yv);
     EXPECT_EQ(model.log_pdf(), std::log(xv) + std::log(yv));
+}
 
-    // both out of range
-    xv = 14.3; yv = 69.;
-    reconfigure(xv, yv);
-    EXPECT_EQ(model.pdf(), xv * yv);
-    EXPECT_EQ(model.log_pdf(), std::log(xv) + std::log(yv));
+TEST_F(many_tag_dist_fixture, four_tags)
+{
+    auto model = (
+        x |= MockDist(),
+        y |= MockDist(),
+        z |= MockDist(),
+        w |= MockDist()
+    );
+
+    xv = 0.2; yv = 1.8; zv = 3.2; wv = 0.3;
+
+    x.set_value(xv);
+    y.set_value(yv);
+    z.set_value(zv);
+    w.set_value(wv);
+    model.update();
+
+    EXPECT_EQ(model.pdf(), xv * yv * zv * wv);
+    EXPECT_EQ(model.log_pdf(), std::log(xv) + std::log(yv)
+                             + std::log(zv) + std::log(wv));
 }
 
 } // namespace ppl

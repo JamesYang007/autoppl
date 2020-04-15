@@ -32,8 +32,8 @@ struct EqNode
     { tag_ = tag_cref_; }
 
     /*
-     * Compute pdf of dist_ with value_.
-     * Assumes that value_ has been assigned with a proper value.
+     * Compute pdf of underlying distribution with underlying value.
+     * Assumes that underlying value has been assigned properly.
      */
     dist_value_t pdf() const
     { return dist_.pdf(tag_.get_value()); }
