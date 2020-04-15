@@ -4,7 +4,7 @@
 namespace ppl {
 
 /*
- * Fixture for testing rv_tag with distribution.
+ * Fixture for testing one rv_tag with distribution.
  */
 struct tag_dist_fixture : ::testing::Test
 {
