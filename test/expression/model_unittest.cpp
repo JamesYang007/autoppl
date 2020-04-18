@@ -51,20 +51,13 @@ struct tag_dist_fixture : ::testing::Test
 {
 protected:
     MockTag x;
-    std::array<MockTag, 1> comp_data;
     using model_t = std::decay_t<decltype(x |= MockDist())>;
     model_t model = (x |= MockDist());
     double val;
 
-    tag_dist_fixture()
-    {
-        auto ptr = model.bind_comp_data(comp_data.begin(), comp_data.end());
-        EXPECT_EQ(ptr, comp_data.end());
-    }
-
     void reconfigure(double val)
     {
-        comp_data[0].set_value(val);
+        x.set_value(val);
     }
 };
 
@@ -149,13 +142,8 @@ TEST_F(tag_dist_fixture, log_pdf_invalid)
 struct many_tag_dist_fixture : ::testing::Test
 {
 protected:
-    std::vector<MockTag> comp_data;
     MockTag x, y, z, w;
     double xv, yv, zv, wv;
-
-    many_tag_dist_fixture()
-        : comp_data(4)
-    {}
 };
 
 TEST_F(many_tag_dist_fixture, two_tags)
@@ -169,7 +157,6 @@ TEST_F(many_tag_dist_fixture, two_tags)
 
     x.set_value(xv);
     y.set_value(yv);
-    model.bind_comp_data(comp_data.begin(), std::next(comp_data.begin(), 2));
 
     EXPECT_EQ(model.pdf(), xv * yv);
     EXPECT_EQ(model.log_pdf(), std::log(xv) + std::log(yv));
@@ -190,37 +177,10 @@ TEST_F(many_tag_dist_fixture, four_tags)
     y.set_value(yv);
     z.set_value(zv);
     w.set_value(wv);
-    model.bind_comp_data(comp_data.begin(), comp_data.end());
 
     EXPECT_EQ(model.pdf(), xv * yv * zv * wv);
     EXPECT_EQ(model.log_pdf(), std::log(xv) + std::log(yv)
                              + std::log(zv) + std::log(wv));
-}
-
-TEST_F(many_tag_dist_fixture, four_tags_correct_bind)
-{
-    auto model = (
-        x |= MockDist(),
-        y |= MockDist(),
-        z |= MockDist(),
-        w |= MockDist()
-    );
-
-    xv = 0.2; yv = 1.8; zv = 3.2; wv = 0.3;
-
-    x.set_value(xv);
-    y.set_value(yv);
-    z.set_value(zv);
-    w.set_value(wv);
-    model.bind_comp_data(comp_data.begin(), comp_data.end());
-
-    // test that the computation data was initialized in the same
-    // order as the variables listed in the model.
-    
-    EXPECT_EQ(comp_data[0].get_value(), xv);
-    EXPECT_EQ(comp_data[1].get_value(), yv);
-    EXPECT_EQ(comp_data[2].get_value(), zv);
-    EXPECT_EQ(comp_data[3].get_value(), wv);
 }
 
 } // namespace ppl

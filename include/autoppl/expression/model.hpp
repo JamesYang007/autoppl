@@ -31,41 +31,22 @@ struct EqNode
     EqNode(const tag_t& tag, 
            const dist_t& dist) noexcept
         : orig_tag_cref_{tag}
-        , comp_tag_cref_{}
         , dist_{dist}
     {}
-
-    /*
-     * Binds computation-required data with this model.
-     * Underlying reference to computation data for this random variable
-     * will reference the next data (*begin).
-     * The next data (*begin) will be initialized with original tag.
-     * The functor getter MUST return an lvalue reference to the tag.
-     * TODO: set up compile-time checks for this ^.
-     * The tag must be the same type as tag_t.
-     */
-    template <class Iter, class F = details::IdentityTagFunctor<Iter>>
-    Iter bind_comp_data(Iter begin, Iter end, F getter = F()) 
-    {
-        assert(begin != end);                   // MUST have a value to get
-        getter(*begin) = orig_tag_cref_.get();  // initialize comp data
-        comp_tag_cref_ = getter(*begin);        // set reference to comp data
-        return ++begin;
-    }
 
     /*
      * Compute pdf of underlying distribution with underlying value.
      * Assumes that underlying value has been assigned properly.
      */
     dist_value_t pdf() const
-    { return dist_.pdf(comp_tag_cref_->get().get_value()); }
+    { return dist_.pdf(orig_tag_cref_.get().get_value()); }
 
     /*
      * Compute log-pdf of underlying distribution with underlying value.
      * Assumes that underlying value has been assigned properly.
      */
     dist_value_t log_pdf() const
-    { return dist_.log_pdf(comp_tag_cref_->get().get_value()); }
+    { return dist_.log_pdf(orig_tag_cref_.get().get_value()); }
 
 private:
     using tag_cref_t = std::reference_wrapper<const tag_t>;
@@ -73,7 +54,6 @@ private:
     
     tag_cref_t orig_tag_cref_;      // (const) reference of the original tag since 
                                     // any configuration may be changed until right before update 
-    opt_tag_cref_t comp_tag_cref_;  // reference the tag needed in computation 
     dist_t dist_;                   // distribution associated with tag
 };
 
@@ -96,17 +76,6 @@ struct GlueNode
         : left_node_{lhs}
         , right_node_{rhs}
     {}
-
-    /*
-     * Binds computational data in order from left to right.
-     * In other words, same order as user would list the model expressions.
-     */
-    template <class Iter, class F = details::IdentityTagFunctor<Iter>>
-    Iter bind_comp_data(Iter begin, Iter end, F getter = F()) 
-    {
-        Iter new_begin = left_node_.bind_comp_data(begin, end, getter);
-        return right_node_.bind_comp_data(new_begin, end, getter);
-    }
 
     /*
      * Computes left node joint pdf then right node joint pdf
