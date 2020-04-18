@@ -1,4 +1,4 @@
-#include <autoppl/expression/uniform.hpp>
+#include <autoppl/distribution/uniform.hpp>
 #include <autoppl/expression/variable.hpp>
 
 #include <cmath>
