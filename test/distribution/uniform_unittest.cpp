@@ -18,13 +18,13 @@ protected:
 };
 
 TEST_F(uniform_dist_fixture, simple_uniform) {
-    EXPECT_EQ(dist1.pdf(1.1), 0.0);
+    EXPECT_DOUBLE_EQ(dist1.pdf(1.1), 0.0);
 
-    EXPECT_EQ(dist2.pdf(1.0), 0.0);
-    EXPECT_EQ(dist2.pdf(0.25), 2.0);
+    EXPECT_DOUBLE_EQ(dist2.pdf(1.0), 0.0);
+    EXPECT_DOUBLE_EQ(dist2.pdf(0.25), 2.0);
 
-    EXPECT_EQ(dist3.pdf(-0.1), 0.0);
-    EXPECT_EQ(dist3.pdf(0.25), 2.5);
+    EXPECT_DOUBLE_EQ(dist3.pdf(-0.1), 0.0);
+    EXPECT_DOUBLE_EQ(dist3.pdf(0.25), 2.5);
 }
 
 } // ppl
