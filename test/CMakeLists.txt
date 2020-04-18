@@ -11,7 +11,6 @@ endif()
 
 add_executable(expression_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/model_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/expression/uniform_unittest.cpp
     )
 target_compile_options(expression_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(expression_unittest PRIVATE ${GTEST_DIR}/include)
@@ -20,3 +19,18 @@ if (AUTOPPL_ENABLE_TEST_COVERAGE)
 endif()
 target_link_libraries(expression_unittest gtest_main pthread ${PROJECT_NAME})
 add_test(expression_unittest expression_unittest)
+
+######################################################
+# Distribution Test
+######################################################
+
+add_executable(distribution_unittest
+    ${CMAKE_CURRENT_SOURCE_DIR}/distribution/uniform_unittest.cpp
+    )
+target_compile_options(distribution_unittest PRIVATE -g -Wall -Werror -Wextra)
+target_include_directories(distribution_unittest PRIVATE ${GTEST_DIR}/include)
+if (AUTOPPL_ENABLE_TEST_COVERAGE)
+    target_link_libraries(distribution_unittest gcov)
+endif()
+target_link_libraries(distribution_unittest gtest_main pthread ${PROJECT_NAME})
+add_test(distribution_unittest distribution_unittest)

@@ -10,10 +10,10 @@ namespace ppl {
 //////////////////////////////////////////////////////
 
 /*
- * Mock tag object for testing purposes.
- * Must meet some of the requirements of actual tag types.
+ * Mock var object for testing purposes.
+ * Must meet some of the requirements of actual var types.
  */
-struct MockTag
+struct MockVar
 {
     using value_t = double;
     using pointer_t = double*;
@@ -45,12 +45,12 @@ struct MockDist
 };
 
 /*
- * Fixture for testing one tag with distribution.
+ * Fixture for testing one var with distribution.
  */
-struct tag_dist_fixture : ::testing::Test
+struct var_dist_fixture : ::testing::Test
 {
 protected:
-    MockTag x;
+    MockVar x;
     using model_t = std::decay_t<decltype(x |= MockDist())>;
     model_t model = (x |= MockDist());
     double val;
@@ -61,7 +61,7 @@ protected:
     }
 };
 
-TEST_F(tag_dist_fixture, pdf_valid)
+TEST_F(var_dist_fixture, pdf_valid)
 {
     // MockDist pdf is identity function
     // so we may simply compare model.pdf() with val.
@@ -79,7 +79,7 @@ TEST_F(tag_dist_fixture, pdf_valid)
     EXPECT_EQ(model.pdf(), val);
 }
 
-TEST_F(tag_dist_fixture, pdf_invalid)
+TEST_F(var_dist_fixture, pdf_invalid)
 {
     val = 0.000004123;
     reconfigure(val);
@@ -98,7 +98,7 @@ TEST_F(tag_dist_fixture, pdf_invalid)
     EXPECT_EQ(model.pdf(), val);
 }
 
-TEST_F(tag_dist_fixture, log_pdf_valid)
+TEST_F(var_dist_fixture, log_pdf_valid)
 {
     val = 0.000001;
     reconfigure(val);
@@ -113,7 +113,7 @@ TEST_F(tag_dist_fixture, log_pdf_valid)
     EXPECT_EQ(model.log_pdf(), std::log(val));
 }
 
-TEST_F(tag_dist_fixture, log_pdf_invalid)
+TEST_F(var_dist_fixture, log_pdf_invalid)
 {
     val = 0.000004123;
     reconfigure(val);
@@ -137,16 +137,16 @@ TEST_F(tag_dist_fixture, log_pdf_invalid)
 //////////////////////////////////////////////////////
 
 /*
- * Fixture for testing many tags with distributions.
+ * Fixture for testing many vars with distributions.
  */
-struct many_tag_dist_fixture : ::testing::Test
+struct many_var_dist_fixture : ::testing::Test
 {
 protected:
-    MockTag x, y, z, w;
+    MockVar x, y, z, w;
     double xv, yv, zv, wv;
 };
 
-TEST_F(many_tag_dist_fixture, two_tags)
+TEST_F(many_var_dist_fixture, two_vars)
 {
     auto model = (
         x |= MockDist(),
@@ -162,7 +162,7 @@ TEST_F(many_tag_dist_fixture, two_tags)
     EXPECT_EQ(model.log_pdf(), std::log(xv) + std::log(yv));
 }
 
-TEST_F(many_tag_dist_fixture, four_tags)
+TEST_F(many_var_dist_fixture, four_vars)
 {
     auto model = (
         x |= MockDist(),
