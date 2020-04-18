@@ -37,6 +37,9 @@ struct rv_tag
         : rv_tag(0, storage_ptr)
     {}
 
+    rv_tag(value_t value) noexcept
+        : rv_tag(value, nullptr) {}
+
     rv_tag() noexcept
         : rv_tag(0, nullptr)
     {}
@@ -50,6 +53,8 @@ struct rv_tag
 
     void set_state(state_t state) { state_ = state; }
     state_t get_state() const { return state_; }
+
+    operator value_t () const { return value_; }
 
     /*
      * Sets underlying value to "value".

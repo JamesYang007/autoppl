@@ -11,6 +11,7 @@ endif()
 
 add_executable(expression_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/model_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/uniform_unittest.cpp
     )
 target_compile_options(expression_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(expression_unittest PRIVATE ${GTEST_DIR}/include)
