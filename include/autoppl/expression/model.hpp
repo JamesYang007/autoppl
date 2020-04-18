@@ -49,9 +49,7 @@ struct EqNode
     { return dist_.log_pdf(orig_var_cref_.get().get_value()); }
 
 private:
-    using var_cref_t = std::reference_wrapper<const var_t>;
-    using opt_var_cref_t = std::optional<var_cref_t>;
-    
+    using var_cref_t = std::reference_wrapper<const var_t>;    
     var_cref_t orig_var_cref_;      // (const) reference of the original var since 
                                     // any configuration may be changed until right before update 
     dist_t dist_;                   // distribution associated with var
