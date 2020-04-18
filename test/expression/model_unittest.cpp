@@ -1,4 +1,5 @@
 #include <cmath>
+#include <array>
 #include "gtest/gtest.h"
 #include <autoppl/expression/model.hpp>
 
@@ -49,16 +50,21 @@ struct MockDist
 struct tag_dist_fixture : ::testing::Test
 {
 protected:
-    MockTag x, comp_data;
+    MockTag x;
+    std::array<MockTag, 1> comp_data;
     using model_t = std::decay_t<decltype(x |= MockDist())>;
     model_t model = (x |= MockDist());
     double val;
 
+    tag_dist_fixture()
+    {
+        auto ptr = model.bind_comp_data(comp_data.begin(), comp_data.end());
+        EXPECT_EQ(ptr, comp_data.end());
+    }
+
     void reconfigure(double val)
     {
-        x.set_value(val);
-        auto ptr = model.bind_comp_data(&comp_data, &comp_data + 1);
-        EXPECT_EQ(ptr, &comp_data + 1);
+        comp_data[0].set_value(val);
     }
 };
 
