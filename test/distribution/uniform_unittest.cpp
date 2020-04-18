@@ -27,4 +27,15 @@ TEST_F(uniform_dist_fixture, simple_uniform) {
     EXPECT_DOUBLE_EQ(dist3.pdf(0.25), 2.5);
 }
 
+TEST_F(uniform_dist_fixture, uniform_sampling) {
+    std::random_device rd{};
+    std::mt19937 gen{rd()};
+    
+    for (int i = 0; i < 100; i++) {
+        double sample = dist1.sample(gen);
+        EXPECT_GT(sample, 0.0);
+        EXPECT_LT(sample, 1.0);
+    }
+}
+
 } // ppl
