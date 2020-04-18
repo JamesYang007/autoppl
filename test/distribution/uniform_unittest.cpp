@@ -17,13 +17,24 @@ protected:
     Uniform<Variable<double>, Variable<double> > dist3 = Uniform(y, x);
 };
 
+TEST_F(uniform_dist_fixture, sanity_uniform_test) {
+    EXPECT_EQ(dist1.min(), 0.0);
+    EXPECT_EQ(dist1.max(), 1.0);
+
+    EXPECT_EQ(dist2.min(), 0.0);
+    EXPECT_EQ(dist2.max(), 0.5);
+
+    EXPECT_EQ(dist3.min(), 0.1);
+    EXPECT_EQ(dist3.max(), 0.5);
+}
+
 TEST_F(uniform_dist_fixture, simple_uniform) {
     EXPECT_DOUBLE_EQ(dist1.pdf(1.1), 0.0);
+    EXPECT_DOUBLE_EQ(dist1.pdf(1.0), 0.0);
 
-    EXPECT_DOUBLE_EQ(dist2.pdf(1.0), 0.0);
     EXPECT_DOUBLE_EQ(dist2.pdf(0.25), 2.0);
+    EXPECT_DOUBLE_EQ(dist2.pdf(-0.1), 0.0);
 
-    EXPECT_DOUBLE_EQ(dist3.pdf(-0.1), 0.0);
     EXPECT_DOUBLE_EQ(dist3.pdf(0.25), 2.5);
 }
 

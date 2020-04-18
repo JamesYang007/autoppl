@@ -21,34 +21,25 @@ struct Normal {
 
     Normal(mean_type mean, var_type var)
         : mean_{mean}, var_{var} {
-            assert(static_cast<value_t>(var_) > 0);
+            assert(this -> var() > 0);
         };
 
     template <class GeneratorType>
     value_t sample(GeneratorType& gen) const {
-        value_t mean, var;
-        mean = static_cast<value_t>(mean_);
-        var = static_cast<value_t>(var_);
-
-        std::normal_distribution<value_t> dist(mean, var);
+        std::normal_distribution<value_t> dist(mean(), var());
         return dist(gen);
     }
 
     dist_value_t pdf(value_t x) const {
-        value_t mean, var;
-        mean = static_cast<value_t>(mean_);
-        var = static_cast<value_t>(var_);
-
-        return std::exp(- 0.5 * std::pow(x - mean, 2) / var) / (std::sqrt(var * 2 * M_PI));
+        return std::exp(- 0.5 * std::pow(x - mean(), 2) / var()) / (std::sqrt(var() * 2 * M_PI));
     }
 
     dist_value_t log_pdf(value_t x) const {
-        value_t mean, var;
-        mean = static_cast<value_t>(mean_);
-        var = static_cast<value_t>(var_);
-
-        return (-0.5 * std::pow(x - mean, 2) / var) - 0.5 * (std::log(var) + std::log(2) + std::log(M_PI));
+        return (-0.5 * std::pow(x - mean(), 2) / var()) - 0.5 * (std::log(var()) + std::log(2) + std::log(M_PI));
     }
+
+    inline value_t mean() const { return static_cast<value_t>(mean_);}
+    inline value_t var() const { return static_cast<value_t>(var_);}
 
    private:
     mean_type mean_;

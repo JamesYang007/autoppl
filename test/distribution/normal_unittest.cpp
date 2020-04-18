@@ -16,6 +16,14 @@ protected:
     Normal<Variable<double>, Variable<double> > dist2 = Normal(mu, sigma);
 };
 
+TEST_F(normal_dist_fixture, sanity_normal_test) {
+    EXPECT_EQ(dist1.mean(), 0.0);
+    EXPECT_EQ(dist1.var(), 1.0);
+
+    EXPECT_EQ(dist2.mean(), 0.0);
+    EXPECT_EQ(dist2.var(), 1.0);
+}
+
 TEST_F(normal_dist_fixture, simple_gaussian) {
     EXPECT_DOUBLE_EQ(dist1.pdf(0.0), 0.3989422804014327);
     EXPECT_DOUBLE_EQ(dist1.pdf(-0.5), 0.3520653267642995);
