@@ -16,6 +16,7 @@ struct var_traits
     using pointer_t = typename VarType::pointer_t;
     using state_t = typename VarType::state_t;
 
+    // TODO may have to move this to a different class for compile-time checking
     static_assert(std::is_convertible_v<VarType, value_t>);
 };
 

@@ -32,6 +32,15 @@ TEST_F(normal_dist_fixture, simple_gaussian) {
     EXPECT_DOUBLE_EQ(dist1.log_pdf(0.0), std::log(dist1.pdf(0.0)));
     EXPECT_DOUBLE_EQ(dist1.log_pdf(-0.5), std::log(dist1.pdf(-0.5)));
     EXPECT_DOUBLE_EQ(dist1.log_pdf(4), std::log(dist1.pdf(4)));
+
+
+    EXPECT_DOUBLE_EQ(dist2.pdf(0.0), 0.3989422804014327);
+    EXPECT_DOUBLE_EQ(dist2.pdf(-0.5), 0.3520653267642995);
+    EXPECT_DOUBLE_EQ(dist2.pdf(4), 0.00013383022576488537);
+
+    EXPECT_DOUBLE_EQ(dist2.log_pdf(0.0), std::log(dist2.pdf(0.0)));
+    EXPECT_DOUBLE_EQ(dist2.log_pdf(-0.5), std::log(dist2.pdf(-0.5)));
+    EXPECT_DOUBLE_EQ(dist2.log_pdf(4), std::log(dist1.pdf(4)));
 }
 
 } // ppl
