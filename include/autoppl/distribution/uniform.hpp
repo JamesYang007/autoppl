@@ -16,41 +16,32 @@ struct Uniform
     using dist_value_t = double;
 
     Uniform(min_type min, max_type max)
-        : min_{min}, max_{max} { assert(static_cast<value_t>(min_) < static_cast<value_t>(max_)); }
+        : min_{min}, max_{max} { assert(this -> min() < this -> max()); }
 
     // TODO: tag this class as "TriviallySamplable"?
     template <class GeneratorType>
     value_t sample(GeneratorType& gen) const
     {
-        value_t min, max;
-        min = static_cast<value_t>(min_);
-        max = static_cast<value_t>(max_);
-
-        std::uniform_real_distribution<value_t> dist(min, max); 
+        std::uniform_real_distribution<value_t> dist(min(), max()); 
         return dist(gen);
     }
 
     dist_value_t pdf(value_t x) const
     {
-        value_t min, max;
-        min = static_cast<value_t>(min_);
-        max = static_cast<value_t>(max_); 
-        
-        return (min < x && x < max) ? 1. / (max - min) : 0;
+        return (min() < x && x < max()) ? 1. / (max() - min()) : 0;
     }
 
     dist_value_t log_pdf(value_t x) const
     {
-        value_t min, max;
-        min = static_cast<value_t>(min_);
-        max = static_cast<value_t>(max_);
-
-        return (min < x && x < max) ? 
-            -std::log(max - min) : 
+        return (min() < x && x < max()) ? 
+            -std::log(max() - min()) : 
             std::numeric_limits<dist_value_t>::lowest();
     }
 
-private:
+    inline value_t min() const { return static_cast<value_t>(min_); }
+    inline value_t max() const { return static_cast<value_t>(max_); }
+
+   private:
     min_type min_;
     max_type max_;
 };

@@ -3,45 +3,45 @@
 namespace ppl {
 
 /*
- * The possible states for a tag.
- * By default, all tags should be considered as a parameter.
+ * The possible states for a var.
+ * By default, all vars should be considered as a parameter.
  * TODO: maybe move in a different file?
  */
-enum class tag_state : bool {
+enum class var_state : bool {
     data,
     parameter
 };
 
 /* 
- * rv_tag is a light-weight structure that represents a univariate random variable.
+ * Variable is a light-weight structure that represents a univariate random variable.
  * It acts as an intermediate layer of communication between
- * a model expression and the users, who must supply storage of values associated with this tag.
+ * a model expression and the users, who must supply storage of values associated with this var.
  */
 template <class ValueType>
-struct rv_tag
+struct Variable
 {
     using value_t = ValueType;
     using pointer_t = value_t*;
     using const_pointer_t = const value_t*;
-    using state_t = tag_state;
+    using state_t = var_state;
 
     // constructors
-    rv_tag(value_t value, 
+    Variable(value_t value, 
            pointer_t storage_ptr) noexcept
         : value_{value}
         , storage_ptr_{storage_ptr}
         , state_{state_t::parameter}
     {}
 
-    rv_tag(pointer_t storage_ptr) noexcept
-        : rv_tag(0, storage_ptr)
+    Variable(pointer_t storage_ptr) noexcept
+        : Variable(0, storage_ptr)
     {}
 
-    rv_tag(value_t value) noexcept
-        : rv_tag(value, nullptr) {}
+    Variable(value_t value) noexcept
+        : Variable(value, nullptr) {}
 
-    rv_tag() noexcept
-        : rv_tag(0, nullptr)
+    Variable() noexcept
+        : Variable(0, nullptr)
     {}
 
     void set_value(value_t value) { value_ = value; }
@@ -58,7 +58,7 @@ struct rv_tag
 
     /*
      * Sets underlying value to "value".
-     * Additionally modifies the tag to be considered as data.
+     * Additionally modifies the var to be considered as data.
      * Equivalent to calling set_value(value) then set_state(state).
      */
     void observe(value_t value)
@@ -68,14 +68,14 @@ struct rv_tag
     }
 
 private:
-    value_t value_;             // store value associated with tag
+    value_t value_;             // store value associated with var
     pointer_t storage_ptr_;     // points to beginning of storage 
                                 // storage is assumed to be contiguous
     state_t state_;             // state to determine if data or param
 };
 
 // Useful aliases
-using cont_rv_tag = rv_tag<double>; // continuous RV tag
-using disc_rv_tag = rv_tag<int>;    // discrete RV tag
+using cont_var = Variable<double>; // continuous RV var
+using disc_var = Variable<int>;    // discrete RV var
 
 } // namespace ppl

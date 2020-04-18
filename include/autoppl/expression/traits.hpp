@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 
 namespace ppl {
 
@@ -8,12 +9,15 @@ namespace ppl {
  * Users should rely on these classes to grab member aliases.
  */
 
-template <class TagType>
-struct tag_traits
+template <class VarType>
+struct var_traits
 {
-    using value_t = typename TagType::value_t;
-    using pointer_t = typename TagType::pointer_t;
-    using state_t = typename TagType::state_t;
+    using value_t = typename VarType::value_t;
+    using pointer_t = typename VarType::pointer_t;
+    using state_t = typename VarType::state_t;
+
+    // TODO may have to move this to a different class for compile-time checking
+    static_assert(std::is_convertible_v<VarType, value_t>);
 };
 
 template <class DistType>

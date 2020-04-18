@@ -8,29 +8,29 @@ namespace ppl {
 namespace details {
 
 template <class Iter>
-struct IdentityTagFunctor
+struct IdentityVarFunctor
 {
     using value_t = typename std::iterator_traits<Iter>::value_type;
-    value_t& operator()(value_t& tag)
-    { return tag; }
+    value_t& operator()(value_t& var)
+    { return var; }
 };
 
 } // namespace details
 
 /*
  * This class represents a "node" in the model expression
- * that relates a tag with a distribution.
+ * that relates a var with a distribution.
  */
-template <class TagType, class DistType>
+template <class VarType, class DistType>
 struct EqNode
 {
-    using tag_t = TagType;
+    using var_t = VarType;
     using dist_t = DistType;
     using dist_value_t = typename dist_traits<dist_t>::dist_value_t;
 
-    EqNode(const tag_t& tag, 
+    EqNode(const var_t& var, 
            const dist_t& dist) noexcept
-        : orig_tag_cref_{tag}
+        : orig_var_cref_{var}
         , dist_{dist}
     {}
 
@@ -39,22 +39,20 @@ struct EqNode
      * Assumes that underlying value has been assigned properly.
      */
     dist_value_t pdf() const
-    { return dist_.pdf(orig_tag_cref_.get().get_value()); }
+    { return dist_.pdf(orig_var_cref_.get().get_value()); }
 
     /*
      * Compute log-pdf of underlying distribution with underlying value.
      * Assumes that underlying value has been assigned properly.
      */
     dist_value_t log_pdf() const
-    { return dist_.log_pdf(orig_tag_cref_.get().get_value()); }
+    { return dist_.log_pdf(orig_var_cref_.get().get_value()); }
 
 private:
-    using tag_cref_t = std::reference_wrapper<const tag_t>;
-    using opt_tag_cref_t = std::optional<tag_cref_t>;
-    
-    tag_cref_t orig_tag_cref_;      // (const) reference of the original tag since 
+    using var_cref_t = std::reference_wrapper<const var_t>;    
+    var_cref_t orig_var_cref_;      // (const) reference of the original var since 
                                     // any configuration may be changed until right before update 
-    dist_t dist_;                   // distribution associated with tag
+    dist_t dist_;                   // distribution associated with var
 };
 
 /*
@@ -104,14 +102,14 @@ private:
 // with concepts!
 
 /*
- * Builds an EqNode to associate tag with dist.
+ * Builds an EqNode to associate var with dist.
  * Ex. x |= uniform(0,1)
  */
-template <class TagType, class DistType>
-constexpr inline auto operator|=(const TagType& tag,
+template <class VarType, class DistType>
+constexpr inline auto operator|=(const VarType& var,
                                  const DistType& dist)
 {
-    return EqNode<TagType, DistType>(tag, dist);
+    return EqNode<VarType, DistType>(var, dist);
 }
 
 /*
