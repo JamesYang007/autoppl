@@ -3,14 +3,12 @@
 #include <random>
 #include <cmath>
 #include <numeric>
+#include <autoppl/expression/model_expr.hpp>
 
 namespace ppl {
 
-// TODO: change name to UniformDist and make class template.
-// uniform should be a function that creates this kind of object.
-
 template <typename min_type, typename max_type>
-struct Uniform 
+struct Uniform : public ModelExpr<Uniform<min_type, max_type>>
 {
     using value_t = double;
     using dist_value_t = double;

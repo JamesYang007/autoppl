@@ -3,14 +3,12 @@
 #include <random>
 #include <cmath>
 #include <numeric>
+#include <autoppl/expression/model_expr.hpp>
 
 namespace ppl {
 
-// TODO: change name to BernoulliDist and make class template.
-// bernoulli should be a function that creates this kind of object.
-
 template <typename p_type>
-struct Bernoulli 
+struct Bernoulli : public ModelExpr<Bernoulli<p_type>>
 {
     using value_t = int;
     using dist_value_t = double;

@@ -3,6 +3,7 @@
 #include <functional>
 #include <optional>
 #include <autoppl/util/traits.hpp>
+#include <autoppl/expression/model_expr.hpp>
 
 namespace ppl {
 namespace details {
@@ -22,7 +23,7 @@ struct IdentityVarFunctor
  * that relates a var with a distribution.
  */
 template <class VarType, class DistType>
-struct EqNode
+struct EqNode : public ModelExpr<EqNode<VarType, DistType>>
 {
     using var_t = VarType;
     using dist_t = DistType;
@@ -60,7 +61,7 @@ private:
  * "glues" two sub-model expressions.
  */
 template <class LHSNodeType, class RHSNodeType>
-struct GlueNode
+struct GlueNode : public ModelExpr<GlueNode<LHSNodeType, RHSNodeType>>
 {
     using left_node_t = LHSNodeType;
     using right_node_t = RHSNodeType;
@@ -98,18 +99,15 @@ private:
 // Operator overloads
 /////////////////////////////////////////////////////////
 
-// TODO: all these template parameters should be constrained 
-// with concepts!
-
 /*
  * Builds an EqNode to associate var with dist.
  * Ex. x |= uniform(0,1)
  */
 template <class VarType, class DistType>
-constexpr inline auto operator|=(const VarType& var,
-                                 const DistType& dist)
+constexpr inline auto operator|=(const ModelExpr<VarType>& var,
+                                 const ModelExpr<DistType>& dist)
 {
-    return EqNode<VarType, DistType>(var, dist);
+    return EqNode(var.self(), dist.self());
 }
 
 /*
@@ -117,10 +115,10 @@ constexpr inline auto operator|=(const VarType& var,
  * Ex. (x |= uniform(0,1), y |= uniform(0, 2))
  */
 template <class LHSNodeType, class RHSNodeType>
-constexpr inline auto operator,(const LHSNodeType& lhs,
-                                const RHSNodeType& rhs)
+constexpr inline auto operator,(const ModelExpr<LHSNodeType>& lhs,
+                                const ModelExpr<RHSNodeType>& rhs)
 {
-    return GlueNode<LHSNodeType, RHSNodeType>(lhs, rhs);
+    return GlueNode(lhs.self(), rhs.self());
 }
 
 } // namespace ppl

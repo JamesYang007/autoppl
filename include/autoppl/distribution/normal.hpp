@@ -3,14 +3,13 @@
 #include <cmath>
 #include <numeric>
 #include <random>
+#include <autoppl/expression/model_expr.hpp>
 
 namespace ppl {
 
-// TODO: change name to NormalDist and make class template.
-// normal should be a function that creates this kind of object.
-
 template <typename mean_type, typename var_type>
-struct Normal {
+struct Normal : public ModelExpr<Normal<mean_type, var_type>>
+{
     using value_t = double;
     using dist_value_t = double;
 
