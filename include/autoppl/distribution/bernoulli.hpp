@@ -6,6 +6,7 @@
 #include <autoppl/distribution/dist_expr.hpp>
 
 namespace ppl {
+namespace dist {
 
 template <typename p_type>
 struct Bernoulli : public DistExpr<Bernoulli<p_type>>
@@ -43,4 +44,5 @@ private:
     p_type p_;
 };
 
+} // namespace dist
 } // namespace ppl

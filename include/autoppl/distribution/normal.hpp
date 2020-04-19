@@ -6,6 +6,7 @@
 #include <autoppl/distribution/dist_expr.hpp>
 
 namespace ppl {
+namespace dist {
 
 template <typename mean_type, typename var_type>
 struct Normal : public DistExpr<Normal<mean_type, var_type>>
@@ -43,4 +44,5 @@ private:
     var_type var_;
 };
 
-}  // namespace ppl
+} // namespace dist
+} // namespace ppl

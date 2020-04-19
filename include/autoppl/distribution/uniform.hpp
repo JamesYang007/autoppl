@@ -6,6 +6,7 @@
 #include <autoppl/distribution/dist_expr.hpp>
 
 namespace ppl {
+namespace dist {
 
 template <typename min_type, typename max_type>
 struct Uniform : public DistExpr<Uniform<min_type, max_type>>
@@ -44,4 +45,5 @@ private:
     max_type max_;
 };
 
+} // namespace dist
 } // namespace ppl

@@ -6,6 +6,7 @@
 #include <autoppl/expression/model_expr.hpp>
 
 namespace ppl {
+namespace expr {
 namespace details {
 
 template <class Iter>
@@ -95,4 +96,5 @@ private:
     right_node_t right_node_;
 };
 
+} // namespace expr
 } // namespace ppl

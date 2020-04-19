@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 namespace ppl {
+namespace dist {
 
 struct uniform_dist_fixture : ::testing::Test {
 protected:
@@ -49,4 +50,5 @@ TEST_F(uniform_dist_fixture, uniform_sampling) {
     }
 }
 
-} // ppl
+} // namespace dist
+} // namespace ppl

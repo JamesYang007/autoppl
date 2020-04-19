@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 namespace ppl {
+namespace dist {
 
 struct normal_dist_fixture : ::testing::Test {
 protected:
@@ -43,4 +44,5 @@ TEST_F(normal_dist_fixture, simple_gaussian) {
     EXPECT_DOUBLE_EQ(dist2.log_pdf(4), std::log(dist1.pdf(4)));
 }
 
-} // ppl
+} // namespace dist
+} // namespace ppl

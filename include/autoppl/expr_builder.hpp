@@ -1,8 +1,12 @@
 #pragma once
-#include <autoppl/expression/variable.hpp>
 #include <autoppl/expression/model_expr.hpp>
 #include <autoppl/expression/var_expr.hpp>
+#include <autoppl/expression/model.hpp>
+#include <autoppl/expression/variable.hpp>
+#include <autoppl/distribution/dist_expr.hpp>
 #include <autoppl/distribution/uniform.hpp>
+#include <autoppl/distribution/normal.hpp>
+#include <autoppl/distribution/bernoulli.hpp>
 
 namespace ppl {
 
@@ -20,7 +24,7 @@ namespace details {
 using cont_raw_param_t = double;
 template <class T>
 inline constexpr bool is_cont_param_valid =
-    is_var_expr_v<T> || 
+    expr::is_var_expr_v<T> || 
     std::is_convertible_v<T, cont_raw_param_t>;
 
 } // namespace details
@@ -88,7 +92,7 @@ template <class T, class DistType>
 inline constexpr auto operator|=(const Variable<T>& var,
                                  const DistType& dist)
 {
-    static_assert(is_dist_expr_v<DistType>);
+    static_assert(dist::is_dist_expr_v<DistType>);
     return EqNode(var, dist);
 }
 #else
@@ -104,8 +108,8 @@ template <class LHSNodeType, class RHSNodeType>
 inline constexpr auto operator,(const LHSNodeType& lhs,
                                 const RHSNodeType& rhs)
 {
-    static_assert(is_model_expr_v<LHSNodeType>);
-    static_assert(is_model_expr_v<RHSNodeType>);
+    static_assert(expr::is_model_expr_v<LHSNodeType>);
+    static_assert(expr::is_model_expr_v<RHSNodeType>);
     return GlueNode(lhs, rhs);
 }
 #else

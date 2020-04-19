@@ -4,6 +4,7 @@
 #include <autoppl/expression/model.hpp>
 
 namespace ppl {
+namespace expr {
 
 //////////////////////////////////////////////////////
 // Model with one RV TESTS
@@ -196,4 +197,5 @@ TEST_F(many_var_dist_fixture, four_vars)
                              + std::log(zv) + std::log(wv));
 }
 
+} // namespace expr
 } // namespace ppl

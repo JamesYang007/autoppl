@@ -2,6 +2,7 @@
 #include <type_traits>
 
 namespace ppl {
+namespace expr {
 
 template <class Derived>
 struct ModelExpr
@@ -24,4 +25,5 @@ template <class T>
 concept model_expressable = is_model_expr_v<T>; 
 #endif
 
+} // namespace expr
 } // namespace ppl

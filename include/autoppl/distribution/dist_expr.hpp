@@ -2,6 +2,7 @@
 #include <type_traits>
 
 namespace ppl {
+namespace dist {
 
 template <class Derived>
 struct DistExpr
@@ -15,7 +16,7 @@ struct DistExpr
 
 template <class T>
 inline constexpr bool is_dist_expr_v = 
-    std::is_convertible_v<T, DistExpr<T>>;
+    std::is_convertible_v<T, dist::DistExpr<T>>;
 
 #ifdef AUTOPPL_USE_CONCEPTS
 // TODO: definition should be extended with a stronger
@@ -24,4 +25,5 @@ template <class T>
 concept dist_expressable = is_dist_expr_v<T>; 
 #endif
 
+} // namespace dist
 } // namespace ppl

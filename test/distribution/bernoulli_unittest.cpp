@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 namespace ppl {
+namespace dist {
 
 struct bernoulli_dist_fixture : ::testing::Test {
 protected:
@@ -39,4 +40,5 @@ TEST_F(bernoulli_dist_fixture, bernoulli_sampling) {
     }
 }
 
-} // ppl
+} // namespace dist
+} // namespace ppl
