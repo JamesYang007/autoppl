@@ -2,7 +2,7 @@
 #include <type_traits>
 #include <functional>
 #include <optional>
-#include <autoppl/expression/traits.hpp>
+#include <autoppl/utils/traits.hpp>
 
 namespace ppl {
 namespace details {
