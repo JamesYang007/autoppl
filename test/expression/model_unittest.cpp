@@ -144,15 +144,16 @@ struct many_var_dist_fixture : ::testing::Test
 protected:
     MockVar x, y, z, w;
     double xv, yv, zv, wv;
-    using 2model_t = 
+    using eq_t = EqNode<MockVar, MockDist>;
 };
 
 TEST_F(many_var_dist_fixture, two_vars)
 {
-    auto model = (
-        x |= MockDist(),
-        y |= MockDist()
-    );
+    using model_two_t = GlueNode<eq_t, eq_t>;
+    model_two_t model = {
+        {x, MockDist()},
+        {y, MockDist()}
+    };
 
     xv = 0.2; yv = 1.8;
 
@@ -165,12 +166,23 @@ TEST_F(many_var_dist_fixture, two_vars)
 
 TEST_F(many_var_dist_fixture, four_vars)
 {
-    auto model = (
-        x |= MockDist(),
-        y |= MockDist(),
-        z |= MockDist(),
-        w |= MockDist()
-    );
+    using model_four_t = 
+        GlueNode<eq_t, 
+            GlueNode<eq_t,
+                GlueNode<eq_t, eq_t>
+            >
+        >;
+
+    model_four_t model = {
+        {x, MockDist()},
+        {
+            {y, MockDist()},
+            {
+                {z, MockDist()},
+                {w, MockDist()}
+            }
+        }
+    };
 
     xv = 0.2; yv = 1.8; zv = 3.2; wv = 0.3;
 

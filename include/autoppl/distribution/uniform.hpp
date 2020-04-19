@@ -36,10 +36,10 @@ struct Uniform : public DistExpr<Uniform<min_type, max_type>>
             std::numeric_limits<dist_value_t>::lowest();
     }
 
-    inline value_t min() const { return static_cast<value_t>(min_); }
-    inline value_t max() const { return static_cast<value_t>(max_); }
+    value_t min() const { return static_cast<value_t>(min_); }
+    value_t max() const { return static_cast<value_t>(max_); }
 
-   private:
+private:
     min_type min_;
     max_type max_;
 };

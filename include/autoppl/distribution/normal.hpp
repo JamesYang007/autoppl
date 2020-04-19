@@ -1,8 +1,8 @@
 #pragma once
 #include <cassert>
+#include <random>
 #include <cmath>
 #include <numeric>
-#include <random>
 #include <autoppl/distribution/dist_expr.hpp>
 
 namespace ppl {
@@ -35,10 +35,10 @@ struct Normal : public DistExpr<Normal<mean_type, var_type>>
         return (-0.5 * std::pow(x - mean(), 2) / var()) - 0.5 * (std::log(var()) + std::log(2) + std::log(M_PI));
     }
 
-    inline value_t mean() const { return static_cast<value_t>(mean_);}
-    inline value_t var() const { return static_cast<value_t>(var_);}
+    value_t mean() const { return static_cast<value_t>(mean_);}
+    value_t var() const { return static_cast<value_t>(var_);}
 
-   private:
+private:
     mean_type mean_;
     var_type var_;
 };

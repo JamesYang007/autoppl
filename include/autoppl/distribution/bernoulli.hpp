@@ -37,9 +37,9 @@ struct Bernoulli : public DistExpr<Bernoulli<p_type>>
         else return std::numeric_limits<dist_value_t>::lowest();
     }
 
-    inline dist_value_t p() const { return static_cast<dist_value_t>(p_); }
+    dist_value_t p() const { return static_cast<dist_value_t>(p_); }
 
-   private:
+private:
     p_type p_;
 };
 
