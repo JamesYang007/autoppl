@@ -13,7 +13,7 @@ namespace ppl {
  * Mock var object for testing purposes.
  * Must meet some of the requirements of actual var types.
  */
-struct MockVar
+struct MockVar : public ModelExpr<MockVar>
 {
     using value_t = double;
     using pointer_t = double*;
@@ -30,7 +30,7 @@ private:
  * Mock distribution object for testing purposes.
  * Must meet some of the requirements of actual distribution types.
  */
-struct MockDist
+struct MockDist : public ModelExpr<MockDist>
 {
     using value_t = double;
     using dist_value_t = double;
