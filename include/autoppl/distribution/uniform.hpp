@@ -3,12 +3,12 @@
 #include <random>
 #include <cmath>
 #include <numeric>
-#include <autoppl/expression/model_expr.hpp>
+#include <autoppl/distribution/dist_expr.hpp>
 
 namespace ppl {
 
 template <typename min_type, typename max_type>
-struct Uniform : public ModelExpr<Uniform<min_type, max_type>>
+struct Uniform : public DistExpr<Uniform<min_type, max_type>>
 {
     using value_t = double;
     using dist_value_t = double;

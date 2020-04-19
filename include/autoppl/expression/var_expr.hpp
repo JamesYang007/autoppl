@@ -4,7 +4,7 @@
 namespace ppl {
 
 template <class Derived>
-struct ModelExpr
+struct VarExpr
 {
     Derived& self() 
     { return static_cast<Derived&>(*this); }
@@ -14,14 +14,14 @@ struct ModelExpr
 };
 
 template <class T>
-inline constexpr bool is_model_expr_v = 
-    std::is_convertible_v<T, ModelExpr<T>>;
+inline constexpr bool is_var_expr_v = 
+    std::is_convertible_v<T, VarExpr<T>>;
 
 #ifdef AUTOPPL_USE_CONCEPTS
 // TODO: definition should be extended with a stronger
 // restriction on T with interface checking.
 template <class T>
-concept model_expressable = is_model_expr_v<T>; 
+concept var_expressable = is_var_expr_v<T>; 
 #endif
 
 } // namespace ppl

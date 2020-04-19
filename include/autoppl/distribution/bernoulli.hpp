@@ -3,12 +3,12 @@
 #include <random>
 #include <cmath>
 #include <numeric>
-#include <autoppl/expression/model_expr.hpp>
+#include <autoppl/distribution/dist_expr.hpp>
 
 namespace ppl {
 
 template <typename p_type>
-struct Bernoulli : public ModelExpr<Bernoulli<p_type>>
+struct Bernoulli : public DistExpr<Bernoulli<p_type>>
 {
     using value_t = int;
     using dist_value_t = double;

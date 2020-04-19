@@ -13,7 +13,7 @@ namespace ppl {
  * Mock var object for testing purposes.
  * Must meet some of the requirements of actual var types.
  */
-struct MockVar : public ModelExpr<MockVar>
+struct MockVar 
 {
     using value_t = double;
     using pointer_t = double*;
@@ -30,7 +30,7 @@ private:
  * Mock distribution object for testing purposes.
  * Must meet some of the requirements of actual distribution types.
  */
-struct MockDist : public ModelExpr<MockDist>
+struct MockDist
 {
     using value_t = double;
     using dist_value_t = double;
@@ -51,8 +51,8 @@ struct var_dist_fixture : ::testing::Test
 {
 protected:
     MockVar x;
-    using model_t = std::decay_t<decltype(x |= MockDist())>;
-    model_t model = (x |= MockDist());
+    using model_t = EqNode<MockVar, MockDist>;
+    model_t model = {x, MockDist()};
     double val;
 
     void reconfigure(double val)
@@ -144,6 +144,7 @@ struct many_var_dist_fixture : ::testing::Test
 protected:
     MockVar x, y, z, w;
     double xv, yv, zv, wv;
+    using 2model_t = 
 };
 
 TEST_F(many_var_dist_fixture, two_vars)

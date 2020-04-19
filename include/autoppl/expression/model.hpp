@@ -95,30 +95,4 @@ private:
     right_node_t right_node_;
 };
 
-/////////////////////////////////////////////////////////
-// Operator overloads
-/////////////////////////////////////////////////////////
-
-/*
- * Builds an EqNode to associate var with dist.
- * Ex. x |= uniform(0,1)
- */
-template <class VarType, class DistType>
-constexpr inline auto operator|=(const ModelExpr<VarType>& var,
-                                 const ModelExpr<DistType>& dist)
-{
-    return EqNode(var.self(), dist.self());
-}
-
-/*
- * Builds a GlueNode to "glue" the left expression with the right.
- * Ex. (x |= uniform(0,1), y |= uniform(0, 2))
- */
-template <class LHSNodeType, class RHSNodeType>
-constexpr inline auto operator,(const ModelExpr<LHSNodeType>& lhs,
-                                const ModelExpr<RHSNodeType>& rhs)
-{
-    return GlueNode(lhs.self(), rhs.self());
-}
-
 } // namespace ppl

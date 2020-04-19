@@ -3,12 +3,12 @@
 #include <cmath>
 #include <numeric>
 #include <random>
-#include <autoppl/expression/model_expr.hpp>
+#include <autoppl/distribution/dist_expr.hpp>
 
 namespace ppl {
 
 template <typename mean_type, typename var_type>
-struct Normal : public ModelExpr<Normal<mean_type, var_type>>
+struct Normal : public DistExpr<Normal<mean_type, var_type>>
 {
     using value_t = double;
     using dist_value_t = double;
