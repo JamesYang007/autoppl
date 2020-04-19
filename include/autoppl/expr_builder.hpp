@@ -17,11 +17,11 @@ namespace ppl {
 
 namespace details {
 
-using cont_param_raw_t = double;
+using cont_raw_param_t = double;
 template <class T>
-inline constexpr bool is_cont_dist_param_valid =
+inline constexpr bool is_cont_param_valid =
     is_var_expr_v<T> || 
-    std::is_convertible_v<T, cont_param_raw_t>;
+    std::is_convertible_v<T, cont_raw_param_t>;
 
 } // namespace details
 
@@ -35,8 +35,8 @@ template <class MinType, class MaxType>
 inline constexpr auto uniform(const MinType& min_expr,
                               const MaxType& max_expr)
 {
-    static_assert(details::is_cont_dist_param_valid<MinType>);
-    static_assert(details::is_cont_dist_param_valid<MaxType>);
+    static_assert(details::is_cont_param_valid<MinType>);
+    static_assert(details::is_cont_param_valid<MaxType>);
     return Uniform(min_expr, max_expr);
 }
 #else
@@ -52,9 +52,24 @@ template <class MeanType, class VarianceType>
 inline constexpr auto normal(const MeanType& min_expr,
                              const VarianceType& max_expr)
 {
-    static_assert(details::is_cont_dist_param_valid<MeanType>);
-    static_assert(details::is_cont_dist_param_valid<VarianceType>);
+    static_assert(details::is_cont_param_valid<MeanType>);
+    static_assert(details::is_cont_param_valid<VarianceType>);
     return Uniform(min_expr, max_expr);
+}
+#else
+#endif
+
+#ifndef AUTOPPL_USE_CONCEPTS
+/*
+ * Builds a Bernoulli expression only when the parameter
+ * is a valid discrete distribution parameter type.
+ * See var_expr.hpp for more information.
+ */
+template <class ProbType>
+inline constexpr auto bernoulli(const ProbType& p_expr)
+{
+    static_assert(details::is_cont_param_valid<ProbType>);
+    return Bernoulli(p_expr);
 }
 #else
 #endif
