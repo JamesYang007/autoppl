@@ -41,7 +41,7 @@ inline constexpr auto uniform(const MinType& min_expr,
 {
     static_assert(details::is_cont_param_valid<MinType>);
     static_assert(details::is_cont_param_valid<MaxType>);
-    return Uniform(min_expr, max_expr);
+    return dist::Uniform(min_expr, max_expr);
 }
 #else
 #endif
@@ -52,13 +52,13 @@ inline constexpr auto uniform(const MinType& min_expr,
  * are both valid continuous distribution parameter types.
  * See var_expr.hpp for more information.
  */
-template <class MeanType, class VarianceType>
-inline constexpr auto normal(const MeanType& min_expr,
-                             const VarianceType& max_expr)
+template <class MeanType, class StddevType>
+inline constexpr auto normal(const MeanType& mean_expr,
+                             const StddevType& stddev_expr)
 {
     static_assert(details::is_cont_param_valid<MeanType>);
-    static_assert(details::is_cont_param_valid<VarianceType>);
-    return Uniform(min_expr, max_expr);
+    static_assert(details::is_cont_param_valid<StddevType>);
+    return dist::Normal(mean_expr, stddev_expr);
 }
 #else
 #endif
@@ -73,7 +73,7 @@ template <class ProbType>
 inline constexpr auto bernoulli(const ProbType& p_expr)
 {
     static_assert(details::is_cont_param_valid<ProbType>);
-    return Bernoulli(p_expr);
+    return dist::Bernoulli(p_expr);
 }
 #else
 #endif
@@ -89,11 +89,11 @@ inline constexpr auto bernoulli(const ProbType& p_expr)
  * Ex. x |= uniform(0,1)
  */
 template <class T, class DistType>
-inline constexpr auto operator|=(const Variable<T>& var,
+inline constexpr auto operator|=(Variable<T>& var,
                                  const DistType& dist)
 {
     static_assert(dist::is_dist_expr_v<DistType>);
-    return EqNode(var, dist);
+    return expr::EqNode(var, dist);
 }
 #else
 #endif
@@ -110,7 +110,7 @@ inline constexpr auto operator,(const LHSNodeType& lhs,
 {
     static_assert(expr::is_model_expr_v<LHSNodeType>);
     static_assert(expr::is_model_expr_v<RHSNodeType>);
-    return GlueNode(lhs, rhs);
+    return expr::GlueNode(lhs, rhs);
 }
 #else
 #endif

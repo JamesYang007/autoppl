@@ -20,11 +20,19 @@ struct var_traits
     static_assert(std::is_convertible_v<VarType, value_t>);
 };
 
+// Specialization: when double or int, considered "trivial" variable.
+// TODO: this was a quick fix for generalizing distribution value_t.
+template <>
+struct var_traits<double>
+{
+    using value_t = double;
+};
+
 template <class DistType>
 struct dist_traits
 {
-    using value_t = typename DistType::value_t;
-    using dist_value_t = typename DistType::dist_value_t;
+    using value_t = typename DistType::value_t;             // generated value type
+    using dist_value_t = typename DistType::dist_value_t;   // pdf value type 
 };
 
 template <class NodeType>

@@ -19,10 +19,10 @@ protected:
 
 TEST_F(normal_dist_fixture, sanity_normal_test) {
     EXPECT_EQ(dist1.mean(), 0.0);
-    EXPECT_EQ(dist1.var(), 1.0);
+    EXPECT_EQ(dist1.stddev(), 1.0);
 
     EXPECT_EQ(dist2.mean(), 0.0);
-    EXPECT_EQ(dist2.var(), 1.0);
+    EXPECT_EQ(dist2.stddev(), 1.0);
 }
 
 TEST_F(normal_dist_fixture, simple_gaussian) {

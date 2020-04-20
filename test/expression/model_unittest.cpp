@@ -11,6 +11,14 @@ namespace expr {
 //////////////////////////////////////////////////////
 
 /*
+ * Mock state class for testing purposes.
+ */
+enum class MockState {
+    data,
+    parameter
+};
+
+/*
  * Mock var object for testing purposes.
  * Must meet some of the requirements of actual var types.
  */
@@ -18,13 +26,19 @@ struct MockVar
 {
     using value_t = double;
     using pointer_t = double*;
-    using state_t = void;
+    using state_t = MockState;
 
     void set_value(double val) { value_ = val; }  
-    double get_value() const { return value_; }  
+    value_t get_value() const { return value_; }  
+
+    void set_state(state_t state) { state_ = state; }
+    state_t get_state() const { return state_; }
+
+    operator value_t() { return value_; }
 
 private:
     double value_;
+    state_t state_ = state_t::parameter;
 };
 
 /*
@@ -146,27 +160,14 @@ protected:
     MockVar x, y, z, w;
     double xv, yv, zv, wv;
     using eq_t = EqNode<MockVar, MockDist>;
-};
 
-TEST_F(many_var_dist_fixture, two_vars)
-{
     using model_two_t = GlueNode<eq_t, eq_t>;
-    model_two_t model = {
+    model_two_t model_two = {
         {x, MockDist()},
         {y, MockDist()}
+
     };
 
-    xv = 0.2; yv = 1.8;
-
-    x.set_value(xv);
-    y.set_value(yv);
-
-    EXPECT_EQ(model.pdf(), xv * yv);
-    EXPECT_EQ(model.log_pdf(), std::log(xv) + std::log(yv));
-}
-
-TEST_F(many_var_dist_fixture, four_vars)
-{
     using model_four_t = 
         GlueNode<eq_t, 
             GlueNode<eq_t,
@@ -174,7 +175,7 @@ TEST_F(many_var_dist_fixture, four_vars)
             >
         >;
 
-    model_four_t model = {
+    model_four_t model_four = {
         {x, MockDist()},
         {
             {y, MockDist()},
@@ -184,7 +185,21 @@ TEST_F(many_var_dist_fixture, four_vars)
             }
         }
     };
+};
 
+TEST_F(many_var_dist_fixture, two_vars_pdf)
+{
+    xv = 0.2; yv = 1.8;
+
+    x.set_value(xv);
+    y.set_value(yv);
+
+    EXPECT_EQ(model_two.pdf(), xv * yv);
+    EXPECT_EQ(model_two.log_pdf(), std::log(xv) + std::log(yv));
+}
+
+TEST_F(many_var_dist_fixture, four_vars_pdf)
+{
     xv = 0.2; yv = 1.8; zv = 3.2; wv = 0.3;
 
     x.set_value(xv);
@@ -192,9 +207,32 @@ TEST_F(many_var_dist_fixture, four_vars)
     z.set_value(zv);
     w.set_value(wv);
 
-    EXPECT_EQ(model.pdf(), xv * yv * zv * wv);
-    EXPECT_EQ(model.log_pdf(), std::log(xv) + std::log(yv)
+    EXPECT_EQ(model_four.pdf(), xv * yv * zv * wv);
+    EXPECT_EQ(model_four.log_pdf(), std::log(xv) + std::log(yv)
                              + std::log(zv) + std::log(wv));
+}
+
+TEST_F(many_var_dist_fixture, four_vars_traverse_count_params)
+{
+    int count = 0;
+    z.set_state(MockState::data);
+    model_four.traverse([&](auto& model) {
+            using var_t = std::decay_t<decltype(model.get_variable())>;
+            using state_t = typename var_traits<var_t>::state_t;
+            count += (model.get_variable().get_state() == state_t::parameter);
+        });
+    EXPECT_EQ(count, 3);
+}
+
+TEST_F(many_var_dist_fixture, four_vars_traverse_pdf)
+{
+    double actual = 1.;
+    model_four.traverse([&](auto& model) {
+            auto& var = model.get_variable();
+            auto& dist = model.get_distribution();
+            actual *= dist.pdf(var);
+        });
+    EXPECT_EQ(actual, model_four.pdf());
 }
 
 } // namespace expr

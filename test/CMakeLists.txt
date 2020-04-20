@@ -36,3 +36,18 @@ if (AUTOPPL_ENABLE_TEST_COVERAGE)
 endif()
 target_link_libraries(distribution_unittest gtest_main pthread ${PROJECT_NAME})
 add_test(distribution_unittest distribution_unittest)
+
+######################################################
+# Algorithm Test
+######################################################
+
+add_executable(algorithm_unittest
+    ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/mh_unittest.cpp
+    )
+target_compile_options(algorithm_unittest PRIVATE -g -Wall -Werror -Wextra)
+target_include_directories(algorithm_unittest PRIVATE ${GTEST_DIR}/include)
+if (AUTOPPL_ENABLE_TEST_COVERAGE)
+    target_link_libraries(algorithm_unittest gcov)
+endif()
+target_link_libraries(algorithm_unittest gtest_main pthread ${PROJECT_NAME})
+add_test(algorithm_unittest algorithm_unittest)
