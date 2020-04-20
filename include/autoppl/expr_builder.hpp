@@ -1,12 +1,12 @@
 #pragma once
-#include <autoppl/expression/model_expr.hpp>
-#include <autoppl/expression/var_expr.hpp>
-#include <autoppl/expression/model.hpp>
-#include <autoppl/expression/variable.hpp>
-#include <autoppl/distribution/dist_expr.hpp>
-#include <autoppl/distribution/uniform.hpp>
-#include <autoppl/distribution/normal.hpp>
-#include <autoppl/distribution/bernoulli.hpp>
+#include <autoppl/util/traits.hpp>
+#include <autoppl/expression/model/model.hpp>
+#include <autoppl/expression/variable/variable_viewer.hpp>
+#include <autoppl/expression/variable/constant.hpp>
+#include <autoppl/variable.hpp>
+#include <autoppl/expression/distribution/uniform.hpp>
+#include <autoppl/expression/distribution/normal.hpp>
+#include <autoppl/expression/distribution/bernoulli.hpp>
 
 namespace ppl {
 
@@ -21,11 +21,51 @@ namespace ppl {
 
 namespace details {
 
-using cont_raw_param_t = double;
+/*
+ * Converter from arbitrary (decayed) type to valid continuous parameter type 
+ * by the following mapping:
+ * - is_var_v<T> true => VariableViewer<T>
+ * - T is same as cont_raw_param_t => Constant<T>
+ * - is_var_expr_v<T> true => T
+ * Assumes each condition is non-overlapping.
+ */
+template <class T, class = void>
+struct convert_to_cont_dist_param
+{};
+
 template <class T>
-inline constexpr bool is_cont_param_valid =
-    expr::is_var_expr_v<T> || 
-    std::is_convertible_v<T, cont_raw_param_t>;
+struct convert_to_cont_dist_param<T,
+    std::enable_if_t<util::is_var_v<std::decay_t<T>> && 
+                    !std::is_same_v<std::decay_t<T>, util::cont_raw_param_t> &&
+                    !util::is_var_expr_v<std::decay_t<T>>
+                    >>
+{
+    using type = expr::VariableViewer<std::decay_t<T>>;
+};
+
+template <class T>
+struct convert_to_cont_dist_param<T, 
+    std::enable_if_t<!util::is_var_v<std::decay_t<T>> && 
+                    std::is_same_v<std::decay_t<T>, util::cont_raw_param_t> &&
+                    !util::is_var_expr_v<std::decay_t<T>>
+                    >>
+{
+    using type = expr::Constant<std::decay_t<T>>;
+};
+
+template <class T>
+struct convert_to_cont_dist_param<T, 
+    std::enable_if_t<!util::is_var_v<std::decay_t<T>> && 
+                    !std::is_same_v<std::decay_t<T>, util::cont_raw_param_t> &&
+                    util::is_var_expr_v<std::decay_t<T>>
+                    >>
+{
+    using type = T;
+};
+
+template <class T>
+using convert_to_cont_dist_param_t = 
+    typename convert_to_cont_dist_param<T>::type;
 
 } // namespace details
 
@@ -36,12 +76,16 @@ inline constexpr bool is_cont_param_valid =
  * See var_expr.hpp for more information.
  */
 template <class MinType, class MaxType>
-inline constexpr auto uniform(const MinType& min_expr,
-                              const MaxType& max_expr)
+inline constexpr auto uniform(MinType&& min_expr,
+                              MaxType&& max_expr)
 {
-    static_assert(details::is_cont_param_valid<MinType>);
-    static_assert(details::is_cont_param_valid<MaxType>);
-    return dist::Uniform(min_expr, max_expr);
+    using min_t = details::convert_to_cont_dist_param_t<MinType>;
+    using max_t = details::convert_to_cont_dist_param_t<MaxType>;
+
+    min_t wrap_min_expr = std::forward<MinType>(min_expr);
+    max_t wrap_max_expr = std::forward<MaxType>(max_expr);
+
+    return expr::Uniform(wrap_min_expr, wrap_max_expr);
 }
 #else
 #endif
@@ -53,13 +97,18 @@ inline constexpr auto uniform(const MinType& min_expr,
  * See var_expr.hpp for more information.
  */
 template <class MeanType, class StddevType>
-inline constexpr auto normal(const MeanType& mean_expr,
-                             const StddevType& stddev_expr)
+inline constexpr auto normal(MeanType&& mean_expr,
+                             StddevType&& stddev_expr)
 {
-    static_assert(details::is_cont_param_valid<MeanType>);
-    static_assert(details::is_cont_param_valid<StddevType>);
-    return dist::Normal(mean_expr, stddev_expr);
+    using mean_t = details::convert_to_cont_dist_param_t<MeanType>;
+    using stddev_t = details::convert_to_cont_dist_param_t<StddevType>;
+
+    mean_t wrap_mean_expr = std::forward<MeanType>(mean_expr);
+    stddev_t wrap_stddev_expr = std::forward<StddevType>(stddev_expr);
+
+    return expr::Normal(wrap_mean_expr, wrap_stddev_expr);
 }
+
 #else
 #endif
 
@@ -72,8 +121,7 @@ inline constexpr auto normal(const MeanType& mean_expr,
 template <class ProbType>
 inline constexpr auto bernoulli(const ProbType& p_expr)
 {
-    static_assert(details::is_cont_param_valid<ProbType>);
-    return dist::Bernoulli(p_expr);
+    return expr::Bernoulli(p_expr);
 }
 #else
 #endif
@@ -90,11 +138,8 @@ inline constexpr auto bernoulli(const ProbType& p_expr)
  */
 template <class T, class DistType>
 inline constexpr auto operator|=(Variable<T>& var,
-                                 const DistType& dist)
-{
-    static_assert(dist::is_dist_expr_v<DistType>);
-    return expr::EqNode(var, dist);
-}
+                                 DistType&& dist)
+{ return expr::EqNode(var, std::forward<DistType>(dist)); }
 #else
 #endif
 
@@ -105,12 +150,11 @@ inline constexpr auto operator|=(Variable<T>& var,
  * Ex. (x |= uniform(0,1), y |= uniform(0, 2))
  */
 template <class LHSNodeType, class RHSNodeType>
-inline constexpr auto operator,(const LHSNodeType& lhs,
-                                const RHSNodeType& rhs)
-{
-    static_assert(expr::is_model_expr_v<LHSNodeType>);
-    static_assert(expr::is_model_expr_v<RHSNodeType>);
-    return expr::GlueNode(lhs, rhs);
+inline constexpr auto operator,(LHSNodeType&& lhs,
+                                RHSNodeType&& rhs)
+{ 
+    return expr::GlueNode(std::forward<LHSNodeType>(lhs), 
+                          std::forward<RHSNodeType>(rhs)); 
 }
 #else
 #endif

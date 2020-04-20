@@ -2,33 +2,26 @@
 #include <type_traits>
 #include <functional>
 #include <optional>
-#include <autoppl/util/traits.hpp>
-#include <autoppl/expression/model_expr.hpp>
+#include <autoppl/util/var_traits.hpp>
+#include <autoppl/util/dist_expr_traits.hpp>
+#include <autoppl/util/model_expr_traits.hpp>
 
 namespace ppl {
 namespace expr {
-namespace details {
-
-template <class Iter>
-struct IdentityVarFunctor
-{
-    using value_t = typename std::iterator_traits<Iter>::value_type;
-    value_t& operator()(value_t& var)
-    { return var; }
-};
-
-} // namespace details
 
 /*
  * This class represents a "node" in the model expression
  * that relates a var with a distribution.
  */
 template <class VarType, class DistType>
-struct EqNode : public ModelExpr<EqNode<VarType, DistType>>
+struct EqNode
 {
+    static_assert(util::is_var_v<VarType>);
+    static_assert(util::is_dist_expr_v<DistType>);
+
     using var_t = VarType;
     using dist_t = DistType;
-    using dist_value_t = typename dist_traits<dist_t>::dist_value_t;
+    using dist_value_t = typename util::dist_expr_traits<dist_t>::dist_value_t;
 
     EqNode(var_t& var, 
            const dist_t& dist) noexcept
@@ -77,13 +70,16 @@ private:
  * "glues" two sub-model expressions.
  */
 template <class LHSNodeType, class RHSNodeType>
-struct GlueNode : public ModelExpr<GlueNode<LHSNodeType, RHSNodeType>>
+struct GlueNode
 {
+    static_assert(util::is_model_expr_v<LHSNodeType>);
+    static_assert(util::is_model_expr_v<RHSNodeType>);
+
     using left_node_t = LHSNodeType;
     using right_node_t = RHSNodeType;
     using dist_value_t = std::common_type_t<
-        typename node_traits<left_node_t>::dist_value_t,
-        typename node_traits<right_node_t>::dist_value_t
+        typename util::model_expr_traits<left_node_t>::dist_value_t,
+        typename util::model_expr_traits<right_node_t>::dist_value_t
             >;
 
     GlueNode(const left_node_t& lhs,

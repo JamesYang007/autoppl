@@ -1,22 +1,23 @@
 #pragma once
 #include <cassert>
 #include <random>
-#include <cmath>
-#include <numeric>
-#include <autoppl/util/traits.hpp>
-#include <autoppl/distribution/dist_expr.hpp>
-#include <autoppl/distribution/density.hpp>
+#include <autoppl/util/var_expr_traits.hpp>
+#include <autoppl/util/dist_expr_traits.hpp>
+#include <autoppl/expression/distribution/density.hpp>
 
 namespace ppl {
-namespace dist {
+namespace expr {
 
 template <typename mean_type, typename stddev_type>
-struct Normal : public DistExpr<Normal<mean_type, stddev_type>>
+struct Normal
 {
-    using value_t = double;
+    static_assert(util::is_var_expr_v<mean_type>);
+    static_assert(util::is_var_expr_v<stddev_type>);
+
+    using value_t = util::cont_raw_param_t;
     using param_value_t = std::common_type_t<
-        typename var_traits<mean_type>::value_t,
-        typename var_traits<stddev_type>::value_t
+        typename util::var_expr_traits<mean_type>::value_t,
+        typename util::var_expr_traits<stddev_type>::value_t
             >;
     using dist_value_t = typename NormalBase::dist_value_t;
 
@@ -45,5 +46,5 @@ private:
     stddev_type stddev_;
 };
 
-} // namespace dist
+} // namespace expr
 } // namespace ppl

@@ -1,20 +1,20 @@
 #pragma once
 #include <cassert>
 #include <random>
-#include <cmath>
-#include <numeric>
-#include <autoppl/util/traits.hpp>
-#include <autoppl/distribution/dist_expr.hpp>
-#include <autoppl/distribution/density.hpp>
+#include <autoppl/util/var_expr_traits.hpp>
+#include <autoppl/util/dist_expr_traits.hpp>
+#include <autoppl/expression/distribution/density.hpp>
 
 namespace ppl {
-namespace dist {
+namespace expr {
 
 template <typename p_type>
-struct Bernoulli : public DistExpr<Bernoulli<p_type>>
+struct Bernoulli
 {
-    using value_t = uint8_t;
-    using param_value_t = typename var_traits<p_type>::value_t;
+    static_assert(util::is_var_expr_v<p_type>);
+
+    using value_t = util::disc_raw_param_t;
+    using param_value_t = typename util::var_expr_traits<p_type>::value_t;
     using dist_value_t = typename BernoulliBase::dist_value_t;
 
     Bernoulli(p_type p)
@@ -39,5 +39,5 @@ private:
     p_type p_;
 };
 
-} // namespace dist
+} // namespace expr
 } // namespace ppl

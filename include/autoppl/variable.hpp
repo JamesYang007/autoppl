@@ -1,5 +1,6 @@
 #pragma once
-#include <autoppl/expression/var_expr.hpp>
+#include <autoppl/util/var_traits.hpp>
+#include <autoppl/util/dist_expr_traits.hpp>
 
 namespace ppl {
 
@@ -19,7 +20,7 @@ enum class var_state : bool {
  * a model expression and the users, who must supply storage of values associated with this var.
  */
 template <class ValueType>
-struct Variable : public expr::VarExpr<Variable<ValueType>>
+struct Variable
 {
     using value_t = ValueType;
     using pointer_t = value_t*;
@@ -77,7 +78,7 @@ private:
 };
 
 // Useful aliases
-using cont_var = Variable<double>; // continuous RV var
-using disc_var = Variable<int>;    // discrete RV var
+using cont_var = Variable<util::cont_raw_param_t>; // continuous RV var
+using disc_var = Variable<util::disc_raw_param_t>; // discrete RV var
 
 } // namespace ppl
