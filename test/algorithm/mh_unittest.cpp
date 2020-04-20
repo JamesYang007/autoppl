@@ -7,18 +7,6 @@
 
 namespace ppl {
 
-TEST(mh_unittest, plot_hist_sanity)
-{
-    static constexpr size_t sample_size = 20000;
-    std::array<double, sample_size> storage = {0.};
-    std::normal_distribution normal_sampler(0., 1.);
-    std::mt19937 gen;
-    for (size_t i = 0; i < sample_size; ++i) {
-        storage[i] = normal_sampler(gen);
-    }
-    plot_hist(storage);
-}
-
 /*
  * Fixture for Metropolis-Hastings 
  */
@@ -48,7 +36,7 @@ TEST_F(mh_fixture, sample_std_normal)
     auto model = (theta |= normal(0., 1.));
     mh_posterior(model, sample_size);
     plot_hist(storage);
-    EXPECT_NEAR(sample_average(1000), 0., 0.01);
+    EXPECT_NEAR(sample_average(1000), 0., 0.1);
 }
 
 TEST_F(mh_fixture, sample_uniform)
@@ -56,7 +44,7 @@ TEST_F(mh_fixture, sample_uniform)
     auto model = (theta |= uniform(0., 1.));
     mh_posterior(model, sample_size);
     plot_hist(storage, 0.05, 0., 1.);
-    EXPECT_NEAR(sample_average(1000), 0.5, 0.01);
+    EXPECT_NEAR(sample_average(1000), 0.5, 0.1);
 }
 
 TEST_F(mh_fixture, sample_unif_normal_posterior)
@@ -68,7 +56,7 @@ TEST_F(mh_fixture, sample_unif_normal_posterior)
     );
     mh_posterior(model, sample_size);
     plot_hist(storage);
-    EXPECT_NEAR(sample_average(1000), 3.0, 0.01);
+    EXPECT_NEAR(sample_average(1000), 3.0, 0.1);
 }
 
 } // namespace ppl

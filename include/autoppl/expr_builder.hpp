@@ -117,6 +117,7 @@ inline constexpr auto normal(MeanType&& mean_expr,
  * Builds a Bernoulli expression only when the parameter
  * is a valid discrete distribution parameter type.
  * See var_expr.hpp for more information.
+ * TODO: generalize as done with uniform and normal
  */
 template <class ProbType>
 inline constexpr auto bernoulli(const ProbType& p_expr)
