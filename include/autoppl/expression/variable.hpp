@@ -28,21 +28,22 @@ struct Variable : public expr::VarExpr<Variable<ValueType>>
 
     // constructors
     Variable(value_t value, 
-           pointer_t storage_ptr) noexcept
+             pointer_t storage_ptr,
+             state_t state) noexcept
         : value_{value}
         , storage_ptr_{storage_ptr}
-        , state_{state_t::parameter}
+        , state_{state}
     {}
 
     Variable(pointer_t storage_ptr) noexcept
-        : Variable(0, storage_ptr)
+        : Variable(0, storage_ptr, state_t::parameter)
     {}
 
     Variable(value_t value) noexcept
-        : Variable(value, nullptr) {}
+        : Variable(value, nullptr, state_t::data) {}
 
     Variable() noexcept
-        : Variable(0, nullptr)
+        : Variable(0, nullptr, state_t::parameter)
     {}
 
     void set_value(value_t value) { value_ = value; }
