@@ -1,4 +1,5 @@
 #pragma once
+#include <ctime>
 #include <random>
 #include <algorithm>
 #include <vector>
@@ -36,7 +37,7 @@ template <class ModelType>
 inline void mh_posterior(ModelType& model,
                          double n_sample,
                          double stddev = 1.0,
-                         double seed = 0
+                         double seed = std::time(0)
                          )
 {
     using data_t = details::MHData;
