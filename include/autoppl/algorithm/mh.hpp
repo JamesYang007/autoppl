@@ -1,5 +1,5 @@
 #pragma once
-#include <ctime>
+#include <chrono>
 #include <random>
 #include <algorithm>
 #include <vector>
@@ -37,8 +37,11 @@ template <class ModelType>
 inline void mh_posterior(ModelType& model,
                          double n_sample,
                          double stddev = 1.0,
-                         double seed = std::time(0)
-                         )
+                         double seed = std::chrono::duration_cast<
+                                        std::chrono::milliseconds>(
+                                            std::chrono::system_clock::now().time_since_epoch()
+                                            ).count()
+                        )
 {
     using data_t = details::MHData;
     
