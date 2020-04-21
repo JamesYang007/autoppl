@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <autoppl/util/traits.hpp>
 #include <autoppl/expression/var_expr.hpp>
+#include <autoppl/expression/variable.hpp>
 
 namespace ppl {
 
@@ -10,8 +11,8 @@ template <class LHSValueType, class RHSValueType, class BinaryOp>
 struct BinaryOpNode 
 {
 	using binop_result_t = std::common_type_t<
-		typename node_traits<left_node_t>::binop_result_t,
-		typename node_traits<right_node_t>::binop_result_t
+		typename node_traits<LHSValueType>::binop_result_t,
+		typename node_traits<RHSValueType>::binop_result_t
 			>;
 
 	BinaryOpNode(Variable<LHSValueType> lhs, Variable<RHSValueType> rhs)
@@ -29,44 +30,27 @@ private:
 	Variable<LHSValueType> lhs_;
 	Variable<RHSValueType> rhs_;
 
-}
+};
 
-template <class LHSValueType, class RHSValueType>
-BinaryOpNode BinaryOp::operator+(
-	const Variable<LHSValueType>& lhs,
-	const Variable<RHSValueType>& rhs)
-{
-	return BinaryOpNode<Variable<LHSValueType>, Variable<RHSValueType>, AddOp>(lhs, rhs);
-}
-
-template <class LHSValueType, class RHSValueType>
-BinaryOpNode BinaryOp::operator*(
-	const Variable<LHSValueType>& lhs,
-	const Variable<RHSValueType>& rhs)
-{
-	return BinaryOpNode<Variable<LHSValueType>, Variable<RHSValueType>, MultOp>(lhs, rhs);
-}
 
 template <class LHSValueType, class RHSValueType>
 struct BinaryOp {
 	
-	using left_node_t = LHSValueType;
-	using right_node_t = RHSValueType;
 	using binop_result_t = std::common_type_t<
-		typename node_traits<left_node_t>::binop_result_t,
-		typename node_traits<right_node_t>::binop_result_t
+		typename node_traits<LHSValueType>::binop_result_t,
+		typename node_traits<RHSValueType>::binop_result_t
 			>;
 
-	binop_result_t BinaryOp::evaluate();
+	binop_result_t evaluate();
 
-}
+};
 
 template <class LHSValueType, class RHSValueType>
-struct AddOp : BinaryOp {
+struct AddOp : BinaryOp<LHSValueType, RHSValueType> {
 	
 	using binop_result_t = std::common_type_t<
-		typename node_traits<left_node_t>::binop_result_t,
-		typename node_traits<right_node_t>::binop_result_t
+		typename node_traits<LHSValueType>::binop_result_t,
+		typename node_traits<RHSValueType>::binop_result_t
 			>;
 
 	static binop_result_t evaluate(LHSValueType x, RHSValueType y)
@@ -74,14 +58,14 @@ struct AddOp : BinaryOp {
 		return x + y;
 	}
 
-}
+};
 
 template <class LHSValueType, class RHSValueType>
-struct MultOp : BinaryOp {
+struct MultOp : BinaryOp<LHSValueType, RHSValueType> {
 	
 	using binop_result_t = std::common_type_t<
-		typename node_traits<left_node_t>::binop_result_t,
-		typename node_traits<right_node_t>::binop_result_t
+		typename node_traits<LHSValueType>::binop_result_t,
+		typename node_traits<RHSValueType>::binop_result_t
 			>;
 
 	static binop_result_t evaluate(LHSValueType x, RHSValueType y)
@@ -89,8 +73,23 @@ struct MultOp : BinaryOp {
 		return x * y;
 	}
 
+};
+
+template <class LHSValueType, class RHSValueType>
+inline constexpr auto operator+(
+	const Variable<LHSValueType>& lhs,
+	const Variable<RHSValueType>& rhs)
+{
+	return BinaryOpNode<Variable<LHSValueType>, Variable<RHSValueType>, AddOp<LHSValueType, RHSValueType> >(lhs, rhs);
 }
 
+template <class LHSValueType, class RHSValueType>
+inline constexpr auto operator*(
+	const Variable<LHSValueType>& lhs,
+	const Variable<RHSValueType>& rhs)
+{
+	return BinaryOpNode<Variable<LHSValueType>, Variable<RHSValueType>, MultOp<LHSValueType, RHSValueType> >(lhs, rhs);
+}
 
 #ifdef AUTOPPL_USE_CONCEPTS
 #endif
