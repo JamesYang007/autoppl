@@ -24,6 +24,13 @@ inline constexpr bool is_model_expr_v =
     has_func_log_pdf_v<const T>
     ;
 
+template <class T>
+inline constexpr bool assert_is_model_expr_v = 
+    assert_has_type_dist_value_t_v<T> &&
+    assert_has_func_pdf_v<const T> &&
+    assert_has_func_log_pdf_v<const T>
+    ;
+
 // TODO: not used currently
 template <class T>
 inline constexpr bool is_eq_node_expr_v =

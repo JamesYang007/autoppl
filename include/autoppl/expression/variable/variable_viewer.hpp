@@ -12,7 +12,7 @@ namespace expr {
 template <class VariableType>
 struct VariableViewer
 {
-    static_assert(util::is_var_v<VariableType>);
+    static_assert(util::assert_is_var_v<VariableType>);
 
     using var_t = VariableType;
     using value_t = typename util::var_traits<var_t>::value_t;

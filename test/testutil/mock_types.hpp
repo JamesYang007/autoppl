@@ -46,6 +46,7 @@ struct MockVar_no_convertible
 {
     using value_t = double;
     using pointer_t = double*;
+    using const_pointer_t = const double*;
     using state_t = void;
 };
 

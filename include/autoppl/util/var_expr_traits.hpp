@@ -25,10 +25,7 @@ struct var_expr_traits<double>
 };
 
 /*
- * A variable expression is any class that the following:
- * - is_var_v<T> must be false
- * - var_expr_traits must be well-defined for T
- * - T must be explicitly convertible to its value_t
+ * A variable expression is any class that satisfies the following concept.
  */
 template <class T>
 inline constexpr bool is_var_expr_v = 
@@ -36,6 +33,23 @@ inline constexpr bool is_var_expr_v =
     has_type_value_t_v<T> &&
     has_func_get_value_v<const T> &&
     is_explicitly_convertible_v<const T, get_type_value_t_t<T>>
+    ;
+
+namespace details {
+
+// Tool needed to assert 
+template <class T>
+inline constexpr bool is_not_var_v = !is_var_v<T>;
+DEFINE_ASSERT_ONE_PARAM(is_not_var_v);
+
+} // namespace details 
+
+template <class T>
+inline constexpr bool assert_is_var_expr_v = 
+    details::assert_is_not_var_v<T> &&
+    assert_has_type_value_t_v<T> &&
+    assert_has_func_get_value_v<const T> &&
+    assert_is_explicitly_convertible_v<const T, get_type_value_t_t<T>>
     ;
 
 } // namespace util

@@ -10,8 +10,8 @@ namespace expr {
 template <typename min_type, typename max_type>
 struct Uniform
 {
-    static_assert(util::is_var_expr_v<min_type>);
-    static_assert(util::is_var_expr_v<max_type>);
+    static_assert(util::assert_is_var_expr_v<min_type>);
+    static_assert(util::assert_is_var_expr_v<max_type>);
 
     using value_t = util::cont_param_t;
     using param_value_t = std::common_type_t<

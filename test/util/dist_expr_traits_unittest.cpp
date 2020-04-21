@@ -12,7 +12,7 @@ protected:
 
 TEST_F(dist_expr_traits_fixture, is_dist_expr_v_true)
 {
-    static_assert(is_dist_expr_v<MockDistExpr>);
+    static_assert(assert_is_dist_expr_v<MockDistExpr>);
 }
 
 TEST_F(dist_expr_traits_fixture, is_dist_expr_v_false)

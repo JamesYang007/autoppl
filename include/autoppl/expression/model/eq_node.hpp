@@ -14,8 +14,8 @@ namespace expr {
 template <class VarType, class DistType>
 struct EqNode
 {
-    static_assert(util::is_var_v<VarType>);
-    static_assert(util::is_dist_expr_v<DistType>);
+    static_assert(util::assert_is_var_v<VarType>);
+    static_assert(util::assert_is_dist_expr_v<DistType>);
 
     using var_t = VarType;
     using dist_t = DistType;

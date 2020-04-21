@@ -13,8 +13,8 @@ namespace expr {
 template <class LHSNodeType, class RHSNodeType>
 struct GlueNode
 {
-    static_assert(util::is_model_expr_v<LHSNodeType>);
-    static_assert(util::is_model_expr_v<RHSNodeType>);
+    static_assert(util::assert_is_model_expr_v<LHSNodeType>);
+    static_assert(util::assert_is_model_expr_v<RHSNodeType>);
 
     using left_node_t = LHSNodeType;
     using right_node_t = RHSNodeType;

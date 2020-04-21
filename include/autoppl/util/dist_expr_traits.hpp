@@ -36,10 +36,7 @@ struct dist_expr_traits
 };
 
 /*
- * A distribution expression is any class that the following:
- * - dist_expr_traits must be well-defined for T
- * - T must have member function pdf
- * - T must have member function log_pdf
+ * A distribution expression is any class that satisfies the following concept:
  */
 template <class T>
 inline constexpr bool is_dist_expr_v = 
@@ -47,6 +44,14 @@ inline constexpr bool is_dist_expr_v =
     has_type_dist_value_t_v<T> &&
     has_func_pdf_v<const T> &&
     has_func_log_pdf_v<const T>
+    ;
+
+template <class T>
+inline constexpr bool assert_is_dist_expr_v = 
+    assert_has_type_value_t_v<T> &&
+    assert_has_type_dist_value_t_v<T> &&
+    assert_has_func_pdf_v<const T> &&
+    assert_has_func_log_pdf_v<const T>
     ;
 
 } // namespace util

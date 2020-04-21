@@ -12,7 +12,7 @@ protected:
 
 TEST_F(var_expr_traits_fixture, is_var_expr_v_true)
 {
-    static_assert(is_var_expr_v<MockVarExpr>);
+    static_assert(assert_is_var_expr_v<MockVarExpr>);
 }
 
 TEST_F(var_expr_traits_fixture, is_var_expr_v_false)
