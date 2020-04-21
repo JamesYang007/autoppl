@@ -54,7 +54,7 @@ add_executable(dist_expr_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/density_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/normal_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/uniform_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/distribution/discrete_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/discrete_unittest.cpp
     )
 target_compile_options(dist_expr_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(dist_expr_unittest PRIVATE
