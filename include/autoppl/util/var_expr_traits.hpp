@@ -33,6 +33,7 @@ template <class T>
 inline constexpr bool is_var_expr_v = 
     !is_var_v<T> &&
     has_type_value_t_v<T> &&
+    has_func_get_value_v<const T> &&
     std::is_convertible_v<const T, get_type_value_t_t<T>>
     ;
 
