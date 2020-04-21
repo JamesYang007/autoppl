@@ -28,6 +28,8 @@ add_executable(distribution_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/distribution/uniform_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/distribution/normal_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/distribution/bernoulli_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/distribution/discrete_unittest.cpp
+
     )
 target_compile_options(distribution_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(distribution_unittest PRIVATE ${GTEST_DIR}/include)
