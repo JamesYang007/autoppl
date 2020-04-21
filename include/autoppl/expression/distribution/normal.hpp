@@ -14,7 +14,7 @@ struct Normal
     static_assert(util::is_var_expr_v<mean_type>);
     static_assert(util::is_var_expr_v<stddev_type>);
 
-    using value_t = util::cont_raw_param_t;
+    using value_t = util::cont_param_t;
     using param_value_t = std::common_type_t<
         typename util::var_expr_traits<mean_type>::value_t,
         typename util::var_expr_traits<stddev_type>::value_t

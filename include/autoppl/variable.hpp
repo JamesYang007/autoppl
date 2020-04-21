@@ -78,7 +78,7 @@ private:
 };
 
 // Useful aliases
-using cont_var = Variable<util::cont_raw_param_t>; // continuous RV var
-using disc_var = Variable<util::disc_raw_param_t>; // discrete RV var
+using cont_var = Variable<util::cont_param_t>; // continuous RV var
+using disc_var = Variable<util::disc_param_t>; // discrete RV var
 
 } // namespace ppl

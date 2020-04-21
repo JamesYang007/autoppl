@@ -26,7 +26,7 @@ namespace details {
  * Converter from arbitrary (decayed) type to valid continuous parameter type 
  * by the following mapping:
  * - is_var_v<T> true => VariableViewer<T>
- * - T is same as cont_raw_param_t => Constant<T>
+ * - T is same as cont_param_t => Constant<T>
  * - is_var_expr_v<T> true => T
  * Assumes each condition is non-overlapping.
  */
@@ -37,7 +37,7 @@ struct convert_to_cont_dist_param
 template <class T>
 struct convert_to_cont_dist_param<T,
     std::enable_if_t<util::is_var_v<std::decay_t<T>> && 
-                    !std::is_same_v<std::decay_t<T>, util::cont_raw_param_t> &&
+                    !std::is_same_v<std::decay_t<T>, util::cont_param_t> &&
                     !util::is_var_expr_v<std::decay_t<T>>
                     >>
 {
@@ -47,7 +47,7 @@ struct convert_to_cont_dist_param<T,
 template <class T>
 struct convert_to_cont_dist_param<T, 
     std::enable_if_t<!util::is_var_v<std::decay_t<T>> && 
-                    std::is_same_v<std::decay_t<T>, util::cont_raw_param_t> &&
+                    std::is_same_v<std::decay_t<T>, util::cont_param_t> &&
                     !util::is_var_expr_v<std::decay_t<T>>
                     >>
 {
@@ -57,7 +57,7 @@ struct convert_to_cont_dist_param<T,
 template <class T>
 struct convert_to_cont_dist_param<T, 
     std::enable_if_t<!util::is_var_v<std::decay_t<T>> && 
-                    !std::is_same_v<std::decay_t<T>, util::cont_raw_param_t> &&
+                    !std::is_same_v<std::decay_t<T>, util::cont_param_t> &&
                     util::is_var_expr_v<std::decay_t<T>>
                     >>
 {

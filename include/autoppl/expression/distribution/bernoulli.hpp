@@ -13,7 +13,7 @@ struct Bernoulli
 {
     static_assert(util::is_var_expr_v<p_type>);
 
-    using value_t = util::disc_raw_param_t;
+    using value_t = util::disc_param_t;
     using param_value_t = typename util::var_expr_traits<p_type>::value_t;
     using dist_value_t = typename BernoulliBase::dist_value_t;
 

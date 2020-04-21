@@ -14,7 +14,7 @@ struct Uniform
     static_assert(util::is_var_expr_v<min_type>);
     static_assert(util::is_var_expr_v<max_type>);
 
-    using value_t = util::cont_raw_param_t;
+    using value_t = util::cont_param_t;
     using param_value_t = std::common_type_t<
         typename util::var_expr_traits<min_type>::value_t,
         typename util::var_expr_traits<max_type>::value_t
