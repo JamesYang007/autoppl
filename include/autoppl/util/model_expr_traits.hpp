@@ -32,12 +32,5 @@ inline constexpr bool is_eq_node_expr_v =
     has_func_get_distribution_v<T>
     ;   
 
-#ifdef AUTOPPL_USE_CONCEPTS
-// TODO: definition should be extended with a stronger
-// restriction on T with interface checking.
-template <class T>
-concept model_expressable = is_model_expr_v<T>; 
-#endif
-
 } // namespace util
 } // namespace ppl

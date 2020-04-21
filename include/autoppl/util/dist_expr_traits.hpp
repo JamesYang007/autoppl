@@ -16,12 +16,12 @@ namespace util {
 /*
  * Continuous distribution expressions can be constructed with this type.
  */
-using cont_raw_param_t = double;
+using cont_param_t = double;
 
 /*
  * Discrete distribution expressions can be constructed with this type.
  */
-using disc_raw_param_t = int64_t;
+using disc_param_t = int64_t;
 
 /*
  * Traits for Distribution Expression classes.
@@ -48,13 +48,6 @@ inline constexpr bool is_dist_expr_v =
     has_func_pdf_v<const T> &&
     has_func_log_pdf_v<const T>
     ;
-
-#ifdef AUTOPPL_USE_CONCEPTS
-// TODO: definition should be extended with a stronger
-// restriction on T with interface checking.
-template <class T>
-concept dist_expressable = is_dist_expr_v<T>; 
-#endif
 
 } // namespace util
 } // namespace ppl
