@@ -3,7 +3,6 @@
 #include <random>
 #include <autoppl/util/var_expr_traits.hpp>
 #include <autoppl/util/dist_expr_traits.hpp>
-#include <autoppl/expression/distribution/base.hpp>
 
 namespace ppl {
 namespace expr {
@@ -19,7 +18,7 @@ struct Normal
         typename util::var_expr_traits<mean_type>::value_t,
         typename util::var_expr_traits<stddev_type>::value_t
             >;
-    using dist_value_t = typename NormalBase::dist_value_t;
+    using dist_value_t = double;
 
     Normal(mean_type mean, stddev_type stddev)
         : mean_{mean}, stddev_{stddev} {
@@ -33,10 +32,16 @@ struct Normal
     }
 
     dist_value_t pdf(value_t x) const 
-    { return NormalBase::pdf(x, mean(), stddev()); }
+    {
+        dist_value_t z_score = (x - mean()) / stddev();
+        return std::exp(- 0.5 * z_score * z_score) / (stddev() * std::sqrt(2 * M_PI));
+    }
 
     dist_value_t log_pdf(value_t x) const 
-    { return NormalBase::log_pdf(x, mean(), stddev()); }
+    {
+        dist_value_t z_score = (x - mean()) / stddev();
+        return -0.5 * ((z_score * z_score) + std::log(stddev() * stddev() * 2 * M_PI));
+    }
 
     param_value_t mean() const { return static_cast<param_value_t>(mean_);}
     param_value_t stddev() const { return static_cast<param_value_t>(stddev_);}

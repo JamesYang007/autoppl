@@ -12,8 +12,8 @@ struct uniform_fixture : ::testing::Test {
 protected:
     using value_t = typename MockVarExpr::value_t;
     static constexpr size_t sample_size = 1000;
-    double min = 0.1;
-    double max = 0.8;
+    double min = -2.3;
+    double max = 2.7;
     MockVarExpr x{min};
     MockVarExpr y{max};
     using unif_t = Uniform<MockVarExpr, MockVarExpr>;
@@ -31,26 +31,46 @@ TEST_F(uniform_fixture, uniform_check_params) {
     EXPECT_DOUBLE_EQ(unif.max(), static_cast<value_t>(y));
 }
 
-TEST_F(uniform_fixture, uniform_pdf_delegate) {
-    EXPECT_DOUBLE_EQ(unif.pdf(-10.664), UniformBase::pdf(-10.664, min, max));
-    EXPECT_DOUBLE_EQ(unif.pdf(-7.324), UniformBase::pdf(-7.324, min, max));
-    EXPECT_DOUBLE_EQ(unif.pdf(-3.241), UniformBase::pdf(-3.241, min, max));
-    EXPECT_DOUBLE_EQ(unif.pdf(-0.359288), UniformBase::pdf(-0.359288, min, max));
-    EXPECT_DOUBLE_EQ(unif.pdf(0.12314), UniformBase::pdf(0.12314, min, max));
-    EXPECT_DOUBLE_EQ(unif.pdf(3.145), UniformBase::pdf(3.145, min, max));
-    EXPECT_DOUBLE_EQ(unif.pdf(6.000923), UniformBase::pdf(6.000923, min, max));
-    EXPECT_DOUBLE_EQ(unif.pdf(16.423), UniformBase::pdf(16.423, min, max));
+TEST_F(uniform_fixture, uniform_pdf_in_range)
+{
+    EXPECT_DOUBLE_EQ(unif.pdf(-2.2999999999), 0.2);
+    EXPECT_DOUBLE_EQ(unif.pdf(-2.), 0.2);
+    EXPECT_DOUBLE_EQ(unif.pdf(-1.423), 0.2);
+    EXPECT_DOUBLE_EQ(unif.pdf(0.), 0.2);
+    EXPECT_DOUBLE_EQ(unif.pdf(1.31), 0.2);
+    EXPECT_DOUBLE_EQ(unif.pdf(2.41), 0.2);
+    EXPECT_DOUBLE_EQ(unif.pdf(2.69999999999), 0.2);
 }
 
-TEST_F(uniform_fixture, uniform_log_pdf_delegate) {
-    EXPECT_DOUBLE_EQ(unif.log_pdf(-10.664), UniformBase::log_pdf(-10.664, min, max));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(-7.324), UniformBase::log_pdf(-7.324, min, max));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(-3.241), UniformBase::log_pdf(-3.241, min, max));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(-0.359288), UniformBase::log_pdf(-0.359288, min, max));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(0.12314), UniformBase::log_pdf(0.12314, min, max));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(3.145), UniformBase::log_pdf(3.145, min, max));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(6.000923), UniformBase::log_pdf(6.000923, min, max));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(16.423), UniformBase::log_pdf(16.423, min, max));
+TEST_F(uniform_fixture, uniform_pdf_out_of_range)
+{
+    EXPECT_DOUBLE_EQ(unif.pdf(-100), 0.);
+    EXPECT_DOUBLE_EQ(unif.pdf(-3.41), 0.);
+    EXPECT_DOUBLE_EQ(unif.pdf(-2.3), 0.);
+    EXPECT_DOUBLE_EQ(unif.pdf(2.7), 0.);
+    EXPECT_DOUBLE_EQ(unif.pdf(3.5), 0.);
+    EXPECT_DOUBLE_EQ(unif.pdf(3214), 0.);
+}
+
+TEST_F(uniform_fixture, uniform_log_pdf_in_range)
+{
+    EXPECT_DOUBLE_EQ(unif.log_pdf(-2.2999999999), std::log(0.2));
+    EXPECT_DOUBLE_EQ(unif.log_pdf(-2.), std::log(0.2));
+    EXPECT_DOUBLE_EQ(unif.log_pdf(-1.423), std::log(0.2));
+    EXPECT_DOUBLE_EQ(unif.log_pdf(0.), std::log(0.2));
+    EXPECT_DOUBLE_EQ(unif.log_pdf(1.31), std::log(0.2));
+    EXPECT_DOUBLE_EQ(unif.log_pdf(2.41), std::log(0.2));
+    EXPECT_DOUBLE_EQ(unif.log_pdf(2.69999999999), std::log(0.2));
+}
+
+TEST_F(uniform_fixture, uniform_log_pdf_out_of_range)
+{
+    EXPECT_DOUBLE_EQ(unif.log_pdf(-100), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(unif.log_pdf(-3.41), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(unif.log_pdf(-2.3), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(unif.log_pdf(2.7), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(unif.log_pdf(3.5), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(unif.log_pdf(3214), std::numeric_limits<double>::lowest());
 }
 
 TEST_F(uniform_fixture, uniform_sample) {
