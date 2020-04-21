@@ -49,12 +49,5 @@ inline constexpr bool is_dist_expr_v =
     has_func_log_pdf_v<const T>
     ;
 
-#ifdef AUTOPPL_USE_CONCEPTS
-// TODO: definition should be extended with a stronger
-// restriction on T with interface checking.
-template <class T>
-concept dist_expressable = is_dist_expr_v<T>; 
-#endif
-
 } // namespace util
 } // namespace ppl

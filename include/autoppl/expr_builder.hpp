@@ -70,7 +70,6 @@ using convert_to_cont_dist_param_t =
 
 } // namespace details
 
-#ifndef AUTOPPL_USE_CONCEPTS
 /*
  * Builds a Uniform expression only when the parameters
  * are both valid continuous distribution parameter types.
@@ -88,10 +87,7 @@ inline constexpr auto uniform(MinType&& min_expr,
 
     return expr::Uniform(wrap_min_expr, wrap_max_expr);
 }
-#else
-#endif
 
-#ifndef AUTOPPL_USE_CONCEPTS
 /*
  * Builds a Normal expression only when the parameters
  * are both valid continuous distribution parameter types.
@@ -110,10 +106,6 @@ inline constexpr auto normal(MeanType&& mean_expr,
     return expr::Normal(wrap_mean_expr, wrap_stddev_expr);
 }
 
-#else
-#endif
-
-#ifndef AUTOPPL_USE_CONCEPTS
 /*
  * Builds a Bernoulli expression only when the parameter
  * is a valid discrete distribution parameter type.
@@ -125,14 +117,11 @@ inline constexpr auto bernoulli(const ProbType& p_expr)
 {
     return expr::Bernoulli(p_expr);
 }
-#else
-#endif
 
 ////////////////////////////////////////////////////////
 // Model Expression Builder
 ////////////////////////////////////////////////////////
 
-#ifndef AUTOPPL_USE_CONCEPTS
 /*
  * Builds an EqNode to associate var with dist
  * only when var is a Variable and dist is a valid distribution expression.
@@ -142,10 +131,7 @@ template <class T, class DistType>
 inline constexpr auto operator|=(Variable<T>& var,
                                  DistType&& dist)
 { return expr::EqNode(var, std::forward<DistType>(dist)); }
-#else
-#endif
 
-#ifndef AUTOPPL_USE_CONCEPTS
 /*
  * Builds a GlueNode to "glue" the left expression with the right
  * only when both parameters are valid model expressions.
@@ -158,7 +144,5 @@ inline constexpr auto operator,(LHSNodeType&& lhs,
     return expr::GlueNode(std::forward<LHSNodeType>(lhs), 
                           std::forward<RHSNodeType>(rhs)); 
 }
-#else
-#endif
 
 } // namespace ppl
