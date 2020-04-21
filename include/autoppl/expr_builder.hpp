@@ -1,6 +1,7 @@
 #pragma once
 #include <autoppl/util/traits.hpp>
-#include <autoppl/expression/model/model.hpp>
+#include <autoppl/expression/model/eq_node.hpp>
+#include <autoppl/expression/model/glue_node.hpp>
 #include <autoppl/expression/variable/variable_viewer.hpp>
 #include <autoppl/expression/variable/constant.hpp>
 #include <autoppl/variable.hpp>

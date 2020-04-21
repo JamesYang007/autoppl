@@ -1,7 +1,8 @@
 #include "gtest/gtest.h"
 #include <cmath>
 #include <array>
-#include <autoppl/expression/model/model.hpp>
+#include <autoppl/expression/model/eq_node.hpp>
+#include <autoppl/expression/model/glue_node.hpp>
 #include <testutil/mock_types.hpp>
 
 namespace ppl {
