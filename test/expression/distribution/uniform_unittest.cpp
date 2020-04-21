@@ -23,7 +23,7 @@ protected:
 
 TEST_F(uniform_fixture, ctor)
 {
-    static_assert(util::is_dist_expr_v<unif_t>);
+    static_assert(util::assert_is_dist_expr_v<unif_t>);
 }
 
 TEST_F(uniform_fixture, uniform_check_params) {

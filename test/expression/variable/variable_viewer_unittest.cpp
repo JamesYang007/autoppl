@@ -15,7 +15,7 @@ protected:
 
 TEST_F(variable_viewer_fixture, ctor)
 {
-    static_assert(util::is_var_expr_v<VariableViewer<MockVar>>);
+    static_assert(util::assert_is_var_expr_v<VariableViewer<MockVar>>);
 }
 
 TEST_F(variable_viewer_fixture, convertible_value)

@@ -16,7 +16,7 @@ protected:
 
 TEST_F(constant_fixture, ctor)
 {
-    static_assert(util::is_var_expr_v<Constant<value_t>>);
+    static_assert(util::assert_is_var_expr_v<Constant<value_t>>);
 }
 
 TEST_F(constant_fixture, convertible_value)

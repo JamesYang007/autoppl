@@ -29,7 +29,7 @@ protected:
 
 TEST_F(var_dist_fixture, ctor)
 {
-    static_assert(util::is_model_expr_v<model_t>);
+    static_assert(util::assert_is_model_expr_v<model_t>);
 }
 
 TEST_F(var_dist_fixture, pdf_valid)
@@ -107,8 +107,8 @@ protected:
 
 TEST_F(many_var_dist_fixture, ctor)
 {
-    static_assert(util::is_model_expr_v<model_two_t>);
-    static_assert(util::is_model_expr_v<model_four_t>);
+    static_assert(util::assert_is_model_expr_v<model_two_t>);
+    static_assert(util::assert_is_model_expr_v<model_four_t>);
 }
 
 TEST_F(many_var_dist_fixture, two_vars_pdf)

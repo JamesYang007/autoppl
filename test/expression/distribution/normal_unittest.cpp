@@ -24,7 +24,7 @@ protected:
 
 TEST_F(normal_fixture, ctor)
 {
-    static_assert(util::is_dist_expr_v<norm_t>);
+    static_assert(util::assert_is_dist_expr_v<norm_t>);
 }
 
 TEST_F(normal_fixture, normal_check_params) {

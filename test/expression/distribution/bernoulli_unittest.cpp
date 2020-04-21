@@ -21,7 +21,7 @@ protected:
 
 TEST_F(bernoulli_fixture, ctor)
 {
-    static_assert(util::is_dist_expr_v<Bernoulli<MockVarExpr>>);
+    static_assert(util::assert_is_dist_expr_v<Bernoulli<MockVarExpr>>);
 }
 
 TEST_F(bernoulli_fixture, bernoulli_check_params) {
