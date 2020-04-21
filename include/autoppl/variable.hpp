@@ -57,7 +57,7 @@ struct Variable
     void set_state(state_t state) { state_ = state; }
     state_t get_state() const { return state_; }
 
-    operator value_t () const { return get_value(); }
+    explicit operator value_t () const { return get_value(); }
 
     /*
      * Sets underlying value to "value".

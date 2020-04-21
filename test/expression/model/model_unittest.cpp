@@ -75,9 +75,10 @@ TEST_F(var_dist_fixture, log_pdf_valid)
 struct many_var_dist_fixture : ::testing::Test
 {
 protected:
-    MockVar x, y, z, w;
-    double xv, yv, zv, wv;
+    using value_t = double;
     using eq_t = EqNode<MockVar, MockDistExpr>;
+    MockVar x, y, z, w;
+    value_t xv, yv, zv, wv;
 
     using model_two_t = GlueNode<eq_t, eq_t>;
     model_two_t model_two = {
@@ -153,7 +154,7 @@ TEST_F(many_var_dist_fixture, four_vars_traverse_pdf)
     model_four.traverse([&](auto& model) {
             auto& var = model.get_variable();
             auto& dist = model.get_distribution();
-            actual *= dist.pdf(var);
+            actual *= dist.pdf(static_cast<value_t>(var));
         });
     EXPECT_EQ(actual, model_four.pdf());
 }

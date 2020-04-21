@@ -10,7 +10,7 @@ struct Constant
     Constant(value_t c)
         : c_{c}
     {}
-    operator value_t() const { return get_value(); }
+    explicit operator value_t() const { return get_value(); }
     value_t get_value() const { return c_; }
 
 private:

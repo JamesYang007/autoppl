@@ -21,7 +21,7 @@ struct VariableViewer
         : var_ref_{var}
     {}
 
-    operator value_t() const { return get_value(); }
+    explicit operator value_t() const { return get_value(); }
 
     value_t get_value() const 
     { return static_cast<value_t>(var_ref_.get()); }

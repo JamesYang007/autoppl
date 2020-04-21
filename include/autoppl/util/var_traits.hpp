@@ -1,5 +1,5 @@
 #pragma once
-#include <type_traits>
+#include <autoppl/util/type_traits.hpp>
 #include <autoppl/util/concept.hpp>
 
 namespace ppl {
@@ -22,7 +22,7 @@ struct var_traits
 /*
  * C++17 version of concepts to check var properties.
  * - var_traits must be well-defined under type T
- * - T must be convertible to its value_t
+ * - T must be explicitly convertible to its value_t
  * - not possible to get overloads
  */
 template <class T>
@@ -36,7 +36,7 @@ inline constexpr bool is_var_v =
     has_func_set_storage_v<T> &&
     has_func_set_state_v<T> &&
     has_func_get_state_v<const T> &&
-    std::is_convertible_v<const T, get_type_value_t_t<T>>
+    is_explicitly_convertible_v<const T, get_type_value_t_t<T>>
     ;
 
 } // namespace util

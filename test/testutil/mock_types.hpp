@@ -23,7 +23,7 @@ struct MockVar
     using state_t = MockState;
 
     value_t get_value() const {return x_;}
-    operator value_t() const { return get_value(); }
+    explicit operator value_t() const { return get_value(); }
 
     void set_value(value_t x) {x_ = x;}
 
@@ -57,7 +57,7 @@ struct MockVarExpr
 {
     using value_t = double;
     value_t get_value() const { return x_; }
-    operator value_t() const { return get_value(); }
+    explicit operator value_t() const { return get_value(); }
 
     /* not part of API */
     MockVarExpr(value_t x)

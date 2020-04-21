@@ -1,4 +1,5 @@
 #pragma once
+#include <autoppl/util/type_traits.hpp>
 #include <autoppl/util/concept.hpp>
 #include <autoppl/util/var_traits.hpp>
 
@@ -27,14 +28,14 @@ struct var_expr_traits<double>
  * A variable expression is any class that the following:
  * - is_var_v<T> must be false
  * - var_expr_traits must be well-defined for T
- * - T must be convertible to its value_t
+ * - T must be explicitly convertible to its value_t
  */
 template <class T>
 inline constexpr bool is_var_expr_v = 
     !is_var_v<T> &&
     has_type_value_t_v<T> &&
     has_func_get_value_v<const T> &&
-    std::is_convertible_v<const T, get_type_value_t_t<T>>
+    is_explicitly_convertible_v<const T, get_type_value_t_t<T>>
     ;
 
 } // namespace util
