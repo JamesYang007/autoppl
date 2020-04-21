@@ -57,7 +57,7 @@ struct BinaryOp {
 		typename node_traits<right_node_t>::binop_result_t
 			>;
 
-	ReturnType BinaryOp::evaluate();
+	binop_result_t BinaryOp::evaluate();
 
 }
 
