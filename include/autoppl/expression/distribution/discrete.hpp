@@ -3,9 +3,10 @@
 #include <random>
 #include <cmath>
 #include <numeric>
+#include <algorithm>
 
 namespace ppl {
-//namespace expr {
+namespace expr {
     
 // TODO: change name to DiscreteDist and make class template.
 // Discrete should be a function that creates this kind of object.
@@ -19,22 +20,11 @@ struct Discrete
     Discrete() { weights_ = {1}; } 
 
     Discrete(std::initializer_list<weight_type> weights)
-        : weights_{weights} { 
-            assert(weights_.size() > 0); 
-            assert(all_of(weights_.begin(), weights_.end(), [](weight_type &n){ return n > 0; }));
-            double total = std::accumulate(weights_.begin(), weights_.end(), 0.0);
-            for_each(weights_.begin(), weights_.end(), [total](weight_type &n){n /= total; });
-        }
+        : weights_{ normalize_weights(weights) } {  }
 
     template <class Iter>
     Discrete(Iter begin, Iter end)
-        :weights_{begin,end} 
-    {
-        assert(weights_.size() > 0); 
-        assert(all_of(weights_.begin(), weights_.end(), [](weight_type &n){ return n > 0; }));
-        double total = std::accumulate(weights_.begin(), weights_.end(), 0.0);
-        for_each(weights_.begin(), weights_.end(), [total](weight_type &n){n /= total; });
-    }
+        :weights_{ normalize_weights(std::vector<weight_type> (begin,end)) } { }
 
     template <class GeneratorType>
     value_t sample(GeneratorType& gen) const
@@ -60,10 +50,18 @@ struct Discrete
 
    private:
     std::vector<weight_type> weights_;
+    std::vector<weight_type> normalize_weights(std::vector<weight_type> w){
+        // check that weights are positive, not empty, and normalize the weights
+        assert(w.size() > 0); 
+        assert(std::all_of(w.begin(), w.end(), [](weight_type &n){ return n > 0; }));
+        double total = std::accumulate(w.begin(), w.end(), 0.0);
+        std::for_each(w.begin(), w.end(), [total](weight_type &n){n /= total; }); 
+        return w;
+    }
 };
 
 template<typename Iter> Discrete(Iter,Iter) -> Discrete<typename Iter::value_type>;
 
-//} // namespace expr
+} // namespace expr
 } // namespace ppl
 

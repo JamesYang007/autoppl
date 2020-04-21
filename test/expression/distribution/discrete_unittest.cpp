@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 
 namespace ppl {
-namespace dist {
+namespace expr {
 
 struct discrete_dist_fixture : ::testing::Test {
 protected:
@@ -70,5 +70,5 @@ TEST_F(discrete_dist_fixture, Discrete_sampling_iter) {
         EXPECT_TRUE(sample == 0 || sample == 1 || sample == 2 || sample == 3);
     }
 }
-} // namespace dist
+} // namespace expr
 } // ppl
