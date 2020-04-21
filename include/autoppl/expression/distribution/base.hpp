@@ -1,8 +1,9 @@
 #pragma once
 #include <cmath>
+#include <numeric>
 
 namespace ppl {
-namespace dist {
+namespace expr {
 
 /*
  * The Base objects contain static member functions 
@@ -86,5 +87,5 @@ struct BernoulliBase
     }
 };
 
-} // namespace dist
+} // namespace expr
 } // namespace ppl

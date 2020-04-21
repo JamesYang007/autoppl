@@ -1,7 +1,9 @@
+#include "gtest/gtest.h"
 #include <cmath>
 #include <array>
-#include "gtest/gtest.h"
-#include <autoppl/expression/model.hpp>
+#include <autoppl/expression/model/eq_node.hpp>
+#include <autoppl/expression/model/glue_node.hpp>
+#include <testutil/mock_types.hpp>
 
 namespace ppl {
 namespace expr {
@@ -11,139 +13,55 @@ namespace expr {
 //////////////////////////////////////////////////////
 
 /*
- * Mock state class for testing purposes.
- */
-enum class MockState {
-    data,
-    parameter
-};
-
-/*
- * Mock var object for testing purposes.
- * Must meet some of the requirements of actual var types.
- */
-struct MockVar 
-{
-    using value_t = double;
-    using pointer_t = double*;
-    using state_t = MockState;
-
-    void set_value(double val) { value_ = val; }  
-    value_t get_value() const { return value_; }  
-
-    void set_state(state_t state) { state_ = state; }
-    state_t get_state() const { return state_; }
-
-    operator value_t() { return value_; }
-
-private:
-    double value_;
-    state_t state_ = state_t::parameter;
-};
-
-/*
- * Mock distribution object for testing purposes.
- * Must meet some of the requirements of actual distribution types.
- */
-struct MockDist
-{
-    using value_t = double;
-    using dist_value_t = double;
-
-    // Mock pdf - identity function.
-    double pdf(double x) const
-    { return x; }
-
-    // Mock log_pdf - log(pdf(x)). 
-    double log_pdf(double x) const
-    { return std::log(pdf(x)); }
-};
-
-/*
  * Fixture for testing one var with distribution.
  */
 struct var_dist_fixture : ::testing::Test
 {
 protected:
     MockVar x;
-    using model_t = EqNode<MockVar, MockDist>;
-    model_t model = {x, MockDist()};
+    using model_t = EqNode<MockVar, MockDistExpr>;
+    model_t model = {x, MockDistExpr()};
     double val;
 
-    void reconfigure(double val)
-    {
-        x.set_value(val);
-    }
+    void reconfigure()
+    { x.set_value(val); }
 };
+
+TEST_F(var_dist_fixture, ctor)
+{
+    static_assert(util::is_model_expr_v<model_t>);
+}
 
 TEST_F(var_dist_fixture, pdf_valid)
 {
-    // MockDist pdf is identity function
+    // MockDistExpr pdf is identity function
     // so we may simply compare model.pdf() with val.
     
     val = 0.000001;
-    reconfigure(val);
+    reconfigure();
     EXPECT_EQ(model.pdf(), val);    
 
     val = 0.5;
-    reconfigure(val);
+    reconfigure();
     EXPECT_EQ(model.pdf(), val);
 
     val = 0.999999;
-    reconfigure(val);
-    EXPECT_EQ(model.pdf(), val);
-}
-
-TEST_F(var_dist_fixture, pdf_invalid)
-{
-    val = 0.000004123;
-    reconfigure(val);
-    EXPECT_EQ(model.pdf(), val);
-
-    val = 0.55555;
-    reconfigure(val);
-    EXPECT_EQ(model.pdf(), val);
-
-    val = 5.234424231;
-    reconfigure(val);
-    EXPECT_EQ(model.pdf(), val);
-
-    val = 69;
-    reconfigure(val);
+    reconfigure();
     EXPECT_EQ(model.pdf(), val);
 }
 
 TEST_F(var_dist_fixture, log_pdf_valid)
 {
     val = 0.000001;
-    reconfigure(val);
+    reconfigure();
     EXPECT_EQ(model.log_pdf(), std::log(val));    
 
     val = 0.5;
-    reconfigure(val);
+    reconfigure();
     EXPECT_EQ(model.log_pdf(), std::log(val));
 
     val = 0.999999;
-    reconfigure(val);
-    EXPECT_EQ(model.log_pdf(), std::log(val));
-}
-
-TEST_F(var_dist_fixture, log_pdf_invalid)
-{
-    val = 0.000004123;
-    reconfigure(val);
-    EXPECT_EQ(model.log_pdf(), std::log(val));
-
-    val = 0.55555;
-    reconfigure(val);
-    EXPECT_EQ(model.log_pdf(), std::log(val));
-
-    val = 5.234424231;
-    reconfigure(val);
-    EXPECT_EQ(model.log_pdf(), std::log(val));
-
-    val = 69;
-    reconfigure(val);
+    reconfigure();
     EXPECT_EQ(model.log_pdf(), std::log(val));
 }
 
@@ -159,13 +77,12 @@ struct many_var_dist_fixture : ::testing::Test
 protected:
     MockVar x, y, z, w;
     double xv, yv, zv, wv;
-    using eq_t = EqNode<MockVar, MockDist>;
+    using eq_t = EqNode<MockVar, MockDistExpr>;
 
     using model_two_t = GlueNode<eq_t, eq_t>;
     model_two_t model_two = {
-        {x, MockDist()},
-        {y, MockDist()}
-
+        {x, MockDistExpr()},
+        {y, MockDistExpr()}
     };
 
     using model_four_t = 
@@ -176,16 +93,22 @@ protected:
         >;
 
     model_four_t model_four = {
-        {x, MockDist()},
+        {x, MockDistExpr()},
         {
-            {y, MockDist()},
+            {y, MockDistExpr()},
             {
-                {z, MockDist()},
-                {w, MockDist()}
+                {z, MockDistExpr()},
+                {w, MockDistExpr()}
             }
         }
     };
 };
+
+TEST_F(many_var_dist_fixture, ctor)
+{
+    static_assert(util::is_model_expr_v<model_two_t>);
+    static_assert(util::is_model_expr_v<model_four_t>);
+}
 
 TEST_F(many_var_dist_fixture, two_vars_pdf)
 {
@@ -218,7 +141,7 @@ TEST_F(many_var_dist_fixture, four_vars_traverse_count_params)
     z.set_state(MockState::data);
     model_four.traverse([&](auto& model) {
             using var_t = std::decay_t<decltype(model.get_variable())>;
-            using state_t = typename var_traits<var_t>::state_t;
+            using state_t = typename util::var_traits<var_t>::state_t;
             count += (model.get_variable().get_state() == state_t::parameter);
         });
     EXPECT_EQ(count, 3);
