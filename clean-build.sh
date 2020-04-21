@@ -1,5 +1,4 @@
 # directory where current shell script resides
-
 PROJECTDIR=$(dirname "$BASH_SOURCE")
 
 cd "$PROJECTDIR"
@@ -27,5 +26,5 @@ else
 fi
 
 rm -rf *
-cmake -DCMAKE_C_COMPILER=/usr/local/Cellar/gcc/9.3.0_1/bin/gcc -DCMAKE_CXX_COMPILER=/usr/local/Cellar/gcc/9.3.0_1/bin/g++ ../../ "$@"
-cmake --build . -- -j12 
+cmake ../../ "$@"
+cmake --build . -- -j12
