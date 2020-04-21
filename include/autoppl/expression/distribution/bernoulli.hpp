@@ -3,7 +3,7 @@
 #include <random>
 #include <autoppl/util/var_expr_traits.hpp>
 #include <autoppl/util/dist_expr_traits.hpp>
-#include <autoppl/expression/distribution/density.hpp>
+#include <autoppl/expression/distribution/base.hpp>
 
 namespace ppl {
 namespace expr {

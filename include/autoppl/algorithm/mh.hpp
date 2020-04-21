@@ -5,7 +5,7 @@
 #include <vector>
 #include <autoppl/util/traits.hpp>
 #include <autoppl/variable.hpp>
-#include <autoppl/expression/distribution/density.hpp>
+#include <autoppl/expression/distribution/base.hpp>
 
 /*
  * Assumptions:

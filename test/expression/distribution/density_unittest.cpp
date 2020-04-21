@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include <array>
-#include <autoppl/expression/distribution/density.hpp>
+#include <autoppl/expression/distribution/base.hpp>
 
 namespace ppl {
 namespace expr {
