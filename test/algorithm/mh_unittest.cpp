@@ -14,14 +14,16 @@ struct mh_fixture : ::testing::Test
 {
 protected:
     size_t sample_size = 20000;
-    std::vector<double> storage;
-    Variable<double> theta, x;
+    std::vector<double> storage, storage_2;
+    Variable<double> theta, theta_2, x;
     Variable<int> x_discrete;
     size_t burn = 1000;
 
     mh_fixture()
         : storage(sample_size)
+        , storage_2(sample_size)
         , theta{storage.data()}
+        , theta_2{storage_2.data()}
     {}
 
     template <class ArrayType>
@@ -73,6 +75,20 @@ TEST_F(mh_fixture, sample_unif_normal_posterior_stddev)
     mh_posterior(model, sample_size, 0.5, 0.25, 0.);
     plot_hist(storage);
     EXPECT_NEAR(sample_average(storage), 3.27226, 0.1);
+}
+
+TEST_F(mh_fixture, sample_unif_normal_posterior_mean_stddev)
+{
+    x.observe(-0.314);
+    auto model = (
+        theta |= normal(0., 1.),
+        theta_2 |= uniform(0.1, 5.),
+        x |= normal(theta, theta_2)
+    );
+    mh_posterior(model, sample_size, 0.5, 0.25, 0.);
+    plot_hist(storage);
+    EXPECT_NEAR(sample_average(storage), -0.1235305689822228, 0.1);
+    EXPECT_NEAR(sample_average(storage_2), 1.868814361437099766, 0.1);
 }
 
 TEST_F(mh_fixture, sample_unif_bern_posterior_observe_one)
