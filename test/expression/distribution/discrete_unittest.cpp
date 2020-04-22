@@ -71,4 +71,4 @@ TEST_F(discrete_dist_fixture, Discrete_sampling_iter) {
     }
 }
 } // namespace expr
-} // ppl
+} // namespace ppl
