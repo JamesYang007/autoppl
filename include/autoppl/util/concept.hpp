@@ -192,10 +192,18 @@ namespace ppl {
 namespace util {
 
 /*
- * The type invalid_tag is left undefined and hence is an incomplete type.
- * It is used as a "black hole" for when a condition is not met, but cannot set compiler error.
+ * The type invalid_tag is used as a "black hole" 
+ * for when a condition is not met, but cannot set compiler error.
  */
-struct invalid_tag;
+struct invalid_tag
+{
+    invalid_tag() =delete;
+    ~invalid_tag() =delete;
+    invalid_tag(const invalid_tag&) =delete;
+    invalid_tag& operator=(const invalid_tag&) =delete;
+    invalid_tag(invalid_tag&&) =delete;
+    invalid_tag& operator=(invalid_tag&&) =delete;
+};
 
 DEFINE_HAS_TYPE(value_t);
 DEFINE_HAS_TYPE(pointer_t);
