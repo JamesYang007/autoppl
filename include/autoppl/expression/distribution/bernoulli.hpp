@@ -17,7 +17,8 @@ struct Bernoulli
     using dist_value_t = double;
 
     Bernoulli(p_type p)
-        : p_{p} { assert((this -> p() >= 0) && (this -> p() <= 1)); }
+        : p_{p} 
+    {}
 
     template <class GeneratorType>
     value_t sample(GeneratorType& gen) const
@@ -41,6 +42,8 @@ struct Bernoulli
     }
 
     param_value_t p() const { return static_cast<param_value_t>(p_); }
+    value_t min() const { return 0; }
+    value_t max() const { return 1; }
 
 private:
     p_type p_;

@@ -221,6 +221,8 @@ DEFINE_HAS_FUNC(get_state);
 
 DEFINE_HAS_FUNC(pdf);
 DEFINE_HAS_FUNC(log_pdf);
+DEFINE_HAS_FUNC(min);
+DEFINE_HAS_FUNC(max);
 
 DEFINE_HAS_FUNC(get_variable);
 DEFINE_HAS_FUNC(get_distribution);

@@ -1,10 +1,15 @@
 #pragma once
+#include <iostream> // TODO: remove
 #include <chrono>
 #include <random>
 #include <algorithm>
 #include <vector>
 #include <autoppl/util/traits.hpp>
 #include <autoppl/variable.hpp>
+
+#define AUTOPPL_MH_UNKNOWN_VALUE_TYPE_ERROR \
+    "Unknown value type: must be convertible to util::disc_param_t " \
+    "such as uint64_t or util::cont_param_t such as double."
 
 /*
  * Assumptions:
@@ -36,6 +41,7 @@ template <class ModelType>
 inline void mh_posterior(ModelType& model,
                          double n_sample,
                          double stddev = 1.0,
+                         double alpha = 0.25,
                          double seed = std::chrono::duration_cast<
                                         std::chrono::milliseconds>(
                                             std::chrono::system_clock::now().time_since_epoch()
@@ -47,48 +53,120 @@ inline void mh_posterior(ModelType& model,
     // set-up auxiliary tools
     std::mt19937 gen(seed);
     std::uniform_real_distribution unif_sampler(0., 1.);
+    size_t n_params = 0;
+    double curr_log_pdf = 0.;  // current log pdf
+    const double initial_radius = 5.;    // arbitrarily chosen radius for initial sampling
 
-    // get number of parameters to sample    
-    size_t n_params = 0.;
-    auto get_n_params = [&](auto& eq_node) {
+    // 1. initialize parameters with values in valid range
+    // - discrete valued params sampled uniformly within the distribution range
+    // - continuous valued params sampled uniformly within the intersection range
+    //   of distribution min and max and [-initial_radius, initial_radius]
+    // 2. update n_params with number of parameters
+    // 3. compute current log-pdf
+    auto init_params = [&](auto& eq_node) {
         auto& var = eq_node.get_variable();
+        const auto& dist = eq_node.get_distribution();
+
         using var_t = std::decay_t<decltype(var)>;
+        using value_t = typename util::var_traits<var_t>::value_t;
         using state_t = typename util::var_traits<var_t>::state_t;
-        n_params += (var.get_state() == state_t::parameter);
+
+        if (var.get_state() == state_t::parameter) {
+            if constexpr (std::is_integral_v<value_t>) {
+                std::uniform_int_distribution init_sampler(dist.min(), dist.max());
+                var.set_value(init_sampler(gen));
+            } else if constexpr (std::is_floating_point_v<value_t>) {
+                std::uniform_real_distribution init_sampler(
+                        std::max(dist.min(), -initial_radius), 
+                        std::min(dist.max(), initial_radius)
+                        );
+                var.set_value(init_sampler(gen));
+            } else {
+                static_assert(!(std::is_integral_v<value_t> ||
+                                std::is_floating_point_v<value_t>), 
+                              AUTOPPL_MH_UNKNOWN_VALUE_TYPE_ERROR);
+            }
+            ++n_params;
+        }
+        curr_log_pdf += dist.log_pdf(var.get_value()); 
     };
-    model.traverse(get_n_params);
-
-    // vector of parameter-related data with candidate
-    std::vector<data_t> params(n_params);
-    double curr_log_pdf = model.log_pdf();
-    auto params_it = params.begin();
-
+    model.traverse(init_params);
+    
+    std::vector<data_t> params(n_params);   // vector of parameter-related data with candidate
+    auto params_it = params.begin();        // used to iterate through params in lambda-fns
     for (size_t iter = 0; iter < n_sample; ++iter) {
-
+        
+        size_t n_swaps = 0;                     // during candidate sampling, if sample out-of-bounds,
+                                                // traversal will prematurely return and n_swaps < n_params
+        bool early_reject = false;              // indicate early sample reject
         double log_alpha = -curr_log_pdf;
 
         // generate next candidates and place them in parameter
         // variables as next values; update log_alpha
         // The old values are temporary stored in the params vector.
-        auto get_candidate = [=, &gen](auto& eq_node) mutable {
+        auto get_candidate = [=, &n_swaps, &early_reject, &gen](auto& eq_node) mutable {
+            if (early_reject) return;
+
             auto& var = eq_node.get_variable();
             using var_t = std::decay_t<decltype(var)>;
+            using value_t = typename util::var_traits<var_t>::value_t;
             using state_t = typename util::var_traits<var_t>::state_t;
 
             if (var.get_state() == state_t::parameter) {
                 auto curr = var.get_value();
-                std::normal_distribution norm_sampler(curr, stddev);
+                const auto& dist = eq_node.get_distribution();
 
-                // sample new candidate, place old value in params, 
-                // fill next candidate in var, and update log_alpha
-                auto cand = norm_sampler(gen); 
+                // Choose either continuous or discrete sampler depending on value_t
+                if constexpr (std::is_integral_v<value_t>) {
+                    std::discrete_distribution disc_sampler({alpha, 1-2*alpha, alpha});
+                    auto cand = disc_sampler(gen) - 1 + curr; // new candidate in curr + [-1, 0, 1]
+                    // TODO: refactor common logic
+                    if (dist.min() <= cand && cand <= dist.max()) { // if within dist bound
+                        var.set_value(cand); 
+                        ++n_swaps;
+                    }
+                    else { early_reject = true; return; }
+                } else if constexpr (std::is_floating_point_v<value_t>) {
+                    std::normal_distribution norm_sampler(static_cast<double>(curr), stddev);
+                    auto cand = norm_sampler(gen); 
+                    if (dist.min() <= cand && cand <= dist.max()) { // if within dist bound
+                        var.set_value(cand); 
+                        ++n_swaps;
+                    }
+                    else { early_reject = true; return; }
+                } else {
+                    static_assert(!(std::is_integral_v<value_t> ||
+                                    std::is_floating_point_v<value_t>), 
+                                  AUTOPPL_MH_UNKNOWN_VALUE_TYPE_ERROR);
+                }
+
+                // move old value into params
                 params_it->next = curr;
-                var.set_value(cand); 
-
                 ++params_it;
             }
         };
         model.traverse(get_candidate);
+
+        if (early_reject) {
+
+            // swap back original params only up until when candidate was out of bounds.
+            auto add_to_storage = [&n_swaps, params_it, iter](auto& eq_node) mutable {
+                auto& var = eq_node.get_variable();
+                using var_t = std::decay_t<decltype(var)>;
+                using state_t = typename util::var_traits<var_t>::state_t;
+                if (var.get_state() == state_t::parameter) {
+                    if (n_swaps) {
+                        var.set_value(params_it->next);
+                        ++params_it;
+                        --n_swaps;
+                    }
+                    auto storage = var.get_storage();
+                    storage[iter] = var.get_value();
+                } 
+            };
+            model.traverse(add_to_storage);
+            continue;
+        }
 
         // compute next candidate log pdf and update log_alpha
         double cand_log_pdf = model.log_pdf();

@@ -83,7 +83,7 @@ TEST_F(uniform_fixture, uniform_sample) {
         EXPECT_LT(sample[i], max);
     }
 
-    plot_hist(sample, 0.05, min, max);
+    plot_hist(sample, 0.5, min, max);
 }
 
 } // namespace expr

@@ -14,16 +14,11 @@ struct Normal
     static_assert(util::assert_is_var_expr_v<stddev_type>);
 
     using value_t = util::cont_param_t;
-    using param_value_t = std::common_type_t<
-        typename util::var_expr_traits<mean_type>::value_t,
-        typename util::var_expr_traits<stddev_type>::value_t
-            >;
     using dist_value_t = double;
 
     Normal(mean_type mean, stddev_type stddev)
-        : mean_{mean}, stddev_{stddev} {
-            assert(this -> stddev() > 0);
-        };
+        : mean_{mean}, stddev_{stddev} 
+    {}
 
     template <class GeneratorType>
     value_t sample(GeneratorType& gen) const {
@@ -43,8 +38,10 @@ struct Normal
         return -0.5 * ((z_score * z_score) + std::log(stddev() * stddev() * 2 * M_PI));
     }
 
-    param_value_t mean() const { return static_cast<param_value_t>(mean_);}
-    param_value_t stddev() const { return static_cast<param_value_t>(stddev_);}
+    auto mean() const { return mean_.get_value();}
+    auto stddev() const { return stddev_.get_value();}
+    value_t min() const { return std::numeric_limits<value_t>::lowest(); }
+    value_t max() const { return std::numeric_limits<value_t>::max(); }
 
 private:
     mean_type mean_;

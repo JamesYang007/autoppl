@@ -6,6 +6,8 @@
  * Users should rely on these classes to grab member aliases.
  */
 
+#include <autoppl/util/concept.hpp>
+#include <autoppl/util/type_traits.hpp>
 #include <autoppl/util/var_traits.hpp>
 #include <autoppl/util/var_expr_traits.hpp>
 #include <autoppl/util/dist_expr_traits.hpp>

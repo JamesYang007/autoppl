@@ -14,14 +14,11 @@ struct Uniform
     static_assert(util::assert_is_var_expr_v<max_type>);
 
     using value_t = util::cont_param_t;
-    using param_value_t = std::common_type_t<
-        typename util::var_expr_traits<min_type>::value_t,
-        typename util::var_expr_traits<max_type>::value_t
-            >;
     using dist_value_t = double;
 
     Uniform(min_type min, max_type max)
-        : min_{min}, max_{max} { assert(this -> min() < this -> max()); }
+        : min_{min}, max_{max} 
+    {}
 
     // TODO: tag this class as "TriviallySamplable"?
     template <class GeneratorType>
@@ -43,8 +40,8 @@ struct Uniform
             std::numeric_limits<dist_value_t>::lowest();
     }
 
-    param_value_t min() const { return static_cast<param_value_t>(min_); }
-    param_value_t max() const { return static_cast<param_value_t>(max_); }
+    value_t min() const { return min_.get_value(); }
+    value_t max() const { return max_.get_value(); }
 
 private:
     min_type min_;

@@ -9,7 +9,7 @@ struct expr_builder_fixture : ::testing::Test
 protected:
 };
 
-TEST_F(expr_builder_fixture, convert_to_cont_dist_param_var)
+TEST_F(expr_builder_fixture, convert_to_cont_param_var)
 {
     using namespace details;
     static_assert(std::is_same_v<MockVar, std::decay_t<MockVar>>);
@@ -17,12 +17,12 @@ TEST_F(expr_builder_fixture, convert_to_cont_dist_param_var)
     static_assert(!std::is_same_v<MockVar, util::cont_param_t>);
     static_assert(!util::is_var_expr_v<MockVar>);
     static_assert(std::is_same_v<
-            convert_to_cont_dist_param_t<MockVar>,
+            convert_to_cont_param_t<MockVar>,
             expr::VariableViewer<MockVar>
             >);
 }
 
-TEST_F(expr_builder_fixture, convert_to_cont_dist_param_raw)
+TEST_F(expr_builder_fixture, convert_to_cont_param_raw)
 {
     using namespace details;
     using data_t = util::cont_param_t;
@@ -31,23 +31,23 @@ TEST_F(expr_builder_fixture, convert_to_cont_dist_param_raw)
     static_assert(std::is_same_v<data_t, util::cont_param_t>);
     static_assert(!util::is_var_expr_v<data_t>);
     static_assert(std::is_same_v<
-            convert_to_cont_dist_param_t<data_t>,
+            convert_to_cont_param_t<data_t>,
             expr::Constant<data_t>
             >);
 }
 
-TEST_F(expr_builder_fixture, convert_to_cont_dist_param_var_expr)
+TEST_F(expr_builder_fixture, convert_to_cont_param_var_expr)
 {
     using namespace details;
     static_assert(!util::is_var_v<MockVarExpr>);
     static_assert(!std::is_same_v<MockVarExpr, util::cont_param_t>);
     static_assert(util::is_var_expr_v<MockVarExpr>);
     static_assert(std::is_same_v<
-            convert_to_cont_dist_param_t<MockVarExpr&>,
+            convert_to_cont_param_t<MockVarExpr&>,
             MockVarExpr&
             >);
     static_assert(std::is_same_v<
-            convert_to_cont_dist_param_t<MockVarExpr&&>,
+            convert_to_cont_param_t<MockVarExpr&&>,
             MockVarExpr&&
             >);
 }

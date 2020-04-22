@@ -93,6 +93,9 @@ struct MockDistExpr
 
     dist_value_t log_pdf(value_t x) const
     { return std::log(x); }
+
+    value_t min() const { return 0.; }
+    value_t max() const { return 1.; }
 };
 
 /*

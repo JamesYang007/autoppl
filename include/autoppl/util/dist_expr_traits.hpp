@@ -43,7 +43,9 @@ inline constexpr bool is_dist_expr_v =
     has_type_value_t_v<T> &&
     has_type_dist_value_t_v<T> &&
     has_func_pdf_v<const T> &&
-    has_func_log_pdf_v<const T>
+    has_func_log_pdf_v<const T> &&
+    has_func_min_v<const T> &&
+    has_func_max_v<const T>
     ;
 
 template <class T>
@@ -51,7 +53,9 @@ inline constexpr bool assert_is_dist_expr_v =
     assert_has_type_value_t_v<T> &&
     assert_has_type_dist_value_t_v<T> &&
     assert_has_func_pdf_v<const T> &&
-    assert_has_func_log_pdf_v<const T>
+    assert_has_func_log_pdf_v<const T> &&
+    assert_has_func_min_v<const T> &&
+    assert_has_func_max_v<const T>
     ;
 
 } // namespace util
