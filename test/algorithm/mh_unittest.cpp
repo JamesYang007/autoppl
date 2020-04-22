@@ -87,6 +87,7 @@ TEST_F(mh_fixture, sample_unif_normal_posterior_mean_stddev)
     );
     mh_posterior(model, sample_size, 0.5, 0.25, 0.);
     plot_hist(storage);
+    plot_hist(storage_2);
     EXPECT_NEAR(sample_average(storage), -0.1235305689822228, 0.1);
     EXPECT_NEAR(sample_average(storage_2), 1.868814361437099766, 0.1);
 }

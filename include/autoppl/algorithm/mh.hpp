@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream> // TODO: remove
 #include <chrono>
 #include <random>
 #include <algorithm>
