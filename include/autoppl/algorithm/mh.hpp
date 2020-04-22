@@ -3,6 +3,7 @@
 #include <random>
 #include <algorithm>
 #include <vector>
+#include <array>
 #include <autoppl/util/traits.hpp>
 #include <autoppl/variable.hpp>
 
@@ -24,75 +25,17 @@ struct MHData
     // TODO: maybe keep an array for batch sampling?
 };
 
-} // namespace details
-
-/*
- * Metropolis-Hastings algorithm to sample from posterior distribution.
- * The posterior distribution is a constant multiple of model.pdf().
- * Any variables that model references which are in state "parameter"
- * is sampled and in state "data" are not.
- * So, model.pdf() is proportional to p(parameters... | data...).
- *
- * User must ensure that they allocated at least as large as n_sample
- * in the storage associated with every parameter referenced in model.
- */
-template <class ModelType>
-inline void mh_posterior(ModelType& model,
-                         double n_sample,
-                         double stddev = 1.0,
-                         double alpha = 0.25,
-                         double seed = std::chrono::duration_cast<
-                                        std::chrono::milliseconds>(
-                                            std::chrono::system_clock::now().time_since_epoch()
-                                            ).count()
-                        )
+template <class ModelType, class RGenType, class Iter>
+inline void mh_posterior__(ModelType& model,
+                           Iter params_it,
+                           RGenType& gen,
+                           size_t n_sample,
+                           double curr_log_pdf,
+                           double alpha,
+                           double stddev)
 {
-    using data_t = details::MHData;
-    
-    // set-up auxiliary tools
-    std::mt19937 gen(seed);
     std::uniform_real_distribution unif_sampler(0., 1.);
-    size_t n_params = 0;
-    double curr_log_pdf = 0.;  // current log pdf
-    const double initial_radius = 5.;    // arbitrarily chosen radius for initial sampling
 
-    // 1. initialize parameters with values in valid range
-    // - discrete valued params sampled uniformly within the distribution range
-    // - continuous valued params sampled uniformly within the intersection range
-    //   of distribution min and max and [-initial_radius, initial_radius]
-    // 2. update n_params with number of parameters
-    // 3. compute current log-pdf
-    auto init_params = [&](auto& eq_node) {
-        auto& var = eq_node.get_variable();
-        const auto& dist = eq_node.get_distribution();
-
-        using var_t = std::decay_t<decltype(var)>;
-        using value_t = typename util::var_traits<var_t>::value_t;
-        using state_t = typename util::var_traits<var_t>::state_t;
-
-        if (var.get_state() == state_t::parameter) {
-            if constexpr (std::is_integral_v<value_t>) {
-                std::uniform_int_distribution init_sampler(dist.min(), dist.max());
-                var.set_value(init_sampler(gen));
-            } else if constexpr (std::is_floating_point_v<value_t>) {
-                std::uniform_real_distribution init_sampler(
-                        std::max(dist.min(), -initial_radius), 
-                        std::min(dist.max(), initial_radius)
-                        );
-                var.set_value(init_sampler(gen));
-            } else {
-                static_assert(!(std::is_integral_v<value_t> ||
-                                std::is_floating_point_v<value_t>), 
-                              AUTOPPL_MH_UNKNOWN_VALUE_TYPE_ERROR);
-            }
-            ++n_params;
-        }
-        curr_log_pdf += dist.log_pdf(var.get_value()); 
-    };
-    model.traverse(init_params);
-    
-    std::vector<data_t> params(n_params);   // vector of parameter-related data with candidate
-    auto params_it = params.begin();        // used to iterate through params in lambda-fns
     for (size_t iter = 0; iter < n_sample; ++iter) {
         
         size_t n_swaps = 0;                     // during candidate sampling, if sample out-of-bounds,
@@ -193,6 +136,93 @@ inline void mh_posterior(ModelType& model,
 
         // update current log pdf for next iteration
         if (accept) curr_log_pdf = cand_log_pdf;
+    }
+}
+
+} // namespace details
+
+/*
+ * Metropolis-Hastings algorithm to sample from posterior distribution.
+ * The posterior distribution is a constant multiple of model.pdf().
+ * Any variables that model references which are in state "parameter"
+ * is sampled and in state "data" are not.
+ * So, model.pdf() is proportional to p(parameters... | data...).
+ *
+ * User must ensure that they allocated at least as large as n_sample
+ * in the storage associated with every parameter referenced in model.
+ */
+template <class ModelType>
+inline void mh_posterior(ModelType& model,
+                         double n_sample,
+                         double stddev = 1.0,
+                         double alpha = 0.25,
+                         double seed = std::chrono::duration_cast<
+                                        std::chrono::milliseconds>(
+                                            std::chrono::system_clock::now().time_since_epoch()
+                                            ).count()
+                        )
+{
+    using data_t = details::MHData;
+    
+    // set-up auxiliary tools
+    std::mt19937 gen(seed);
+    size_t n_params = 0;
+    double curr_log_pdf = 0.;  // current log pdf
+    const double initial_radius = 5.;    // arbitrarily chosen radius for initial sampling
+
+    // 1. initialize parameters with values in valid range
+    // - discrete valued params sampled uniformly within the distribution range
+    // - continuous valued params sampled uniformly within the intersection range
+    //   of distribution min and max and [-initial_radius, initial_radius]
+    // 2. update n_params with number of parameters
+    // 3. compute current log-pdf
+    auto init_params = [&](auto& eq_node) {
+        auto& var = eq_node.get_variable();
+        const auto& dist = eq_node.get_distribution();
+
+        using var_t = std::decay_t<decltype(var)>;
+        using value_t = typename util::var_traits<var_t>::value_t;
+        using state_t = typename util::var_traits<var_t>::state_t;
+
+        if (var.get_state() == state_t::parameter) {
+            if constexpr (std::is_integral_v<value_t>) {
+                std::uniform_int_distribution init_sampler(dist.min(), dist.max());
+                var.set_value(init_sampler(gen));
+            } else if constexpr (std::is_floating_point_v<value_t>) {
+                std::uniform_real_distribution init_sampler(
+                        std::max(dist.min(), -initial_radius), 
+                        std::min(dist.max(), initial_radius)
+                        );
+                var.set_value(init_sampler(gen));
+            } else {
+                static_assert(!(std::is_integral_v<value_t> ||
+                                std::is_floating_point_v<value_t>), 
+                              AUTOPPL_MH_UNKNOWN_VALUE_TYPE_ERROR);
+            }
+            ++n_params;
+        }
+        curr_log_pdf += dist.log_pdf(var.get_value()); 
+    };
+    model.traverse(init_params);
+
+    if (n_params <= 5) {
+        std::array<data_t, 5> params_opt;       // small array optimization
+        details::mh_posterior__(model,
+                                params_opt.begin(),
+                                gen,
+                                n_sample,
+                                curr_log_pdf,
+                                alpha,
+                                stddev);
+    } else {
+        std::vector<data_t> params(n_params);   // vector of parameter-related data with candidate
+        details::mh_posterior__(model,
+                                params.begin(),
+                                gen,
+                                n_sample,
+                                curr_log_pdf,
+                                alpha,
+                                stddev);
     }
 }
 
