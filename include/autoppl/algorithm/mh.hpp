@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 #include <array>
+#include <variant>
 #include <autoppl/util/traits.hpp>
 #include <autoppl/variable.hpp>
 
@@ -19,9 +20,37 @@
 namespace ppl {
 namespace details {
 
+/*
+ * Convert ValueType to either util::cont_param_t if floating point
+ * or util::disc_param_t if integral type.
+ * If not either, raises compile-time error.
+ */
+template <class ValueType, class = void>
+struct value_to_param
+{
+    static_assert(!(std::is_integral_v<ValueType> ||
+                    std::is_floating_point_v<ValueType>),
+                    AUTOPPL_MH_UNKNOWN_VALUE_TYPE_ERROR);
+};
+template <class ValueType>
+struct value_to_param<ValueType, std::enable_if_t<std::is_integral_v<ValueType>>>
+{
+    using type = util::disc_param_t;
+};
+template <class ValueType>
+struct value_to_param<ValueType, std::enable_if_t<std::is_floating_point_v<ValueType>>>
+{
+    using type = util::cont_param_t;
+};
+template <class ValueType>
+using value_to_param_t = typename value_to_param<ValueType>::type;
+
+/*
+ * Data structure to keep track of candidates in metropolis-hastings.
+ */
 struct MHData
 {
-    double next;
+    std::variant<util::cont_param_t, util::disc_param_t> next;
     // TODO: maybe keep an array for batch sampling?
 };
 
@@ -83,7 +112,8 @@ inline void mh_posterior__(ModelType& model,
                 }
 
                 // move old value into params
-                params_it->next = curr;
+                using converted_value_t = details::value_to_param_t<value_t>;
+                params_it->next = static_cast<converted_value_t>(curr);
                 ++params_it;
             }
         };
@@ -95,10 +125,12 @@ inline void mh_posterior__(ModelType& model,
             auto add_to_storage = [&n_swaps, params_it, iter](auto& eq_node) mutable {
                 auto& var = eq_node.get_variable();
                 using var_t = std::decay_t<decltype(var)>;
+                using value_t = typename util::var_traits<var_t>::value_t;
                 using state_t = typename util::var_traits<var_t>::state_t;
                 if (var.get_state() == state_t::parameter) {
                     if (n_swaps) {
-                        var.set_value(params_it->next);
+                        using converted_value_t = details::value_to_param_t<value_t>;
+                        var.set_value(std::get<converted_value_t>(params_it->next));
                         ++params_it;
                         --n_swaps;
                     }
@@ -122,10 +154,12 @@ inline void mh_posterior__(ModelType& model,
         auto add_to_storage = [params_it, iter, accept](auto& eq_node) mutable {
             auto& var = eq_node.get_variable();
             using var_t = std::decay_t<decltype(var)>;
+            using value_t = typename util::var_traits<var_t>::value_t;
             using state_t = typename util::var_traits<var_t>::state_t;
             if (var.get_state() == state_t::parameter) {
                 if (!accept) {
-                    var.set_value(params_it->next);
+                    using converted_value_t = details::value_to_param_t<value_t>;
+                    var.set_value(std::get<converted_value_t>(params_it->next));
                     ++params_it;
                 }
                 auto storage = var.get_storage();
