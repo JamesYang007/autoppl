@@ -205,25 +205,14 @@ inline void mh_posterior(ModelType& model,
     };
     model.traverse(init_params);
 
-    if (n_params <= 5) {
-        std::array<data_t, 5> params_opt;       // small array optimization
-        details::mh_posterior__(model,
-                                params_opt.begin(),
-                                gen,
-                                n_sample,
-                                curr_log_pdf,
-                                alpha,
-                                stddev);
-    } else {
-        std::vector<data_t> params(n_params);   // vector of parameter-related data with candidate
-        details::mh_posterior__(model,
-                                params.begin(),
-                                gen,
-                                n_sample,
-                                curr_log_pdf,
-                                alpha,
-                                stddev);
-    }
+    std::vector<data_t> params(n_params);   // vector of parameter-related data with candidate
+    details::mh_posterior__(model,
+                            params.begin(),
+                            gen,
+                            n_sample,
+                            curr_log_pdf,
+                            alpha,
+                            stddev);
 }
 
 } // namespace ppl
