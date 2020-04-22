@@ -57,20 +57,4 @@ struct MultOp {
 
 };
 
-template <class LHSVarExprType, class RHSVarExprType>
-inline constexpr auto operator+(
-	const LHSVarExprType& lhs,
-	const RHSVarExprType& rhs)
-{
-	return BinaryOpNode<AddOp>(lhs, rhs);
-}
-
-template <class LHSVarExprType, class RHSVarExprType>
-inline constexpr auto operator*(
-	const LHSVarExprType& lhs,
-	const RHSVarExprType& rhs)
-{
-	return BinaryOpNode<MultOp>(lhs, rhs);
-}
-
 } // namespace ppl
