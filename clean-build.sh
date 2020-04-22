@@ -26,5 +26,5 @@ else
 fi
 
 rm -rf *
-cmake ../../ "$@"
+cmake -DCMAKE_C_COMPILER=/usr/local/Cellar/gcc/9.3.0_1/bin/gcc -DCMAKE_CXX_COMPILER=/usr/local/Cellar/gcc/9.3.0_1/bin/g++ ../../ "$@"
 cmake --build . -- -j12

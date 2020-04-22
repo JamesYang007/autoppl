@@ -3,7 +3,6 @@
 #include <random>
 #include <autoppl/util/var_expr_traits.hpp>
 #include <autoppl/util/dist_expr_traits.hpp>
-#include <autoppl/expression/distribution/base.hpp>
 
 namespace ppl {
 namespace expr {
@@ -13,9 +12,9 @@ struct Bernoulli
 {
     static_assert(util::is_var_expr_v<p_type>);
 
-    using value_t = util::disc_raw_param_t;
+    using value_t = util::disc_param_t;
     using param_value_t = typename util::var_expr_traits<p_type>::value_t;
-    using dist_value_t = typename BernoulliBase::dist_value_t;
+    using dist_value_t = double;
 
     Bernoulli(p_type p)
         : p_{p} { assert((this -> p() >= 0) && (this -> p() <= 1)); }
@@ -28,10 +27,18 @@ struct Bernoulli
     }
 
     dist_value_t pdf(value_t x) const
-    { return BernoulliBase::pdf(x, p()); }
+    { 
+        if (x == 1) return p();
+        else if (x == 0) return 1. - p();
+        else return 0.0;
+    }
 
     dist_value_t log_pdf(value_t x) const
-    { return BernoulliBase::log_pdf(x, p()); }
+    {
+        if (x == 1) return std::log(p());
+        else if (x == 0) return std::log(1. - p());
+        else return std::numeric_limits<dist_value_t>::lowest();
+    }
 
     param_value_t p() const { return static_cast<param_value_t>(p_); }
 

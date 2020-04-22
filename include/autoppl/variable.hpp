@@ -57,7 +57,7 @@ struct Variable
     void set_state(state_t state) { state_ = state; }
     state_t get_state() const { return state_; }
 
-    operator value_t () const { return value_; }
+    operator value_t () const { return get_value(); }
 
     /*
      * Sets underlying value to "value".
@@ -78,7 +78,7 @@ private:
 };
 
 // Useful aliases
-using cont_var = Variable<util::cont_raw_param_t>; // continuous RV var
-using disc_var = Variable<util::disc_raw_param_t>; // discrete RV var
+using cont_var = Variable<util::cont_param_t>; // continuous RV var
+using disc_var = Variable<util::disc_param_t>; // discrete RV var
 
 } // namespace ppl

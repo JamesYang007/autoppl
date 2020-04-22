@@ -12,8 +12,9 @@ struct normal_fixture : ::testing::Test {
 protected:
     using value_t = typename MockVarExpr::value_t;
     static constexpr size_t sample_size = 1000;
-    double mean = 0.1;
-    double stddev = 0.8;
+    double mean = 0.3;
+    double stddev = 1.3;
+    double tol = 1e-15;
     MockVarExpr x{mean};
     MockVarExpr y{stddev};
     using norm_t = Normal<MockVarExpr, MockVarExpr>;
@@ -31,26 +32,28 @@ TEST_F(normal_fixture, normal_check_params) {
     EXPECT_DOUBLE_EQ(norm.stddev(), static_cast<value_t>(y));
 }
 
-TEST_F(normal_fixture, normal_pdf_delegate) {
-    EXPECT_DOUBLE_EQ(norm.pdf(-10.664), NormalBase::pdf(-10.664, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.pdf(-7.324), NormalBase::pdf(-7.324, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.pdf(-3.241), NormalBase::pdf(-3.241, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.pdf(-0.359288), NormalBase::pdf(-0.359288, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.pdf(0.12314), NormalBase::pdf(0.12314, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.pdf(3.145), NormalBase::pdf(3.145, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.pdf(6.000923), NormalBase::pdf(6.000923, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.pdf(16.423), NormalBase::pdf(16.423, mean, stddev));
+TEST_F(normal_fixture, normal_pdf)
+{
+    EXPECT_NEAR(norm.pdf(-10.231), 1.726752595588348216742E-15, tol);
+    EXPECT_NEAR(norm.pdf(-5.31), 2.774166877919518907166E-5, tol);
+    EXPECT_DOUBLE_EQ(norm.pdf(-2.3141231), 0.04063645713784323551341);
+    EXPECT_DOUBLE_EQ(norm.pdf(0.), 0.2988151821496727914542);
+    EXPECT_DOUBLE_EQ(norm.pdf(1.31), 0.2269313951019926611687);
+    EXPECT_DOUBLE_EQ(norm.pdf(3.21), 0.02505560241243631472997);
+    EXPECT_NEAR(norm.pdf(5.24551), 2.20984513448306056291E-4, tol);
+    EXPECT_NEAR(norm.pdf(10.5699), 8.61135160183067521907E-15, tol);
 }
 
-TEST_F(normal_fixture, normal_log_pdf_delegate) {
-    EXPECT_DOUBLE_EQ(norm.log_pdf(-10.664), NormalBase::log_pdf(-10.664, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.log_pdf(-7.324), NormalBase::log_pdf(-7.324, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.log_pdf(-3.241), NormalBase::log_pdf(-3.241, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.log_pdf(-0.359288), NormalBase::log_pdf(-0.359288, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.log_pdf(0.12314), NormalBase::log_pdf(0.12314, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.log_pdf(3.145), NormalBase::log_pdf(3.145, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.log_pdf(6.000923), NormalBase::log_pdf(6.000923, mean, stddev));
-    EXPECT_DOUBLE_EQ(norm.log_pdf(16.423), NormalBase::log_pdf(16.423, mean, stddev));
+TEST_F(normal_fixture, normal_log_pdf)
+{
+    EXPECT_DOUBLE_EQ(norm.log_pdf(-10.231), std::log(1.726752595588348216742E-15));
+    EXPECT_DOUBLE_EQ(norm.log_pdf(-5.31), std::log(2.774166877919518907166E-5));
+    EXPECT_DOUBLE_EQ(norm.log_pdf(-2.3141231), std::log(0.04063645713784323551341));
+    EXPECT_DOUBLE_EQ(norm.log_pdf(0.), std::log(0.2988151821496727914542));
+    EXPECT_DOUBLE_EQ(norm.log_pdf(1.31), std::log(0.2269313951019926611687));
+    EXPECT_DOUBLE_EQ(norm.log_pdf(3.21), std::log(0.02505560241243631472997));
+    EXPECT_DOUBLE_EQ(norm.log_pdf(5.24551), std::log(2.20984513448306056291E-4));
+    EXPECT_DOUBLE_EQ(norm.log_pdf(10.5699), std::log(8.61135160183067521907E-15));
 }
 
 TEST_F(normal_fixture, normal_sample) {

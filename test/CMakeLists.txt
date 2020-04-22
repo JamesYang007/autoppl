@@ -51,7 +51,6 @@ add_test(var_expr_unittest var_expr_unittest)
 
 add_executable(dist_expr_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/bernoulli_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/density_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/normal_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/uniform_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/discrete_unittest.cpp

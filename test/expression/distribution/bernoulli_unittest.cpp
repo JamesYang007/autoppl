@@ -28,26 +28,74 @@ TEST_F(bernoulli_fixture, bernoulli_check_params) {
     EXPECT_DOUBLE_EQ(bern.p(), static_cast<value_t>(x));
 }
 
-TEST_F(bernoulli_fixture, bernoulli_pdf_delegate) {
-    EXPECT_DOUBLE_EQ(bern.pdf(-10), BernoulliBase::pdf(-10, p));
-    EXPECT_DOUBLE_EQ(bern.pdf(-7), BernoulliBase::pdf(-7, p));
-    EXPECT_DOUBLE_EQ(bern.pdf(-3), BernoulliBase::pdf(-3, p));
-    EXPECT_DOUBLE_EQ(bern.pdf(0), BernoulliBase::pdf(0, p));
-    EXPECT_DOUBLE_EQ(bern.pdf(1), BernoulliBase::pdf(1, p));
-    EXPECT_DOUBLE_EQ(bern.pdf(3), BernoulliBase::pdf(3, p));
-    EXPECT_DOUBLE_EQ(bern.pdf(6), BernoulliBase::pdf(6, p));
-    EXPECT_DOUBLE_EQ(bern.pdf(16), BernoulliBase::pdf(16, p));
+TEST_F(bernoulli_fixture, bernoulli_pdf_in_range)
+{
+    EXPECT_DOUBLE_EQ(bern.pdf(0), 1-p);
+    EXPECT_DOUBLE_EQ(bern.pdf(1), p);
 }
 
-TEST_F(bernoulli_fixture, bernoulli_log_pdf_delegate) {
-    EXPECT_DOUBLE_EQ(bern.log_pdf(-10), BernoulliBase::log_pdf(-10, p));
-    EXPECT_DOUBLE_EQ(bern.log_pdf(-7), BernoulliBase::log_pdf(-7, p));
-    EXPECT_DOUBLE_EQ(bern.log_pdf(-3), BernoulliBase::log_pdf(-3, p));
-    EXPECT_DOUBLE_EQ(bern.log_pdf(0), BernoulliBase::log_pdf(0, p));
-    EXPECT_DOUBLE_EQ(bern.log_pdf(1), BernoulliBase::log_pdf(1, p));
-    EXPECT_DOUBLE_EQ(bern.log_pdf(3), BernoulliBase::log_pdf(3, p));
-    EXPECT_DOUBLE_EQ(bern.log_pdf(6), BernoulliBase::log_pdf(6, p));
-    EXPECT_DOUBLE_EQ(bern.log_pdf(16), BernoulliBase::log_pdf(16, p));
+TEST_F(bernoulli_fixture, bernoulli_pdf_out_of_range)
+{
+    EXPECT_DOUBLE_EQ(bern.pdf(-100), 0.);
+    EXPECT_DOUBLE_EQ(bern.pdf(-3), 0.);
+    EXPECT_DOUBLE_EQ(bern.pdf(-2), 0.);
+    EXPECT_DOUBLE_EQ(bern.pdf(2), 0.);
+    EXPECT_DOUBLE_EQ(bern.pdf(3), 0.);
+    EXPECT_DOUBLE_EQ(bern.pdf(5), 0.);
+    EXPECT_DOUBLE_EQ(bern.pdf(100), 0.);
+}
+
+TEST_F(bernoulli_fixture, bernoulli_pdf_always_tail)
+{
+    double p = 0.;
+    MockVarExpr x{p};
+    Bernoulli<MockVarExpr> bern = {x};
+    EXPECT_DOUBLE_EQ(bern.pdf(0), 1.);
+    EXPECT_DOUBLE_EQ(bern.pdf(1), 0.);
+}
+
+TEST_F(bernoulli_fixture, bernoulli_pdf_always_head)
+{
+    double p = 1.;
+    MockVarExpr x{p};
+    Bernoulli<MockVarExpr> bern = {x};
+    EXPECT_DOUBLE_EQ(bern.pdf(0), 0.);
+    EXPECT_DOUBLE_EQ(bern.pdf(1), 1.);
+}
+
+TEST_F(bernoulli_fixture, bernoulli_log_pdf_in_range)
+{
+    EXPECT_DOUBLE_EQ(bern.log_pdf(0), std::log(1-p));
+    EXPECT_DOUBLE_EQ(bern.log_pdf(1), std::log(p));
+}
+
+TEST_F(bernoulli_fixture, bernoulli_log_pdf_out_of_range)
+{
+    EXPECT_DOUBLE_EQ(bern.log_pdf(-100), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(bern.log_pdf(-3), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(bern.log_pdf(-1), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(bern.log_pdf(2), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(bern.log_pdf(3), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(bern.log_pdf(5), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(bern.log_pdf(100), std::numeric_limits<double>::lowest());
+}
+
+TEST_F(bernoulli_fixture, bernoulli_log_pdf_always_tail)
+{
+    double p = 0.;
+    MockVarExpr x{p};
+    Bernoulli<MockVarExpr> bern = {x};
+    EXPECT_DOUBLE_EQ(bern.log_pdf(0), 0.);
+    EXPECT_DOUBLE_EQ(bern.log_pdf(1), std::numeric_limits<double>::lowest());
+}
+
+TEST_F(bernoulli_fixture, bernoulli_log_pdf_always_head)
+{
+    double p = 1.;
+    MockVarExpr x{p};
+    Bernoulli<MockVarExpr> bern = {x};
+    EXPECT_DOUBLE_EQ(bern.log_pdf(0), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(bern.log_pdf(1), 0.);
 }
 
 TEST_F(bernoulli_fixture, bernoulli_sample) {
