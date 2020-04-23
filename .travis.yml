@@ -38,7 +38,7 @@ jobs:
                 coveralls 
                 --root ../../ 
                 --build-root ./ 
-                --include autoppl/include 
+                --include include 
                 --exclude lib
                 --gcov 'gcov-7' 
                 --gcov-options '\-lp'
