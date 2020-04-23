@@ -33,6 +33,7 @@ add_test(util_unittest util_unittest)
 add_executable(var_expr_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/variable_viewer_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/constant_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/binop_unittest.cpp
     )
 target_compile_options(var_expr_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(var_expr_unittest PRIVATE

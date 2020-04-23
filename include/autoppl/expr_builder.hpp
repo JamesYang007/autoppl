@@ -4,6 +4,7 @@
 #include <autoppl/expression/model/glue_node.hpp>
 #include <autoppl/expression/variable/variable_viewer.hpp>
 #include <autoppl/expression/variable/constant.hpp>
+#include <autoppl/expression/variable/binop.hpp>
 #include <autoppl/variable.hpp>
 #include <autoppl/expression/distribution/uniform.hpp>
 #include <autoppl/expression/distribution/normal.hpp>
@@ -151,7 +152,7 @@ inline constexpr auto operator+(
 	const LHSVarExprType& lhs,
 	const RHSVarExprType& rhs)
 {
-	return BinaryOpNode<AddOp>(lhs, rhs);
+	return expr::BinaryOpNode<expr::AddOp, LHSVarExprType, RHSVarExprType>(lhs, rhs);
 }
 
 template <class LHSVarExprType, class RHSVarExprType>
@@ -159,7 +160,7 @@ inline constexpr auto operator*(
 	const LHSVarExprType& lhs,
 	const RHSVarExprType& rhs)
 {
-	return BinaryOpNode<MultOp>(lhs, rhs);
+	return expr::BinaryOpNode<expr::MultOp, LHSVarExprType, RHSVarExprType>(lhs, rhs);
 }
 
 } // namespace ppl

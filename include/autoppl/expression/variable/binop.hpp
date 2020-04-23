@@ -2,10 +2,10 @@
 
 #include <type_traits>
 #include <autoppl/util/traits.hpp>
-#include <autoppl/expression/var_expr.hpp>
-#include <autoppl/expression/variable.hpp>
+#include <autoppl/variable.hpp>
 
 namespace ppl {
+namespace expr {
 
 template <class BinaryOp, class LHSVarExprType, class RHSVarExprType>
 struct BinaryOpNode
@@ -57,4 +57,5 @@ struct MultOp {
 
 };
 
+} // namespace expr
 } // namespace ppl
