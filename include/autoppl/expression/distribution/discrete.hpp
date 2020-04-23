@@ -7,10 +7,8 @@
 
 namespace ppl {
 namespace expr {
-    
-// TODO: change name to DiscreteDist and make class template.
-// Discrete should be a function that creates this kind of object.
 
+// TODO: will most likely not be used as an expression
 template <typename weight_type>
 struct Discrete 
 {
@@ -56,9 +54,9 @@ struct Discrete
     void normalize_weights(Iter begin, Iter end){
         // check that weights are positive, not empty, and normalize the weights
         assert(std::distance(begin, end) > 0); 
-        assert(std::all_of(begin, end, [](weight_type &n){ return n > 0; }));
-        double total = std::accumulate(begin, end, 0.0);
-        std::for_each(begin, end, [total](weight_type &n){n /= total; }); 
+        assert(std::all_of(begin, end, [](const weight_type& n){ return n > 0; }));
+        dist_value_t total = std::accumulate(begin, end, 0.0);
+        std::for_each(begin, end, [total](weight_type& n){n /= total; }); 
     }
 };
 
