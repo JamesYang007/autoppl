@@ -11,18 +11,6 @@ namespace expr {
 // Model with one RV TESTS
 //////////////////////////////////////////////////////
 
-/*
- * Mock binary operation node for testing purposes.
- */
-struct MockBinaryOp
-{
-	// mock operation -- returns the sum 
-	static double evaluate(double x, double y) {
-		return x + y;
-	}
-
-};
-
 struct binop_fixture : ::testing::Test
 {
 protected:

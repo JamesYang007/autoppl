@@ -55,7 +55,6 @@ TEST_F(expr_builder_fixture, convert_to_param_var_expr)
             convert_to_param_t<MockVarExpr&&>,
             MockVarExpr&&
             >);
-
 }
 
 TEST_F(expr_builder_fixture, op_plus)

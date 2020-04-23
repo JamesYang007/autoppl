@@ -118,6 +118,17 @@ private:
 };
 
 /*
+ * Mock binary operation node for testing purposes.
+ */
+struct MockBinaryOp
+{
+	// mock operation -- returns the sum 
+	static double evaluate(double x, double y) {
+		return x + y;
+	}
+};
+
+/*
  * TODO:
  * Mock model expression clases that should meet the 
  * requirements of is_model_expr_v.
