@@ -20,11 +20,13 @@ struct Discrete
     Discrete() { weights_ = {1}; } 
 
     Discrete(std::initializer_list<weight_type> weights)
-        : weights_{ normalize_weights(weights) } {  }
+        : weights_{ weights } 
+        { normalize_weights(weights_.begin(), weights_.end()); }
 
     template <class Iter>
     Discrete(Iter begin, Iter end)
-        :weights_{ normalize_weights(std::vector<weight_type> (begin,end)) } { }
+        : weights_{ std::vector<weight_type> (begin, end) } 
+        { normalize_weights(begin, end); }
 
     template <class GeneratorType>
     value_t sample(GeneratorType& gen) const
@@ -50,13 +52,13 @@ struct Discrete
 
    private:
     std::vector<weight_type> weights_;
-    std::vector<weight_type> normalize_weights(std::vector<weight_type> w){
+    template <class Iter> 
+    void normalize_weights(Iter begin, Iter end){
         // check that weights are positive, not empty, and normalize the weights
-        assert(w.size() > 0); 
-        assert(std::all_of(w.begin(), w.end(), [](weight_type &n){ return n > 0; }));
-        double total = std::accumulate(w.begin(), w.end(), 0.0);
-        std::for_each(w.begin(), w.end(), [total](weight_type &n){n /= total; }); 
-        return w;
+        assert(end - begin > 0); 
+        assert(std::all_of(begin, end, [](weight_type &n){ return n > 0; }));
+        double total = std::accumulate(begin, end, 0.0);
+        std::for_each(begin, end, [total](weight_type &n){n /= total; }); 
     }
 };
 
