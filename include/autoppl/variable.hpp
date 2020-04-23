@@ -20,12 +20,13 @@ enum class var_state : bool {
  * a model expression and the users, who must supply storage of values associated with this var.
  */
 template <class ValueType>
-struct Variable
+struct Variable : util::Var<Variable<ValueType>>
 {
     using value_t = ValueType;
     using pointer_t = value_t*;
     using const_pointer_t = const value_t*;
     using state_t = var_state;
+	using binop_result_t = ValueType;
 
     // constructors
     Variable(value_t value, 

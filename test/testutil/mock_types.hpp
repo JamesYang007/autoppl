@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <autoppl/util/traits.hpp>
 
 namespace ppl {
 
@@ -15,7 +16,7 @@ enum class MockState {
  * Mock Variable class that should meet the requirements
  * of is_var_v.
  */
-struct MockVar
+struct MockVar : util::Var<MockVar>
 {
     using value_t = double;
     using pointer_t = double*;
@@ -42,7 +43,7 @@ private:
  * Mock variable classes that fulfill 
  * var_traits requirements, but do not fit the rest.
  */
-struct MockVar_no_convertible
+struct MockVar_no_convertible : util::Var<MockVar>
 {
     using value_t = double;
     using pointer_t = double*;
@@ -54,18 +55,18 @@ struct MockVar_no_convertible
  * Mock Variable Expression class that should meet the requirements
  * of is_var_expr_v.
  */
-struct MockVarExpr
+struct MockVarExpr : util::VarExpr<MockVarExpr>
 {
     using value_t = double;
     value_t get_value() const { return x_; }
     explicit operator value_t() const { return get_value(); }
 
     /* not part of API */
-    MockVarExpr(value_t x)
+    MockVarExpr(value_t x = 0.)
         : x_{x}
     {}
-
     void set_value(value_t x) {x_ = x;}
+
 private:
     value_t x_ = 0.;
 };
@@ -74,7 +75,7 @@ private:
  * Mock variable expression classes that fulfill 
  * var_expr_traits requirements, but do not fit the rest.
  */
-struct MockVarExpr_no_convertible
+struct MockVarExpr_no_convertible : util::VarExpr<MockVarExpr>
 {
     using value_t = double;
 };
@@ -83,7 +84,7 @@ struct MockVarExpr_no_convertible
  * Mock distribution expression class that should meet the requirements
  * of is_dist_expr_v.
  */
-struct MockDistExpr
+struct MockDistExpr : util::DistExpr<MockDistExpr>
 {
     using value_t = double;
     using dist_value_t = double;
@@ -102,7 +103,9 @@ struct MockDistExpr
  * Mock distribution expression classes that fulfill 
  * dist_expr_traits requirements, but do not fit the rest.
  */
-struct MockDistExpr_no_pdf : public MockDistExpr
+struct MockDistExpr_no_pdf : 
+    util::DistExpr<MockDistExpr_no_pdf>, 
+    public MockDistExpr
 {
 private:
     using MockDistExpr::pdf;

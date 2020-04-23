@@ -1,9 +1,28 @@
 #pragma once
 #include <cstdint>
 #include <autoppl/util/concept.hpp>
+#include <autoppl/util/type_traits.hpp>
 
 namespace ppl {
 namespace util {
+
+/*
+ * Base class for all distribution expressions.
+ * It is necessary for all distribution expressions to
+ * derive from this class.
+ */
+template <class T>
+struct DistExpr : BaseCRTP<T>
+{ using BaseCRTP<T>::self; };
+
+/*
+ * Checks if DistExpr<T> is base of type T 
+ */
+template <class T>
+inline constexpr bool dist_expr_is_base_of_v =
+    std::is_base_of_v<DistExpr<T>, T>;
+
+DEFINE_ASSERT_ONE_PARAM(dist_expr_is_base_of_v);
 
 /* 
  * TODO: Samplable distribution expression concept?
@@ -40,6 +59,7 @@ struct dist_expr_traits
  */
 template <class T>
 inline constexpr bool is_dist_expr_v = 
+    dist_expr_is_base_of_v<T> &&
     has_type_value_t_v<T> &&
     has_type_dist_value_t_v<T> &&
     has_func_pdf_v<const T> &&
@@ -50,6 +70,7 @@ inline constexpr bool is_dist_expr_v =
 
 template <class T>
 inline constexpr bool assert_is_dist_expr_v = 
+    assert_dist_expr_is_base_of_v<T> &&
     assert_has_type_value_t_v<T> &&
     assert_has_type_dist_value_t_v<T> &&
     assert_has_func_pdf_v<const T> &&

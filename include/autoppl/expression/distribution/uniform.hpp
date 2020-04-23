@@ -8,7 +8,7 @@ namespace ppl {
 namespace expr {
 
 template <typename min_type, typename max_type>
-struct Uniform
+struct Uniform : util::DistExpr<Uniform<min_type, max_type>>
 {
     static_assert(util::assert_is_var_expr_v<min_type>);
     static_assert(util::assert_is_var_expr_v<max_type>);

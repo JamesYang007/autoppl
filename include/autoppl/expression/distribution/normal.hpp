@@ -8,7 +8,7 @@ namespace ppl {
 namespace expr {
 
 template <typename mean_type, typename stddev_type>
-struct Normal
+struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
 {
     static_assert(util::assert_is_var_expr_v<mean_type>);
     static_assert(util::assert_is_var_expr_v<stddev_type>);

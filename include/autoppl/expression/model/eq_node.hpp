@@ -2,6 +2,7 @@
 #include <type_traits>
 #include <functional>
 #include <autoppl/util/var_traits.hpp>
+#include <autoppl/util/model_expr_traits.hpp>
 #include <autoppl/util/dist_expr_traits.hpp>
 
 namespace ppl {
@@ -12,7 +13,7 @@ namespace expr {
  * that relates a var with a distribution.
  */
 template <class VarType, class DistType>
-struct EqNode
+struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
 {
     static_assert(util::assert_is_var_v<VarType>);
     static_assert(util::assert_is_dist_expr_v<DistType>);

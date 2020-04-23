@@ -6,6 +6,24 @@ namespace ppl {
 namespace util {
 
 /*
+ * Base class for all variables.
+ * It is necessary for all variables to
+ * derive from this class.
+ */
+template <class T>
+struct Var : BaseCRTP<T>
+{ using BaseCRTP<T>::self; };
+
+/*
+ * Checks if DistExpr<T> is base of type T 
+ */
+template <class T>
+inline constexpr bool var_is_base_of_v =
+    std::is_base_of_v<Var<T>, T>;
+
+DEFINE_ASSERT_ONE_PARAM(var_is_base_of_v);
+
+/*
  * Traits for Variable-like classes.
  * value_t      type of value Variable represents during computation
  * pointer_t    storage pointer type 
@@ -27,6 +45,7 @@ struct var_traits
  */
 template <class T>
 inline constexpr bool is_var_v = 
+    var_is_base_of_v<T> &&
     has_type_value_t_v<T> &&
     has_type_pointer_t_v<T> &&
     has_type_const_pointer_t_v<T> &&
@@ -41,6 +60,7 @@ inline constexpr bool is_var_v =
 
 template <class T>
 inline constexpr bool assert_is_var_v = 
+    assert_var_is_base_of_v<T> &&
     assert_has_type_value_t_v<T> &&
     assert_has_type_pointer_t_v<T> &&
     assert_has_type_const_pointer_t_v<T> &&
