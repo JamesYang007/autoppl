@@ -147,20 +147,60 @@ inline constexpr auto operator,(LHSNodeType&& lhs,
                           std::forward<RHSNodeType>(rhs)); 
 }
 
-template <class LHSVarExprType, class RHSVarExprType>
+template <class LHSType, class RHSType>
 inline constexpr auto operator+(
-	const LHSVarExprType& lhs,
-	const RHSVarExprType& rhs)
+	LHSType&& lhs,
+	RHSType&& rhs)
 {
-	return expr::BinaryOpNode<expr::AddOp, LHSVarExprType, RHSVarExprType>(lhs, rhs);
+	using lhs_t = details::convert_to_cont_param_t<LHSType>;
+    using rhs_t = details::convert_to_cont_param_t<RHSType>;
+
+   	lhs_t wrap_lhs_expr = std::forward<LHSType>(lhs);
+    rhs_t wrap_rhs_expr = std::forward<RHSType>(rhs);
+
+	return expr::BinaryOpNode<expr::AddOp, std::decay_t<lhs_t>, std::decay_t<rhs_t> >(wrap_lhs_expr, wrap_rhs_expr);
 }
 
-template <class LHSVarExprType, class RHSVarExprType>
-inline constexpr auto operator*(
-	const LHSVarExprType& lhs,
-	const RHSVarExprType& rhs)
+template <class LHSType, class RHSType>
+inline constexpr auto operator-(
+	LHSType&& lhs,
+	RHSType&& rhs)
 {
-	return expr::BinaryOpNode<expr::MultOp, LHSVarExprType, RHSVarExprType>(lhs, rhs);
+	using lhs_t = details::convert_to_cont_param_t<LHSType>;
+    using rhs_t = details::convert_to_cont_param_t<RHSType>;
+
+   	lhs_t wrap_lhs_expr = std::forward<LHSType>(lhs);
+    rhs_t wrap_rhs_expr = std::forward<RHSType>(rhs);
+
+	return expr::BinaryOpNode<expr::SubOp, std::decay_t<lhs_t>, std::decay_t<rhs_t> >(wrap_lhs_expr, wrap_rhs_expr);
+}
+
+template <class LHSType, class RHSType>
+inline constexpr auto operator*(
+	LHSType&& lhs,
+	RHSType&& rhs)
+{
+	using lhs_t = details::convert_to_cont_param_t<LHSType>;
+    using rhs_t = details::convert_to_cont_param_t<RHSType>;
+
+   	lhs_t wrap_lhs_expr = std::forward<LHSType>(lhs);
+    rhs_t wrap_rhs_expr = std::forward<RHSType>(rhs);
+
+	return expr::BinaryOpNode<expr::MultOp, std::decay_t<lhs_t>, std::decay_t<rhs_t> >(wrap_lhs_expr, wrap_rhs_expr);
+}
+
+template <class LHSType, class RHSType>
+inline constexpr auto operator/(
+	LHSType&& lhs,
+	RHSType&& rhs)
+{
+	using lhs_t = details::convert_to_cont_param_t<LHSType>;
+    using rhs_t = details::convert_to_cont_param_t<RHSType>;
+
+   	lhs_t wrap_lhs_expr = std::forward<LHSType>(lhs);
+    rhs_t wrap_rhs_expr = std::forward<RHSType>(rhs);
+
+	return expr::BinaryOpNode<expr::DivOp, std::decay_t<lhs_t>, std::decay_t<rhs_t> >(wrap_lhs_expr, wrap_rhs_expr);
 }
 
 } // namespace ppl

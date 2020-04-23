@@ -10,6 +10,9 @@ namespace expr {
 template <class BinaryOp, class LHSVarExprType, class RHSVarExprType>
 struct BinaryOpNode
 {
+	static_assert(util::assert_is_var_expr_v<LHSVarExprType>);
+	static_assert(util::assert_is_var_expr_v<RHSVarExprType>);
+
 	using value_t = std::common_type_t<
 		typename util::var_expr_traits<LHSVarExprType>::value_t,
 		typename util::var_expr_traits<RHSVarExprType>::value_t
@@ -47,12 +50,32 @@ struct AddOp {
 
 };
 
+struct SubOp {
+	
+	template <class LHSValueType, class RHSValueType>
+	static auto evaluate(LHSValueType x, RHSValueType y)
+	{
+		return x - y;
+	}
+
+};
+
 struct MultOp {
 	
 	template <class LHSValueType, class RHSValueType>
 	static auto evaluate(LHSValueType x, RHSValueType y)
 	{
 		return x * y;
+	}
+
+};
+
+struct DivOp {
+	
+	template <class LHSValueType, class RHSValueType>
+	static auto evaluate(LHSValueType x, RHSValueType y)
+	{
+		return x / y;
 	}
 
 };

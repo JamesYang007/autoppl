@@ -2,6 +2,7 @@
 #include <array>
 #include "gtest/gtest.h"
 #include <autoppl/expression/variable/binop.hpp>
+#include <testutil/mock_types.hpp>
 
 namespace ppl {
 namespace expr {
@@ -11,40 +12,13 @@ namespace expr {
 //////////////////////////////////////////////////////
 
 /*
- * Mock var object for testing purposes.
- * Must meet some of the requirements of actual var types.
- */
-struct MockVar 
-{
-    using value_t = double;
-    using pointer_t = double*;
-    using state_t = void;
-	using binop_result_t = double;
-
-    void set_value(double val) { value_ = val; }  
-    double get_value() const { return value_; } 
-
-	/* BinOpNode<MockVar, MockVar, MockBinaryOp> operator+(const MockVar& b) const
-	{
-		return new BinOpNode<MockVar, MockVar, MockBinaryOp>(this, b);
-	} */
-
-private:
-    double value_;
-};
-
-/*
  * Mock binary operation node for testing purposes.
  */
 struct MockBinaryOp
 {
-	using binop_result_t = double;
-
-	// mock operation -- returns 1
-	double evaluate(MockVar x, MockVar y) {
-		double xv = x.get_value();
-		double yv = y.get_value();
-		return xv + yv;
+	// mock operation -- returns the sum 
+	static double evaluate(double x, double y) {
+		return x + y;
 	}
 
 };
@@ -52,16 +26,12 @@ struct MockBinaryOp
 struct binop_fixture : ::testing::Test
 {
 protected:
-	MockVar x;
-	MockVar y;
+	MockVarExpr x = 0;
+	MockVarExpr y = 0;
 
 	using binop_result_t = double;
-	/*AddOp<double, double> addNode();
-	MultOp<double, double> multNode();
-	*/
-	/* BinaryOpNode<MockVar, MockVar, AddOp<MockVar, MockVar> > addNode = x + y;
-	BinaryOpNode<MockVar, MockVar, MultOp<MockVar, MockVar> > multNode = x * y;
-	*/
+	
+	using binop_node_t = BinaryOpNode<MockBinaryOp, MockVarExpr, MockVarExpr>;
 	
 	void reconfigureX(double val)
 	{ x.set_value(val); }
@@ -73,14 +43,63 @@ protected:
 
 TEST_F(binop_fixture, add)
 {
-	double val1 = 3;
-	double val2 = 4;
+	double val1 = 3.5;
+	double val2 = 4.5;
 	
-	double addResult = AddOp::evaluate(val1, val2);
-	double multResult = MultOp::evaluate(val1, val2);
+	double addDouble = AddOp::evaluate(val1, val2);
+	EXPECT_DOUBLE_EQ(addDouble, 8.0);
+
+	int addInt = AddOp::evaluate(3, 4);
+	EXPECT_EQ(addInt, 7);
+}
+
+TEST_F(binop_fixture, sub)
+{
+	double val1 = 3.5;
+	double val2 = 4.5;
 	
-	EXPECT_EQ(addResult, 7);
-	EXPECT_EQ(multResult, 12);
+	double subDouble = SubOp::evaluate(val1, val2);
+	EXPECT_DOUBLE_EQ(subDouble, -1.0);
+
+	int subInt = SubOp::evaluate(3, 4);
+	EXPECT_EQ(subInt, -1);
+}
+
+
+TEST_F(binop_fixture, mult)
+{
+	double val1 = 3.5;
+	double val2 = 4.5;
+	
+	double multDouble = MultOp::evaluate(val1, val2);
+	EXPECT_DOUBLE_EQ(multDouble, 15.75);
+
+	int multInt = MultOp::evaluate(3, 4);
+	EXPECT_EQ(multInt, 12);
+}
+
+TEST_F(binop_fixture, div)
+{
+	double val1 = 4.5;
+	double val2 = 0.75;
+	
+	double divDouble = DivOp::evaluate(val1, val2);
+	EXPECT_DOUBLE_EQ(divDouble, 6.0);
+
+	int divInt = DivOp::evaluate(12, 3);
+	EXPECT_EQ(divInt, 4);
+}
+
+TEST_F(binop_fixture, binop_node)
+{
+	reconfigureX(3);
+	reconfigureY(4);
+
+	binop_node_t addNode = {x, y};
+	double res = addNode.get_value();
+
+	EXPECT_EQ(res, 7);
+
 }
 
 } // namespace expr

@@ -52,4 +52,37 @@ TEST_F(expr_builder_fixture, convert_to_cont_param_var_expr)
             >);
 }
 
+struct binop_overload_fixture : ::testing::Test {
+
+	MockVarExpr x = 0;
+	MockVarExpr y = 0;
+
+};
+
+TEST_F(binop_overload_fixture, op_plus)
+{
+	static_assert(
+			std::is_same_v<expr::BinaryOpNode<expr::AddOp, MockVarExpr, MockVarExpr>,
+			std::decay_t<decltype(x + y)> >);
+}
+
+TEST_F(binop_overload_fixture, op_minus)
+{
+	static_assert(
+			std::is_same_v<expr::BinaryOpNode<expr::SubOp, MockVarExpr, MockVarExpr>,
+			std::decay_t<decltype(x - y)> >);
+}
+
+TEST_F(binop_overload_fixture, op_times)
+{
+	static_assert(
+			std::is_same_v<expr::BinaryOpNode<expr::MultOp, MockVarExpr, MockVarExpr>,
+			std::decay_t<decltype(x * y)> >);
+}
+TEST_F(binop_overload_fixture, op_div)
+{
+	static_assert(
+			std::is_same_v<expr::BinaryOpNode<expr::DivOp, MockVarExpr, MockVarExpr>,
+			std::decay_t<decltype(x / y)> >);
+}
 } // namespace ppl
