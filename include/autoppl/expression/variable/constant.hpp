@@ -1,10 +1,11 @@
 #pragma once
+#include <autoppl/util/var_expr_traits.hpp>
 
 namespace ppl {
 namespace expr {
 
 template <class ValueType>
-struct Constant
+struct Constant : util::VarExpr<Constant<ValueType>>
 {
     using value_t = ValueType;
     Constant(value_t c)

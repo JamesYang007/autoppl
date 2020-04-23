@@ -20,7 +20,7 @@ enum class var_state : bool {
  * a model expression and the users, who must supply storage of values associated with this var.
  */
 template <class ValueType>
-struct Variable
+struct Variable : util::Var<Variable<ValueType>>
 {
     using value_t = ValueType;
     using pointer_t = value_t*;

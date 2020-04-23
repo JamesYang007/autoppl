@@ -10,7 +10,7 @@ namespace expr {
  * It will mainly be used to view Variable class defined in autoppl/variable.hpp.
  */
 template <class VariableType>
-struct VariableViewer
+struct VariableViewer : util::VarExpr<VariableViewer<VariableType>>
 {
     static_assert(util::assert_is_var_v<VariableType>);
 

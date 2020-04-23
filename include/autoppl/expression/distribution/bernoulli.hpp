@@ -8,7 +8,7 @@ namespace ppl {
 namespace expr {
 
 template <typename p_type>
-struct Bernoulli
+struct Bernoulli : util::DistExpr<Bernoulli<p_type>>
 {
     static_assert(util::assert_is_var_expr_v<p_type>);
 

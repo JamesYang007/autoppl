@@ -11,7 +11,7 @@ namespace expr {
  * "glues" two sub-model expressions.
  */
 template <class LHSNodeType, class RHSNodeType>
-struct GlueNode
+struct GlueNode : util::ModelExpr<GlueNode<LHSNodeType, RHSNodeType>>
 {
     static_assert(util::assert_is_model_expr_v<LHSNodeType>);
     static_assert(util::assert_is_model_expr_v<RHSNodeType>);

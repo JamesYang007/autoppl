@@ -1,14 +1,13 @@
 #pragma once
-
-#include <type_traits>
-#include <autoppl/util/traits.hpp>
+#include <autoppl/util/var_expr_traits.hpp>
 #include <autoppl/variable.hpp>
 
 namespace ppl {
 namespace expr {
 
 template <class BinaryOp, class LHSVarExprType, class RHSVarExprType>
-struct BinaryOpNode
+struct BinaryOpNode : 
+    util::VarExpr<BinaryOpNode<BinaryOp, LHSVarExprType, RHSVarExprType>>
 {
 	static_assert(util::assert_is_var_expr_v<LHSVarExprType>);
 	static_assert(util::assert_is_var_expr_v<RHSVarExprType>);

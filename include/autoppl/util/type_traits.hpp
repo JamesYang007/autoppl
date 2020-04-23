@@ -49,4 +49,15 @@ inline constexpr bool is_explicitly_convertible_v =
     ;
 DEFINE_ASSERT_TWO_PARAM(is_explicitly_convertible_v);
 
+/*
+ * Used for CRTP to unify certain expression types under one name.
+ * CRTP types should simply derive from this base class.
+ */
+template <class T>
+struct BaseCRTP 
+{
+    T& self() { return static_cast<T&>(*this); }
+    const T& self() const { return static_cast<const T&>(*this); }
+};
+
 } // namespace ppl
