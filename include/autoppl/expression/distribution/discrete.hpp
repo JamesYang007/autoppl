@@ -25,7 +25,7 @@ struct Discrete
 
     template <class Iter>
     Discrete(Iter begin, Iter end)
-        : weights_{ std::vector<weight_type> (begin, end) } 
+        : weights_{ begin, end } 
         { normalize_weights(begin, end); }
 
     template <class GeneratorType>
@@ -55,7 +55,7 @@ struct Discrete
     template <class Iter> 
     void normalize_weights(Iter begin, Iter end){
         // check that weights are positive, not empty, and normalize the weights
-        assert(end - begin > 0); 
+        assert(std::distance(begin, end) > 0); 
         assert(std::all_of(begin, end, [](weight_type &n){ return n > 0; }));
         double total = std::accumulate(begin, end, 0.0);
         std::for_each(begin, end, [total](weight_type &n){n /= total; }); 
