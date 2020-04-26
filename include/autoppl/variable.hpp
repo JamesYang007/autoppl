@@ -45,9 +45,7 @@ struct Variable : util::Var<Variable<ValueType>>
         : Variable(values.begin(), values.end(), nullptr, state_t::data) {}
 
     Variable(value_t value, pointer_t storage_ptr, state_t state) noexcept
-        : storage_ptr_{storage_ptr}, state_{state} {
-            values_.push_back(value);
-        }
+        : values_{{value}}, storage_ptr_{storage_ptr}, state_{state} {}
 
     Variable(value_t value) noexcept
         : Variable(value, nullptr, state_t::data) {}
@@ -56,8 +54,13 @@ struct Variable : util::Var<Variable<ValueType>>
     Variable(iterator begin, iterator end) noexcept
         : Variable(begin, end, nullptr, state_t::data) {}
 
+    /*
+     * when Variable is a parameter, the first value stores
+     * the parameter value for access by algorithms and
+     * distributions.
+    */
     Variable() noexcept
-        : Variable(0, nullptr, state_t::parameter)
+        : Variable(0., nullptr, state_t::parameter)
     {}
 
 
