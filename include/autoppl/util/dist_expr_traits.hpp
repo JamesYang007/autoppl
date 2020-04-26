@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <cstdio>
 #include <autoppl/util/concept.hpp>
 #include <autoppl/util/type_traits.hpp>
 
