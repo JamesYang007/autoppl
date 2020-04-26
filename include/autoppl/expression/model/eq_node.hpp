@@ -45,12 +45,7 @@ struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
      * Assumes that underlying value has been assigned properly.
      */
     dist_value_t pdf() const {
-        dist_value_t value = 1.0;
-        for (size_t i = 0; i < orig_var_ref_.get().size(); i++) {
-            value *= dist_.pdf(orig_var_ref_.get().get_value(i));
-        }
-
-        return value;
+        return util::pdf(orig_var_ref_.get(), dist_);
     }
 
     /*
@@ -58,12 +53,7 @@ struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
      * Assumes that underlying value has been assigned properly.
      */
     dist_value_t log_pdf() const {
-        dist_value_t value = 0.0;
-        for (size_t i = 0; i < orig_var_ref_.get().size(); i++) {
-            value += dist_.log_pdf(orig_var_ref_.get().get_value(i));
-        }
-
-        return value;
+        return util::log_pdf(orig_var_ref_.get(), dist_);
     }
 
     auto& get_variable() { return orig_var_ref_.get(); }

@@ -12,10 +12,11 @@ struct Constant : util::VarExpr<Constant<ValueType>>
         : c_{c}
     {}
     value_t get_value(int i) const {
-        assert(i >= 0);
+        assert(i >= 0 && i < size());
         return c_;
     }
-    size_t size() const { return 1; }
+
+    constexpr size_t size() const { return 1; }
     
 private:
     value_t c_;

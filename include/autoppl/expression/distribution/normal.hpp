@@ -37,7 +37,7 @@ struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
         dist_value_t z_score = (x - mean()) / stddev();
         return -0.5 * ((z_score * z_score) + std::log(stddev() * stddev() * 2 * M_PI));
     }
-
+    
     auto mean() const { return mean_.get_value(0);}
     auto stddev() const { return stddev_.get_value(0);}
     value_t min() const { return std::numeric_limits<value_t>::lowest(); }

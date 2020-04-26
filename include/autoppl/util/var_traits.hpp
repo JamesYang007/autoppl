@@ -50,7 +50,7 @@ inline constexpr bool is_var_v =
     has_type_pointer_t_v<T> &&
     has_type_const_pointer_t_v<T> &&
     has_type_state_t_v<T> &&
-    // has_func_set_value_v<T> &&
+    has_func_set_value_v<T> &&
     has_func_get_value_v<const T> &&
     has_func_set_storage_v<T> &&
     has_func_set_state_v<T> &&
@@ -65,7 +65,7 @@ inline constexpr bool assert_is_var_v =
     assert_has_type_pointer_t_v<T> &&
     assert_has_type_const_pointer_t_v<T> &&
     assert_has_type_state_t_v<T> &&
-    // assert_has_func_set_value_v<T> &&
+    assert_has_func_set_value_v<T> &&
     assert_has_func_get_value_v<const T> &&
     assert_has_func_set_storage_v<T> &&
     assert_has_func_set_state_v<T> &&

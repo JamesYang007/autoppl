@@ -13,8 +13,29 @@ namespace util {
  */
 template <class T>
 struct DistExpr : BaseCRTP<T>
-{ using BaseCRTP<T>::self; };
+{ 
+    using BaseCRTP<T>::self;
+};
 
+template <typename VarType, typename DistType>
+typename DistType::dist_value_t log_pdf(const VarType& var, const DistType & dist) {
+    typename DistType::dist_value_t value = 0.0;
+    for (size_t i = 0; i < var.size(); i++) {
+        value += dist.log_pdf(var.get_value(i));
+    }
+
+    return value;
+}
+
+template <typename VarType, typename DistType>
+typename DistType::dist_value_t pdf(const VarType& var, const DistType& dist) {
+    typename DistType::dist_value_t value = 1.0;
+    for (size_t i = 0; i < var.size(); i++) {
+        value *= dist.pdf(var.get_value(i));
+    }
+
+    return value;
+}
 /*
  * Checks if DistExpr<T> is base of type T 
  */

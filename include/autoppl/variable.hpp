@@ -60,7 +60,6 @@ struct Variable : util::Var<Variable<ValueType>>
     void set_value(value_t value) { values_[0] = value; }
     value_t get_value(int i) const { return values_[i]; }
     size_t size() const { return values_.size(); }
-    void add_value(value_t value) { values_.push_back(value); }
 
     void set_storage(pointer_t storage_ptr) { storage_ptr_ = storage_ptr; }
     pointer_t get_storage() { return storage_ptr_; }
@@ -76,8 +75,12 @@ struct Variable : util::Var<Variable<ValueType>>
      */
     void observe(value_t value)
     {
-        set_value(value);
-        set_state(state_t::data);
+        if (state_ == state_t::parameter) {
+            set_value(value);
+            set_state(state_t::data);
+        } else {
+            values_.push_back(value);
+        }
     }
 
 private:
