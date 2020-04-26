@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include <autoppl/util/traits.hpp>
+#include <cassert>
 
 namespace ppl {
 
@@ -24,7 +25,11 @@ struct MockVar : util::Var<MockVar>
     using state_t = MockState;
 
     void set_value(value_t x) { value_ = x; }
-    value_t get_value(size_t i) const { assert(i >= 0 && i < size()); return value_;}
+
+    value_t get_value(size_t) const { 
+        return value_;
+    }
+
     constexpr size_t size() const { return 1; }
 
     void set_storage(pointer_t ptr) {ptr_ = ptr;}
@@ -57,7 +62,10 @@ struct MockVar_no_convertible : util::Var<MockVar>
 struct MockVarExpr : util::VarExpr<MockVarExpr>
 {
     using value_t = double;
-    value_t get_value(size_t i) const { assert(i >= 0 && i < size()); return x_; }
+    value_t get_value(size_t) const { 
+        return x_; 
+    }
+
     constexpr size_t size() const { return 1; }
 
     /* not part of API */

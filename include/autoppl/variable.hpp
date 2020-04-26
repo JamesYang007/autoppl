@@ -3,6 +3,7 @@
 #include <autoppl/util/dist_expr_traits.hpp>
 #include <vector>
 #include <initializer_list>
+#include <cassert>
 
 namespace ppl {
 
