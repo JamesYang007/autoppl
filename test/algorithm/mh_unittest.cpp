@@ -86,11 +86,7 @@ TEST_F(mh_fixture, sample_unif_normal_posterior_mean_stddev)
         theta_2 |= uniform(0.1, 5.),
         x |= normal(theta, theta_2)
     );
-    auto start = std::chrono::high_resolution_clock::now();
     mh_posterior(model, sample_size, 0.5, 0.25, 0.);
-    auto end = std::chrono::high_resolution_clock::now();
-    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cerr << diff.count() * 1e-3 << std::endl;
     plot_hist(storage);
     plot_hist(storage_2, 0.2);
     EXPECT_NEAR(sample_average(storage), -0.1235305689822228, 0.1);
@@ -103,11 +99,7 @@ TEST_F(mh_fixture, sample_unif_normal_posterior_mean_stddev_samples) {
         y |= normal(theta, 1.0) // {0.1, 0.2, 0.3, 0.4, 0.5}
     );
 
-    auto start = std::chrono::high_resolution_clock::now();
     mh_posterior(model, sample_size, 0.5, 0.25, 0.);
-    auto end = std::chrono::high_resolution_clock::now();
-    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cerr << diff.count() * 1e-3 << std::endl;
     plot_hist(storage);
     EXPECT_NEAR(sample_average(storage), 0.3, 0.1);
 }
