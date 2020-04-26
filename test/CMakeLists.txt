@@ -27,24 +27,44 @@ target_link_libraries(util_unittest gtest_main pthread ${PROJECT_NAME})
 add_test(util_unittest util_unittest)
 
 ######################################################
-# Variable Expression Test
+# Sample Test
 ######################################################
 
-add_executable(var_expr_unittest
-    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/variable_viewer_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/constant_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/binop_unittest.cpp
+add_executable(sample_unittest
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/samples/dist_sample_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/samples/model_sample_unittest.cpp
     )
-target_compile_options(var_expr_unittest PRIVATE -g -Wall -Werror -Wextra)
-target_include_directories(var_expr_unittest PRIVATE
+target_compile_options(sample_unittest PRIVATE -g -Wall -Werror -Wextra)
+target_include_directories(sample_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
     )
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
-    target_link_libraries(var_expr_unittest gcov)
+    target_link_libraries(sample_unittest gcov)
 endif()
-target_link_libraries(var_expr_unittest gtest_main pthread ${PROJECT_NAME})
-add_test(var_expr_unittest var_expr_unittest)
+target_link_libraries(sample_unittest gtest_main pthread ${PROJECT_NAME})
+add_test(sample_unittest sample_unittest)
+
+######################################################
+# Variable Test
+######################################################
+
+add_executable(var_unittest
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/variable_viewer_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/variable_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/constant_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/binop_unittest.cpp
+    )
+target_compile_options(var_unittest PRIVATE -g -Wall -Werror -Wextra)
+target_include_directories(var_unittest PRIVATE
+    ${GTEST_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+if (AUTOPPL_ENABLE_TEST_COVERAGE)
+    target_link_libraries(var_unittest gcov)
+endif()
+target_link_libraries(var_unittest gtest_main pthread ${PROJECT_NAME})
+add_test(var_unittest var_unittest)
 
 ######################################################
 # Distribution Expression Test

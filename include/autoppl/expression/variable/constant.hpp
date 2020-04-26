@@ -11,8 +11,8 @@ struct Constant : util::VarExpr<Constant<ValueType>>
     Constant(value_t c)
         : c_{c}
     {}
-    value_t get_value(int i) const {
-        assert(i >= 0 && i < size());
+    value_t get_value(size_t i) const {
+        assert((i >= 0) && (i < size()));
         return c_;
     }
 

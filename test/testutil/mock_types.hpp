@@ -24,8 +24,8 @@ struct MockVar : util::Var<MockVar>
     using state_t = MockState;
 
     void set_value(value_t x) { value_ = x; }
-    value_t get_value(int i) const { assert( i >= 0); return value_;}
-    size_t size() const { return 1; }
+    value_t get_value(size_t i) const { assert(i >= 0 && i < size()); return value_;}
+    constexpr size_t size() const { return 1; }
 
     void set_storage(pointer_t ptr) {ptr_ = ptr;}
 
@@ -57,8 +57,8 @@ struct MockVar_no_convertible : util::Var<MockVar>
 struct MockVarExpr : util::VarExpr<MockVarExpr>
 {
     using value_t = double;
-    value_t get_value(int i) const { assert(i >= 0); return x_; }
-    size_t size() const { return 1; }
+    value_t get_value(size_t i) const { assert(i >= 0 && i < size()); return x_; }
+    constexpr size_t size() const { return 1; }
 
     /* not part of API */
     MockVarExpr(value_t x = 0.)

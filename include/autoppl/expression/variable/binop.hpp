@@ -20,13 +20,12 @@ struct BinaryOpNode :
 	BinaryOpNode(const LHSVarExprType& lhs, const RHSVarExprType& rhs)
 		: lhs_{lhs}, rhs_{rhs}
 	{ assert(lhs.size() == rhs.size() || lhs.size() == 1 || rhs.size() == 1); }
-	
-	value_t get_value(int i) const
-	{
-		auto lhs_value = lhs_.get_value(i);
-		auto rhs_value = rhs_.get_value(i);
-		return BinaryOp::evaluate(lhs_value, rhs_value);
-	}
+
+        value_t get_value(size_t i) const {
+            auto lhs_value = lhs_.get_value(i);
+            auto rhs_value = rhs_.get_value(i);
+            return BinaryOp::evaluate(lhs_value, rhs_value);
+        }
 
 private:
 	LHSVarExprType lhs_;

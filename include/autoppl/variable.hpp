@@ -1,6 +1,8 @@
 #pragma once
 #include <autoppl/util/var_traits.hpp>
 #include <autoppl/util/dist_expr_traits.hpp>
+#include <vector>
+#include <initializer_list>
 
 namespace ppl {
 
@@ -57,8 +59,15 @@ struct Variable : util::Var<Variable<ValueType>>
         : Variable(0, nullptr, state_t::parameter)
     {}
 
+
+
     void set_value(value_t value) { values_[0] = value; }
-    value_t get_value(int i) const { return values_[i]; }
+
+    value_t get_value(size_t i) const { 
+        assert((i >= 0) && (i < size()));
+        return values_[i]; 
+    }
+
     size_t size() const { return values_.size(); }
 
     void set_storage(pointer_t storage_ptr) { storage_ptr_ = storage_ptr; }
@@ -81,6 +90,15 @@ struct Variable : util::Var<Variable<ValueType>>
         } else {
             values_.push_back(value);
         }
+    }
+
+    /*
+     * clear storage and reset to parameter variable.
+    */
+    void clear() {
+        values_.clear();
+        set_state(state_t::parameter);
+        values_.push_back(0);
     }
 
 private:
