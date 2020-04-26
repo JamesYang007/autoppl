@@ -235,7 +235,13 @@ inline void mh_posterior(ModelType& model,
             }
             ++n_params;
         }
-        curr_log_pdf += dist.log_pdf(var.get_value(0)); 
+
+        double value = 0.0;
+        for (size_t i = 0; i < var.size(); i++) {
+            value += dist.log_pdf(var.get_value(i));
+        }
+
+        curr_log_pdf += value;
     };
     model.traverse(init_params);
 
