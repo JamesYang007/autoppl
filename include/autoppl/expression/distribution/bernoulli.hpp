@@ -41,7 +41,7 @@ struct Bernoulli : util::DistExpr<Bernoulli<p_type>>
         else return std::numeric_limits<dist_value_t>::lowest();
     }
 
-    param_value_t p() const { return static_cast<param_value_t>(p_); }
+    param_value_t p() const { return p_.get_value(0); }
     value_t min() const { return 0; }
     value_t max() const { return 1; }
 

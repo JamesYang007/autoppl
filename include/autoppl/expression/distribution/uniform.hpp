@@ -40,8 +40,8 @@ struct Uniform : util::DistExpr<Uniform<min_type, max_type>>
             std::numeric_limits<dist_value_t>::lowest();
     }
 
-    value_t min() const { return min_.get_value(); }
-    value_t max() const { return max_.get_value(); }
+    value_t min() const { return min_.get_value(0); }
+    value_t max() const { return max_.get_value(0); }
 
 private:
     min_type min_;

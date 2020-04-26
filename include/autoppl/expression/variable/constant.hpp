@@ -11,9 +11,12 @@ struct Constant : util::VarExpr<Constant<ValueType>>
     Constant(value_t c)
         : c_{c}
     {}
-    explicit operator value_t() const { return get_value(); }
-    value_t get_value() const { return c_; }
-
+    value_t get_value(int i) const {
+        assert(i >= 0);
+        return c_;
+    }
+    size_t size() const { return 1; }
+    
 private:
     value_t c_;
 };

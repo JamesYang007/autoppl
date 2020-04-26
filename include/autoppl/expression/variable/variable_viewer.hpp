@@ -21,10 +21,8 @@ struct VariableViewer : util::VarExpr<VariableViewer<VariableType>>
         : var_ref_{var}
     {}
 
-    explicit operator value_t() const { return get_value(); }
-
-    value_t get_value() const 
-    { return static_cast<value_t>(var_ref_.get()); }
+    value_t get_value(int i) const { return var_ref_.get().get_value(i); }
+    size_t size() const { return var_ref_.get().size(); }
 
 private:
     using var_ref_t = std::reference_wrapper<var_t>;

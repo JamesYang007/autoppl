@@ -84,7 +84,7 @@ inline void mh_posterior__(ModelType& model,
             using state_t = typename util::var_traits<var_t>::state_t;
 
             if (var.get_state() == state_t::parameter) {
-                auto curr = var.get_value();
+                auto curr = var.get_value(0);
                 const auto& dist = eq_node.get_distribution();
 
                 // Choose either continuous or discrete sampler depending on value_t
@@ -135,7 +135,7 @@ inline void mh_posterior__(ModelType& model,
                         --n_swaps;
                     }
                     auto storage = var.get_storage();
-                    storage[iter] = var.get_value();
+                    storage[iter] = var.get_value(0);
                 } 
             };
             model.traverse(add_to_storage);
@@ -163,7 +163,7 @@ inline void mh_posterior__(ModelType& model,
                     ++params_it;
                 }
                 auto storage = var.get_storage();
-                storage[iter] = var.get_value();
+                storage[iter] = var.get_value(0);
             } 
         };
         model.traverse(add_to_storage);
@@ -235,7 +235,7 @@ inline void mh_posterior(ModelType& model,
             }
             ++n_params;
         }
-        curr_log_pdf += dist.log_pdf(var.get_value()); 
+        curr_log_pdf += dist.log_pdf(var.get_value(0)); 
     };
     model.traverse(init_params);
 

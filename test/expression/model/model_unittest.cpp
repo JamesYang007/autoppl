@@ -154,7 +154,7 @@ TEST_F(many_var_dist_fixture, four_vars_traverse_pdf)
     model_four.traverse([&](auto& model) {
             auto& var = model.get_variable();
             auto& dist = model.get_distribution();
-            actual *= dist.pdf(static_cast<value_t>(var));
+            actual *= dist.pdf(var.get_value(0));
         });
     EXPECT_EQ(actual, model_four.pdf());
 }

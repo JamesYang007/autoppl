@@ -38,8 +38,8 @@ struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
         return -0.5 * ((z_score * z_score) + std::log(stddev() * stddev() * 2 * M_PI));
     }
 
-    auto mean() const { return mean_.get_value();}
-    auto stddev() const { return stddev_.get_value();}
+    auto mean() const { return mean_.get_value(0);}
+    auto stddev() const { return stddev_.get_value(0);}
     value_t min() const { return std::numeric_limits<value_t>::lowest(); }
     value_t max() const { return std::numeric_limits<value_t>::max(); }
 

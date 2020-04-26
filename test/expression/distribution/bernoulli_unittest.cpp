@@ -25,7 +25,7 @@ TEST_F(bernoulli_fixture, ctor)
 }
 
 TEST_F(bernoulli_fixture, bernoulli_check_params) {
-    EXPECT_DOUBLE_EQ(bern.p(), static_cast<value_t>(x));
+    EXPECT_DOUBLE_EQ(bern.p(), x.get_value(0));
 }
 
 TEST_F(bernoulli_fixture, bernoulli_pdf_in_range)

@@ -44,15 +44,27 @@ struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
      * Compute pdf of underlying distribution with underlying value.
      * Assumes that underlying value has been assigned properly.
      */
-    dist_value_t pdf() const
-    { return dist_.pdf(orig_var_ref_.get().get_value()); }
+    dist_value_t pdf() const {
+        dist_value_t value = 1.0;
+        for (size_t i = 0; i < orig_var_ref_.get().size(); i++) {
+            value *= dist_.pdf(orig_var_ref_.get().get_value(i));
+        }
+
+        return value;
+    }
 
     /*
      * Compute log-pdf of underlying distribution with underlying value.
      * Assumes that underlying value has been assigned properly.
      */
-    dist_value_t log_pdf() const
-    { return dist_.log_pdf(orig_var_ref_.get().get_value()); }
+    dist_value_t log_pdf() const {
+        dist_value_t value = 0.0;
+        for (size_t i = 0; i < orig_var_ref_.get().size(); i++) {
+            value += dist_.log_pdf(orig_var_ref_.get().get_value(i));
+        }
+
+        return value;
+    }
 
     auto& get_variable() { return orig_var_ref_.get(); }
     const auto& get_distribution() const { return dist_; }

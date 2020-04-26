@@ -27,8 +27,8 @@ TEST_F(uniform_fixture, ctor)
 }
 
 TEST_F(uniform_fixture, uniform_check_params) {
-    EXPECT_DOUBLE_EQ(unif.min(), static_cast<value_t>(x));
-    EXPECT_DOUBLE_EQ(unif.max(), static_cast<value_t>(y));
+    EXPECT_DOUBLE_EQ(unif.min(), x.get_value(0));
+    EXPECT_DOUBLE_EQ(unif.max(), y.get_value(0));
 }
 
 TEST_F(uniform_fixture, uniform_pdf_in_range)

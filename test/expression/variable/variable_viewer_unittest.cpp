@@ -21,11 +21,11 @@ TEST_F(variable_viewer_fixture, ctor)
 TEST_F(variable_viewer_fixture, convertible_value)
 {
     var.set_value(1.);
-    EXPECT_EQ(static_cast<value_t>(x), 1.);
+    EXPECT_EQ(x.get_value(0), 1.);
 
     // Tests if viewer correctly reflects any changes that happened in var.
     var.set_value(-3.14);
-    EXPECT_EQ(static_cast<value_t>(x), -3.14);
+    EXPECT_EQ(x.get_value(0), -3.14);
 }
 
 } // namespace expr

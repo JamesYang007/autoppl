@@ -27,28 +27,40 @@ struct Variable : util::Var<Variable<ValueType>>
     using const_pointer_t = const value_t*;
     using state_t = var_state;
 
-    // constructors
-    Variable(value_t value, 
+    template <typename iterator>
+    Variable(iterator begin,
+             iterator end,
              pointer_t storage_ptr,
              state_t state) noexcept
-        : value_{value}
-        , storage_ptr_{storage_ptr}
-        , state_{state}
-    {}
+        : values_{begin, end}, storage_ptr_{storage_ptr}, state_{state} {}
 
     Variable(pointer_t storage_ptr) noexcept
         : Variable(0, storage_ptr, state_t::parameter)
     {}
 
+    Variable(std::initializer_list<value_t> values) noexcept
+        : Variable(values.begin(), values.end(), nullptr, state_t::data) {}
+
+    Variable(value_t value, pointer_t storage_ptr, state_t state) noexcept
+        : storage_ptr_{storage_ptr}, state_{state} {
+            values_.push_back(value);
+        }
+
     Variable(value_t value) noexcept
         : Variable(value, nullptr, state_t::data) {}
+
+    template <typename iterator>
+    Variable(iterator begin, iterator end) noexcept
+        : Variable(begin, end, nullptr, state_t::data) {}
 
     Variable() noexcept
         : Variable(0, nullptr, state_t::parameter)
     {}
 
-    void set_value(value_t value) { value_ = value; }
-    value_t get_value() const { return value_; }
+    void set_value(value_t value) { values_[0] = value; }
+    value_t get_value(int i) const { return values_[i]; }
+    size_t size() const { return values_.size(); }
+    void add_value(value_t value) { values_.push_back(value); }
 
     void set_storage(pointer_t storage_ptr) { storage_ptr_ = storage_ptr; }
     pointer_t get_storage() { return storage_ptr_; }
@@ -56,8 +68,6 @@ struct Variable : util::Var<Variable<ValueType>>
 
     void set_state(state_t state) { state_ = state; }
     state_t get_state() const { return state_; }
-
-    explicit operator value_t () const { return get_value(); }
 
     /*
      * Sets underlying value to "value".
@@ -71,7 +81,7 @@ struct Variable : util::Var<Variable<ValueType>>
     }
 
 private:
-    value_t value_;             // store value associated with var
+    std::vector<value_t> values_;             // store value associated with var
     pointer_t storage_ptr_;     // points to beginning of storage 
                                 // storage is assumed to be contiguous
     state_t state_;             // state to determine if data or param

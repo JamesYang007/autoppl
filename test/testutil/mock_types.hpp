@@ -23,10 +23,9 @@ struct MockVar : util::Var<MockVar>
     using const_pointer_t = const double*;
     using state_t = MockState;
 
-    value_t get_value() const {return x_;}
-    explicit operator value_t() const { return get_value(); }
-
-    void set_value(value_t x) {x_ = x;}
+    void set_value(value_t x) { value_ = x; }
+    value_t get_value(int i) const { assert( i >= 0); return value_;}
+    size_t size() const { return 1; }
 
     void set_storage(pointer_t ptr) {ptr_ = ptr;}
 
@@ -34,7 +33,7 @@ struct MockVar : util::Var<MockVar>
     state_t get_state() const {return state_;}
 
 private:
-    value_t x_ = 0.;
+    value_t value_ = 0.0;
     pointer_t ptr_ = nullptr;
     state_t state_ = state_t::parameter;
 };
@@ -58,8 +57,8 @@ struct MockVar_no_convertible : util::Var<MockVar>
 struct MockVarExpr : util::VarExpr<MockVarExpr>
 {
     using value_t = double;
-    value_t get_value() const { return x_; }
-    explicit operator value_t() const { return get_value(); }
+    value_t get_value(int i) const { assert(i >= 0); return x_; }
+    size_t size() const { return 1; }
 
     /* not part of API */
     MockVarExpr(value_t x = 0.)
