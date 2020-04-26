@@ -21,20 +21,20 @@ struct normal_fixture : ::testing::Test {
 TEST_F(normal_fixture, normal_check_pdf) {
     auto dist1 = normal(0., 1.);
 
-    EXPECT_NEAR(util::pdf(v1, dist1), 0.0076757239361914193, tol);
-    EXPECT_NEAR(util::log_pdf(v1, dist1), -4.869692666023363, tol);
+    EXPECT_NEAR(dist1.pdf(v1), 0.0076757239361914193, tol);
+    EXPECT_NEAR(dist1.log_pdf(v1), -4.869692666023363, tol);
 
     auto dist2 = normal(x, 1.);
 
-    EXPECT_NEAR(util::pdf(v1, dist2), 0.0076757239361914193, tol);
-    EXPECT_NEAR(util::log_pdf(v1, dist2), -4.869692666023363, tol);
+    EXPECT_NEAR(dist2.pdf(v1), 0.0076757239361914193, tol);
+    EXPECT_NEAR(dist2.log_pdf(v1), -4.869692666023363, tol);
 
     x.set_value(0.1);
     y.set_value(-0.1);
     auto dist3 = normal(x + y, 1.);
 
-    EXPECT_NEAR(util::pdf(v1, dist3), 0.0076757239361914193, tol);
-    EXPECT_NEAR(util::log_pdf(v1, dist3), -4.869692666023363, tol);
+    EXPECT_NEAR(dist3.pdf(v1), 0.0076757239361914193, tol);
+    EXPECT_NEAR(dist3.log_pdf(v1), -4.869692666023363, tol);
 }
 
 }  // namespace ppl

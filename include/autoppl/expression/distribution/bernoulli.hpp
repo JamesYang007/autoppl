@@ -14,11 +14,13 @@ struct Bernoulli : util::DistExpr<Bernoulli<p_type>>
 
     using value_t = util::disc_param_t;
     using param_value_t = typename util::var_expr_traits<p_type>::value_t;
-    using dist_value_t = double;
+    using base_t = util::DistExpr<Bernoulli<p_type>>;
+    using dist_value_t = typename base_t::dist_value_t;
+    using base_t::pdf;
+    using base_t::log_pdf;
 
     Bernoulli(p_type p)
-        : p_{p} 
-    {}
+        : p_{p} {}
 
     template <class GeneratorType>
     value_t sample(GeneratorType& gen) const

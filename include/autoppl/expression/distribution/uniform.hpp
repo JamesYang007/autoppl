@@ -14,7 +14,10 @@ struct Uniform : util::DistExpr<Uniform<min_type, max_type>>
     static_assert(util::assert_is_var_expr_v<max_type>);
 
     using value_t = util::cont_param_t;
-    using dist_value_t = double;
+    using base_t = util::DistExpr<Uniform<min_type, max_type>>; 
+    using dist_value_t = typename base_t::dist_value_t;
+    using base_t::pdf;
+    using base_t::log_pdf;
 
     Uniform(min_type min, max_type max)
         : min_{min}, max_{max} 

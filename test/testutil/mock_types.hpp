@@ -94,7 +94,11 @@ struct MockVarExpr_no_convertible : util::VarExpr<MockVarExpr>
 struct MockDistExpr : util::DistExpr<MockDistExpr>
 {
     using value_t = double;
-    using dist_value_t = double;
+
+    using base_t = util::DistExpr<MockDistExpr>;
+    using dist_value_t = typename base_t::dist_value_t;
+    using base_t::pdf;
+    using base_t::log_pdf;
 
     dist_value_t pdf(value_t x) const
     { return x; }

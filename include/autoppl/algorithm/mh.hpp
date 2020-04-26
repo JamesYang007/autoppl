@@ -235,7 +235,7 @@ inline void mh_posterior(ModelType& model,
             }
             ++n_params;
         }
-        curr_log_pdf += util::log_pdf(var, dist);
+        curr_log_pdf += dist.log_pdf(var);
     };
     model.traverse(init_params);
 

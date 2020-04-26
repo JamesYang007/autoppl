@@ -14,7 +14,10 @@ struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
     static_assert(util::assert_is_var_expr_v<stddev_type>);
 
     using value_t = util::cont_param_t;
-    using dist_value_t = double;
+    using base_t = util::DistExpr<Normal<mean_type, stddev_type>>;
+    using dist_value_t = typename base_t::dist_value_t;
+    using base_t::pdf;
+    using base_t::log_pdf;
 
     Normal(mean_type mean, stddev_type stddev)
         : mean_{mean}, stddev_{stddev} 

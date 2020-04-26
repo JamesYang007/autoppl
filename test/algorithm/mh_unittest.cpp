@@ -104,6 +104,17 @@ TEST_F(mh_fixture, sample_unif_normal_posterior_mean_stddev_samples) {
     EXPECT_NEAR(sample_average(storage), 0.3, 0.1);
 }
 
+TEST_F(mh_fixture, sample_unif_bern_posterior_observe_zero)
+{
+    x_discrete.observe(0);
+    auto model = (
+        theta |= uniform(0., 1.),
+        x_discrete |= bernoulli(theta)
+    );
+    mh_posterior(model, sample_size, 1.0, 0.25, 0.);
+    plot_hist(storage, 0.2, 0., 1.);
+    EXPECT_NEAR(sample_average(storage), 1./3., 0.1);
+}
 
 TEST_F(mh_fixture, sample_unif_bern_posterior_observe_one)
 {
@@ -115,18 +126,6 @@ TEST_F(mh_fixture, sample_unif_bern_posterior_observe_one)
     mh_posterior(model, sample_size, 1.0, 0.25, 0.);
     plot_hist(storage, 0.2, 0., 1.);
     EXPECT_NEAR(sample_average(storage), 2./3., 0.1);
-}
-
-TEST_F(mh_fixture, sample_unif_bern_posterior_observe_zero)
-{
-    x_discrete.observe(0);
-    auto model = (
-        theta |= uniform(0., 1.),
-        x_discrete |= bernoulli(theta)
-    );
-    mh_posterior(model, sample_size, 1.0, 0.25, 0.);
-    plot_hist(storage, 0.2, 0., 1.);
-    EXPECT_NEAR(sample_average(storage), 1./3., 0.1);
 }
 
 TEST_F(mh_fixture, sample_bern_normal_posterior)
