@@ -175,8 +175,8 @@ inline void mh_posterior__(ModelType& model,
 /*
  * Metropolis-Hastings algorithm to sample from posterior distribution.
  * The posterior distribution is a constant multiple of model.pdf().
- * Any variables that model references which are in state "parameter"
- * is sampled and in state "data" are not.
+ * Any variables that model references which are Params
+ * are sampled but Data variables are ignored.
  * So, model.pdf() is proportional to p(parameters... | data...).
  *
  * User must ensure that they allocated at least as large as n_sample

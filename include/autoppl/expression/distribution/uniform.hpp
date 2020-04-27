@@ -47,7 +47,7 @@ struct Uniform : util::DistExpr<Uniform<min_type, max_type>>
     value_t max(size_t index=0) const { return max_.get_value(index); }
 
 private:
-    min_type min_;
+    min_type min_;  // TODO enforce that these are at least descended from a Param class.
     max_type max_;
 };
 

@@ -8,8 +8,13 @@
 namespace ppl {
 
 /*
- * Param docs
- * 
+ * Param is a light-weight structure that represents a univariate hidden random variable.
+ * That means the parameter does not hold samples, but it does contain a value that is used
+ * by model.pdf and get_value. Param requires user-provided external storage for samples and
+ * other algorithms. It is up to the user to ensure the storage pointer has enough capacity
+ * to support algorithms like metropolis-hastings which store data in this pointer. get_value
+ * supports an integer argument for compatibility with the get_value Data API, but this is never
+ * used.
  */
 
 template <class ValueType>
@@ -49,8 +54,10 @@ struct Param : util::ParamLike<Param<ValueType>> {
 
 /* 
  * Data is a light-weight structure that represents a set of samples from an observed random variable.
- * It acts as an intermediate layer of communication between
- * a model expression and the users, who must supply storage of values associated with this var.
+ * It acts as an intermediate layer of communication between a model expression and the users.
+ * A Data object is different from a Param object in that it can hold multiple values but cannot
+ * be sampled. To this end, the user does not provide external storage for samples. It does not
+ * support set_value, but you can instead var.observe() to add an extra observation internally.
  */
 template <class ValueType>
 struct Data : util::DataLike<Data<ValueType>>
@@ -74,7 +81,7 @@ struct Data : util::DataLike<Data<ValueType>>
     size_t size() const { return values_.size(); }
 
     value_t get_value(size_t i) const { 
-        assert((i >= 0) && (i < size()));
+        assert((i >= 0) && (i < size()));  // TODO change this to exception
         return values_[i]; 
     }
 
@@ -82,7 +89,7 @@ struct Data : util::DataLike<Data<ValueType>>
     void clear() { values_.clear(); }
 
 private:
-    std::vector<value_t> values_;             // store value associated with var
+    std::vector<value_t> values_;  // store value associated with var
 };
 
 // Useful aliases

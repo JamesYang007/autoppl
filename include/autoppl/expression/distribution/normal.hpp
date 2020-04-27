@@ -47,7 +47,7 @@ struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
     value_t max() const { return std::numeric_limits<value_t>::max(); }
 
 private:
-    mean_type mean_;
+    mean_type mean_;  // TODO enforce that these are at least descended from a Param class.
     stddev_type stddev_;
 };
 

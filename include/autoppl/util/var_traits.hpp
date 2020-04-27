@@ -14,17 +14,28 @@ template <class T>
 struct Var : BaseCRTP<T> 
 { using BaseCRTP<T>::self; };
 
+/*
+ * Base class for all Data-like variables.
+ * It is necessary for all Data-like variables to
+ * derive from this class.
+ */
 template <class T>
 struct DataLike : Var<T>
 { using Var<T>::self; };
 
+/*
+ * Base class for all Param-like variables.
+ * It is necessary for all Param-like variables to
+ * derive from this class.
+ */
 template <class T>
 struct ParamLike : Var<T>
 { using Var<T>::self; };
 
 
 /*
- * Checks if DistExpr<T> is base of type T 
+ * Checks if DataLike<T>, ParamLike<T> or Var<T> 
+ * is base of type T 
  */
 
 template <class T>
@@ -47,7 +58,6 @@ DEFINE_ASSERT_ONE_PARAM(data_is_base_of_v);
  * Traits for Variable-like classes.
  * value_t      type of value Variable represents during computation
  * pointer_t    storage pointer type 
- * state_t      type of enum class state; must have "data" and "parameter"
  */
 template <class VarType>
 struct var_traits
