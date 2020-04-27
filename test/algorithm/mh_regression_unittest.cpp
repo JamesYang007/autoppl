@@ -14,7 +14,7 @@ namespace ppl {
  */
 struct mh_regression_fixture : ::testing::Test {
    protected:
-    size_t sample_size = 20000;
+    size_t sample_size = 50000;
     double tol = 1e-8;
 
     std::vector<double> w_storage, b_storage;
