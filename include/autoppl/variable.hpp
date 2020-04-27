@@ -65,16 +65,10 @@ struct Data : util::DataLike<Data<ValueType>>
         : values_{begin, end} {}
 
     Data(std::initializer_list<value_t> values) noexcept
-        : Data(values.begin(), values.end()) {
-            std::cout << "INITIALIZER" << std::endl;
-            std::cout << values_.size() << std::endl;
-        }
+        : Data(values.begin(), values.end()) {}
 
     Data(value_t value) noexcept
-        : values_{{value}} {
-        std::cout << "VALUE" << std::endl;
-        std::cout << values_.size() << std::endl;
-        }
+        : values_{{value}} {}
 
     Data() noexcept : values_{} {}
 

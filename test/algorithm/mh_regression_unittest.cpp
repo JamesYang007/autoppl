@@ -12,8 +12,8 @@ namespace ppl {
 /*
  * Fixture for Metropolis-Hastings 
  */
-struct mh_fixture : ::testing::Test {
-protected:
+struct mh_regression_fixture : ::testing::Test {
+   protected:
     size_t sample_size = 20000;
     double tol = 1e-8;
 
@@ -25,7 +25,7 @@ protected:
 
     size_t burn = 1000;
 
-    mh_fixture()
+    mh_regression_fixture()
         : w_storage(sample_size)
         , b_storage(sample_size)
         , w{w_storage.data()}
@@ -43,25 +43,21 @@ protected:
     }
 };
 
-TEST_F(mh_fixture, test_regression_pdf) {
+TEST_F(mh_regression_fixture, test_regression_pdf) {
     w.set_value(1.0);
     b.set_value(1.0);
-
-    std::cout << x.size() << std::endl;
-    std::cout << (x * w + b).size() << " " << x.size() << " " << w.size() << " " << b.size() << std::endl;
-    std::cout << (x * w + b).get_value(0) << std::endl;
 
     EXPECT_EQ((x * w + b).get_value(0), 3.5);
 
     auto model = (w |= ppl::uniform(0, 2),
                   b |= ppl::uniform(0, 2),
                   y |= ppl::normal(x * w + b, 0.5));
-    
-    EXPECT_NEAR(model.pdf(), 0.24177490849077804, tol);
-    EXPECT_NEAR(model.log_pdf(), -2.806042476988255, tol);
+
+    EXPECT_NEAR(model.pdf(), 0.064503068866399005, tol);
+    EXPECT_NEAR(model.log_pdf(), -2.7410424769882544, tol);
 }
 
-TEST_F(mh_fixture, sample_regression_dist) {
+TEST_F(mh_regression_fixture, sample_regression_dist) {
     auto model = (w |= ppl::uniform(0, 2),
                   b |= ppl::uniform(0, 2),
                   y |= ppl::normal(x * w + b, 0.5)
