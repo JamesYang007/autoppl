@@ -52,3 +52,6 @@ endif()
 
 # Add subdirectories
 add_subdirectory(${PROJECT_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
+
+add_executable(${PROJECT_NAME}_main main.cpp)
+target_link_libraries(${PROJECT_NAME}_main ${PROJECT_NAME})

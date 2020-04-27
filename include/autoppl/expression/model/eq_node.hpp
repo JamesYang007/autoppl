@@ -56,7 +56,7 @@ struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
         return dist_.log_pdf(get_variable());
     }
 
-    auto& get_variable() const { return orig_var_ref_.get(); }
+    const auto& get_variable() const { return orig_var_ref_.get(); }
     auto& get_variable() { return orig_var_ref_.get(); }
 
     const auto& get_distribution() const { return dist_; }
