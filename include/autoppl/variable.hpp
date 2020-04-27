@@ -4,7 +4,6 @@
 #include <vector>
 #include <initializer_list>
 #include <cassert>
-#include <iostream>
 
 namespace ppl {
 

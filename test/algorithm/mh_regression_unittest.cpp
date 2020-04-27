@@ -23,6 +23,9 @@ struct mh_regression_fixture : ::testing::Test {
     ppl::Data<double> x {2.5, 3, 3.5, 4, 4.5, 5.};
     ppl::Data<double> y {3.5, 4, 4.5, 5, 5.5, 6.};
 
+    ppl::Data<double> q{2.4, 3.1, 3.6, 4, 4.5, 5.};
+    ppl::Data<double> r{3.5, 4, 4.4, 5.01, 5.46, 6.1};
+
     size_t burn = 1000;
 
     mh_regression_fixture()
@@ -43,20 +46,6 @@ struct mh_regression_fixture : ::testing::Test {
     }
 };
 
-TEST_F(mh_regression_fixture, test_regression_pdf) {
-    w.set_value(1.0);
-    b.set_value(1.0);
-
-    EXPECT_EQ((x * w + b).get_value(0), 3.5);
-
-    auto model = (w |= ppl::uniform(0, 2),
-                  b |= ppl::uniform(0, 2),
-                  y |= ppl::normal(x * w + b, 0.5));
-
-    EXPECT_NEAR(model.pdf(), 0.064503068866399005, tol);
-    EXPECT_NEAR(model.log_pdf(), -2.7410424769882544, tol);
-}
-
 TEST_F(mh_regression_fixture, sample_regression_dist) {
     auto model = (w |= ppl::uniform(0, 2),
                   b |= ppl::uniform(0, 2),
@@ -70,6 +59,20 @@ TEST_F(mh_regression_fixture, sample_regression_dist) {
 
     EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
     EXPECT_NEAR(sample_average(b_storage), 1.0, 0.1);
+}
+
+TEST_F(mh_regression_fixture, sample_regression_fuzzy_dist) {
+    auto model = (w |= ppl::uniform(0, 2),
+                  b |= ppl::uniform(0, 2),
+                  r |= ppl::normal(q * w + b, 0.5));
+
+    ppl::mh_posterior(model, sample_size);
+
+    plot_hist(w_storage, 0.2, 0., 1.);
+    plot_hist(b_storage, 0.2, 0., 1.);
+
+    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
+    EXPECT_NEAR(sample_average(b_storage), 0.95, 0.1);
 }
 
 } // ppl
