@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <type_traits>
 #include <functional>
 #include <autoppl/util/var_traits.hpp>
@@ -40,6 +41,13 @@ struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
         eq_f(static_cast<this_t&>(*this));
     }
 
+    template <class EqNodeFunc>
+    void traverse(EqNodeFunc&& eq_f) const
+    {
+        using this_t = EqNode<VarType, DistType>;
+        eq_f(static_cast<const this_t&>(*this));
+    }
+
     /*
      * Compute pdf of underlying distribution with underlying value.
      * Assumes that underlying value has been assigned properly.
@@ -56,9 +64,19 @@ struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
         return dist_.log_pdf(get_variable());
     }
 
-    const auto& get_variable() const { return orig_var_ref_.get(); }
-    auto& get_variable() { return orig_var_ref_.get(); }
+    template <class VecRefType, class VecADVarType>
+    auto ad_log_pdf(const VecRefType& keys,
+                    const VecADVarType& vars) const
+    {
+        const void* addr = &orig_var_ref_.get();
+        auto it = std::find(keys.begin(), keys.end(), addr);
+        assert(it != keys.end());
+        size_t idx = std::distance(keys.begin(), it);
+        return dist_.ad_log_pdf(vars[idx], keys, vars);
+    }
 
+    auto& get_variable() { return orig_var_ref_.get(); }
+    const auto& get_variable() const { return orig_var_ref_.get(); }
     const auto& get_distribution() const { return dist_; }
 
 private:

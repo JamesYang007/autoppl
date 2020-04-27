@@ -13,7 +13,7 @@ namespace ppl {
 struct mh_fixture : ::testing::Test
 {
 protected:
-    size_t sample_size = 20000;
+    size_t sample_size = 100000;
     std::vector<double> storage, storage_2;
     Param<double> theta, theta_2;
     Data<double> y {0.1, 0.2, 0.3, 0.4, 0.5};
@@ -45,6 +45,7 @@ TEST_F(mh_fixture, sample_std_normal)
     mh_posterior(model, sample_size, 1.0, 0.25, 0.);
     plot_hist(storage);
     EXPECT_NEAR(sample_average(storage), 0., 0.1);
+    std::cout << sample_average(storage) << std::endl;
 }
 
 TEST_F(mh_fixture, sample_uniform)

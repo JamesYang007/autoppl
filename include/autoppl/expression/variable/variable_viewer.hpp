@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <autoppl/util/var_traits.hpp>
 #include <autoppl/util/var_expr_traits.hpp>
 
@@ -23,6 +24,21 @@ struct VariableViewer : util::VarExpr<VariableViewer<VariableType>>
 
     value_t get_value(size_t i) const { return var_ref_.get().get_value(i); }
     size_t size() const { return var_ref_.get().size(); }
+
+    /* 
+     * Returns ad expression of the constant.
+     * Assumes that AD variables in vars will always be parameters.
+     */
+    template <class VecRefType, class VecADVarType>
+    auto get_ad(const VecRefType& keys,
+                const VecADVarType& vars) const
+    {
+        const void* addr = &var_ref_.get();
+        auto it = std::find(keys.begin(), keys.end(), addr);
+        assert(it != keys.end());
+        size_t idx = std::distance(keys.begin(), it);
+        return vars[idx];
+    }
 
 private:
     using var_ref_t = std::reference_wrapper<var_t>;

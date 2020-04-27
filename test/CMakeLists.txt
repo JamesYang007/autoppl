@@ -112,16 +112,28 @@ add_test(model_expr_unittest model_expr_unittest)
 add_executable(algorithm_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/mh_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/mh_regression_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/nuts_unittest.cpp
     )
-target_compile_options(algorithm_unittest PRIVATE -g -Wall -Werror -Wextra)
+target_compile_options(algorithm_unittest
+    PRIVATE -g -Wall -Werror -Wextra
+    -DARMA_DONT_USE_WRAPPER
+    )
 target_include_directories(algorithm_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${ARMADILLO_INCLUDE_DIRS}
     )
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(algorithm_unittest gcov)
 endif()
-target_link_libraries(algorithm_unittest gtest_main pthread ${PROJECT_NAME})
+target_link_libraries(algorithm_unittest
+    gtest_main
+    pthread
+    ${PROJECT_NAME}
+    ${ARMADILLO_LIBRARIES}
+    lapack
+    blas
+    )
 add_test(algorithm_unittest algorithm_unittest)
 
 ######################################################

@@ -1,5 +1,6 @@
 #pragma once
 #include <autoppl/util/var_expr_traits.hpp>
+#include <fastad>
 
 namespace ppl {
 namespace expr {
@@ -16,7 +17,15 @@ struct Constant : util::VarExpr<Constant<ValueType>>
     }
 
     constexpr size_t size() const { return 1; }
-    
+
+    /* 
+     * Returns ad expression of the constant.
+     */
+    template <class VecRefType, class VecADVarType>
+    auto get_ad(const VecRefType&,
+                const VecADVarType&) const
+    { return ad::constant(get_value()); }
+
 private:
     value_t c_;
 };

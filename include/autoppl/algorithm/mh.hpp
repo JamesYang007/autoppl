@@ -7,10 +7,7 @@
 #include <variant>
 #include <autoppl/util/traits.hpp>
 #include <autoppl/variable.hpp>
-
-#define AUTOPPL_MH_UNKNOWN_VALUE_TYPE_ERROR \
-    "Unknown value type: must be convertible to util::disc_param_t " \
-    "such as uint64_t or util::cont_param_t such as double."
+#include <autoppl/algorithm/sampler_tools.hpp>
 
 /*
  * Assumptions:
@@ -18,7 +15,7 @@
  */
 
 namespace ppl {
-namespace details {
+namespace alg {
 
 /*
  * Convert ValueType to either util::cont_param_t if floating point
@@ -111,7 +108,7 @@ inline void mh_posterior__(ModelType& model,
                 }
 
                 // move old value into params
-                using converted_value_t = details::value_to_param_t<value_t>;
+                using converted_value_t = value_to_param_t<value_t>;
                 params_it->next = static_cast<converted_value_t>(curr);
                 ++params_it;
             }
@@ -127,8 +124,8 @@ inline void mh_posterior__(ModelType& model,
                 using value_t = typename util::var_traits<var_t>::value_t;
                 if constexpr (util::param_is_base_of_v<var_t>) {
                     if (n_swaps) {
-                        using converted_value_t = details::value_to_param_t<value_t>;
-                        var.set_value(std::get<converted_value_t>(params_it->next));
+                        using converted_value_t = value_to_param_t<value_t>;
+                        var.set_value(*std::get_if<converted_value_t>(&params_it->next));
                         ++params_it;
                         --n_swaps;
                     }
@@ -155,8 +152,8 @@ inline void mh_posterior__(ModelType& model,
             using value_t = typename util::var_traits<var_t>::value_t;
             if constexpr(util::param_is_base_of_v<var_t>) {
                 if (!accept) {
-                    using converted_value_t = details::value_to_param_t<value_t>;
-                    var.set_value(std::get<converted_value_t>(params_it->next));
+                    using converted_value_t = value_to_param_t<value_t>;
+                    var.set_value(*std::get_if<converted_value_t>(&params_it->next));
                     ++params_it;
                 }
                 auto storage = var.get_storage();
@@ -170,7 +167,7 @@ inline void mh_posterior__(ModelType& model,
     }
 }
 
-} // namespace details
+} // namespace alg
 
 /*
  * Metropolis-Hastings algorithm to sample from posterior distribution.
@@ -193,13 +190,13 @@ inline void mh_posterior(ModelType& model,
                                             ).count()
                         )
 {
-    using data_t = details::MHData;
+    using data_t = alg::MHData;
     
     // set-up auxiliary tools
+    constexpr double initial_radius = 5.;    
     std::mt19937 gen(seed);
     size_t n_params = 0;
     double curr_log_pdf = 0.;  // current log pdf
-    const double initial_radius = 5.;    // arbitrarily chosen radius for initial sampling
 
     // 1. initialize parameters with values in valid range
     // - discrete valued params sampled uniformly within the distribution range
@@ -236,13 +233,13 @@ inline void mh_posterior(ModelType& model,
     model.traverse(init_params);
 
     std::vector<data_t> params(n_params);   // vector of parameter-related data with candidate
-    details::mh_posterior__(model,
-                            params.begin(),
-                            gen,
-                            n_sample,
-                            curr_log_pdf,
-                            alpha,
-                            stddev);
+    alg::mh_posterior__(model,
+                        params.begin(),
+                        gen,
+                        n_sample,
+                        curr_log_pdf,
+                        alpha,
+                        stddev);
 }
 
 } // namespace ppl

@@ -40,6 +40,13 @@ struct GlueNode : util::ModelExpr<GlueNode<LHSNodeType, RHSNodeType>>
         right_node_.traverse(eq_f);
     }
 
+    template <class EqNodeFunc>
+    void traverse(EqNodeFunc&& eq_f) const
+    {
+        left_node_.traverse(eq_f);
+        right_node_.traverse(eq_f);
+    }
+
     /*
      * Computes left node joint pdf then right node joint pdf
      * and returns the product of the two.
@@ -53,6 +60,18 @@ struct GlueNode : util::ModelExpr<GlueNode<LHSNodeType, RHSNodeType>>
      */
     dist_value_t log_pdf() const
     { return left_node_.log_pdf() + right_node_.log_pdf(); }
+
+    /* 
+     * Up to constant addition, returns ad expression of log pdf
+     * of both sides added together.
+     */
+    template <class VecRefType, class VecADVarType>
+    auto ad_log_pdf(const VecRefType& keys,
+                    const VecADVarType& vars) const
+    {
+        return (left_node_.ad_log_pdf(keys, vars) +
+                right_node_.ad_log_pdf(keys, vars));
+    }
 
 private:
     left_node_t left_node_;
