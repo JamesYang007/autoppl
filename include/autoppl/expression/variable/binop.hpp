@@ -2,6 +2,8 @@
 #include <autoppl/util/var_expr_traits.hpp>
 #include <autoppl/variable.hpp>
 
+#define MAX(a, b) ((a) > (b)) ? (a) : (b)
+
 namespace ppl {
 namespace expr {
 
@@ -26,6 +28,8 @@ struct BinaryOpNode :
             auto rhs_value = rhs_.get_value(i);
             return BinaryOp::evaluate(lhs_value, rhs_value);
         }
+
+		size_t size() const { return MAX(lhs_.size(), rhs_.size()); }
 
 private:
 	LHSVarExprType lhs_;

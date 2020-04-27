@@ -5,16 +5,16 @@
 namespace ppl {
 namespace expr {
 
-struct variable_fixture : ::testing::Test {
+struct data_fixture : ::testing::Test {
    protected:
-    Variable<double> var1 {1.0, 2.0, 3.0};
-    Variable<double> var2 {1.0};
+    Data<double> var1 {1.0, 2.0, 3.0};
+    Data<double> var2 {1.0};
 
     size_t expected_size;
     size_t real_size;
 };
 
-TEST_F(variable_fixture, test_multiple_value) {
+TEST_F(data_fixture, test_multiple_value) {
     expected_size = 3;
     real_size = var1.size();
     
@@ -42,10 +42,9 @@ TEST_F(variable_fixture, test_multiple_value) {
     }, "");
 
     var1.clear();
-    expected_size = 1;
+    expected_size = 0;
     real_size = var1.size();
     EXPECT_EQ(expected_size, real_size);
-    EXPECT_EQ(var1.get_state(), var_state::parameter);
 
     var1.observe(0.1);
     var1.observe(0.2);
@@ -53,7 +52,6 @@ TEST_F(variable_fixture, test_multiple_value) {
     expected_size = 2;
     real_size = var1.size();
     EXPECT_EQ(expected_size, real_size);
-    EXPECT_EQ(var1.get_state(), var_state::data);
 }
 
 }  // namespace expr

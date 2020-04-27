@@ -8,14 +8,14 @@ namespace expr {
 struct variable_viewer_fixture : ::testing::Test
 {
 protected:
-    using value_t = typename MockVar::value_t;
-    MockVar var;
-    VariableViewer<MockVar> x = var;
+    using value_t = typename MockParam::value_t;
+    MockParam var;
+    VariableViewer<MockParam> x = var;
 };
 
 TEST_F(variable_viewer_fixture, ctor)
 {
-    static_assert(util::assert_is_var_expr_v<VariableViewer<MockVar>>);
+    static_assert(util::assert_is_var_expr_v<VariableViewer<MockParam>>);
 }
 
 TEST_F(variable_viewer_fixture, convertible_value)

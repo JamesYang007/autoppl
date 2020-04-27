@@ -23,7 +23,7 @@ struct DistExpr : BaseCRTP<T>
     log_pdf(const VarType& var) const {
         dist_value_t value = 0.0;
         for (size_t i = 0; i < var.size(); i++) {
-            value += self().log_pdf(var.get_value(i));
+            value += self().log_pdf(var.get_value(i), i);
         }
 
         return value;
@@ -34,7 +34,7 @@ struct DistExpr : BaseCRTP<T>
     pdf(const VarType& var) const {
         dist_value_t value = 1.0;
         for (size_t i = 0; i < var.size(); i++) {
-            value *= self().pdf(var.get_value(i));
+            value *= self().pdf(var.get_value(i), i);
         }
 
         return value;

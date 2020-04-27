@@ -15,9 +15,10 @@ struct mh_fixture : ::testing::Test
 protected:
     size_t sample_size = 20000;
     std::vector<double> storage, storage_2;
-    Variable<double> theta, theta_2, x;
-    Variable<double> y {0.1, 0.2, 0.3, 0.4, 0.5};
-    Variable<int> x_discrete;
+    Param<double> theta, theta_2;
+    Data<double> y {0.1, 0.2, 0.3, 0.4, 0.5};
+    Data<double> x;
+    Data<int> x_discrete;
     size_t burn = 1000;
 
     mh_fixture()
@@ -147,7 +148,7 @@ TEST_F(mh_fixture, sample_unif_bern_posterior_observe_one)
 TEST_F(mh_fixture, sample_bern_normal_posterior)
 {
     std::vector<int> storage(sample_size);
-    Variable<int> theta{storage.data()};
+    Param<int> theta{storage.data()};
     x.observe(1.);
     auto model = (
         theta |= bernoulli(0.5),

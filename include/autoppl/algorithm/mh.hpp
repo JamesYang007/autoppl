@@ -81,9 +81,8 @@ inline void mh_posterior__(ModelType& model,
             auto& var = eq_node.get_variable();
             using var_t = std::decay_t<decltype(var)>;
             using value_t = typename util::var_traits<var_t>::value_t;
-            using state_t = typename util::var_traits<var_t>::state_t;
 
-            if (var.get_state() == state_t::parameter) {
+            if constexpr (util::param_is_base_of_v<var_t>) {
                 auto curr = var.get_value(0);
                 const auto& dist = eq_node.get_distribution();
 
@@ -126,8 +125,7 @@ inline void mh_posterior__(ModelType& model,
                 auto& var = eq_node.get_variable();
                 using var_t = std::decay_t<decltype(var)>;
                 using value_t = typename util::var_traits<var_t>::value_t;
-                using state_t = typename util::var_traits<var_t>::state_t;
-                if (var.get_state() == state_t::parameter) {
+                if constexpr (util::param_is_base_of_v<var_t>) {
                     if (n_swaps) {
                         using converted_value_t = details::value_to_param_t<value_t>;
                         var.set_value(std::get<converted_value_t>(params_it->next));
@@ -155,8 +153,7 @@ inline void mh_posterior__(ModelType& model,
             auto& var = eq_node.get_variable();
             using var_t = std::decay_t<decltype(var)>;
             using value_t = typename util::var_traits<var_t>::value_t;
-            using state_t = typename util::var_traits<var_t>::state_t;
-            if (var.get_state() == state_t::parameter) {
+            if constexpr(util::param_is_base_of_v<var_t>) {
                 if (!accept) {
                     using converted_value_t = details::value_to_param_t<value_t>;
                     var.set_value(std::get<converted_value_t>(params_it->next));
@@ -216,9 +213,8 @@ inline void mh_posterior(ModelType& model,
 
         using var_t = std::decay_t<decltype(var)>;
         using value_t = typename util::var_traits<var_t>::value_t;
-        using state_t = typename util::var_traits<var_t>::state_t;
 
-        if (var.get_state() == state_t::parameter) {
+        if constexpr (util::param_is_base_of_v<var_t>) {
             if constexpr (std::is_integral_v<value_t>) {
                 std::uniform_int_distribution init_sampler(dist.min(), dist.max());
                 var.set_value(init_sampler(gen));

@@ -16,7 +16,7 @@ struct VarExpr : BaseCRTP<T>
 { using BaseCRTP<T>::self; };
 
 /*
- * Checks if DistExpr<T> is base of type T 
+ * Checks if VarExpr<T> is base of type T 
  */
 template <class T>
 inline constexpr bool var_expr_is_base_of_v =

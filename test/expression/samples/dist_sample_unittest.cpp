@@ -11,9 +11,8 @@ namespace ppl {
 
 struct normal_fixture : ::testing::Test {
    protected:
-    Variable<double> v1 {0.1, 0.2, 0.3, 0.4, 0.5};
-    Variable<double> x {0.0};
-    Variable<double> y {0.0};
+    Data<double> v1 {0.1, 0.2, 0.3, 0.4, 0.5};
+    Param<double> x, y;
 
     double tol = 1e-15;
 };

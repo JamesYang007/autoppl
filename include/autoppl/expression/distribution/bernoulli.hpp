@@ -29,21 +29,21 @@ struct Bernoulli : util::DistExpr<Bernoulli<p_type>>
         return dist(gen);
     }
 
-    dist_value_t pdf(value_t x) const
+    dist_value_t pdf(value_t x, size_t index=0) const
     { 
-        if (x == 1) return p();
+        if (x == 1) return p(index);
         else if (x == 0) return 1. - p();
         else return 0.0;
     }
 
-    dist_value_t log_pdf(value_t x) const
+    dist_value_t log_pdf(value_t x, size_t index=0) const
     {
-        if (x == 1) return std::log(p());
-        else if (x == 0) return std::log(1. - p());
+        if (x == 1) return std::log(p(index));
+        else if (x == 0) return std::log(1. - p(index));
         else return std::numeric_limits<dist_value_t>::lowest();
     }
 
-    param_value_t p() const { return p_.get_value(0); }
+    param_value_t p(size_t index=0) const { return p_.get_value(index); }
     value_t min() const { return 0; }
     value_t max() const { return 1; }
 

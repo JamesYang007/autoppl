@@ -18,8 +18,8 @@ namespace expr {
 struct var_dist_fixture : ::testing::Test
 {
 protected:
-    MockVar x;
-    using model_t = EqNode<MockVar, MockDistExpr>;
+    MockParam x;
+    using model_t = EqNode<MockParam, MockDistExpr>;
     model_t model = {x, MockDistExpr()};
     double val;
 
@@ -76,8 +76,8 @@ struct many_var_dist_fixture : ::testing::Test
 {
 protected:
     using value_t = double;
-    using eq_t = EqNode<MockVar, MockDistExpr>;
-    MockVar x, y, z, w;
+    using eq_t = EqNode<MockParam, MockDistExpr>;
+    MockParam x, y, z, w;
     value_t xv, yv, zv, wv;
 
     using model_two_t = GlueNode<eq_t, eq_t>;
@@ -139,13 +139,10 @@ TEST_F(many_var_dist_fixture, four_vars_pdf)
 TEST_F(many_var_dist_fixture, four_vars_traverse_count_params)
 {
     int count = 0;
-    z.set_state(MockState::data);
-    model_four.traverse([&](auto& model) {
-            using var_t = std::decay_t<decltype(model.get_variable())>;
-            using state_t = typename util::var_traits<var_t>::state_t;
-            count += (model.get_variable().get_state() == state_t::parameter);
+    model_four.traverse([&](auto&) {
+            count++;
         });
-    EXPECT_EQ(count, 3);
+    EXPECT_EQ(count, 4);
 }
 
 TEST_F(many_var_dist_fixture, four_vars_traverse_pdf)

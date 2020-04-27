@@ -7,9 +7,9 @@ namespace ppl {
 struct expr_builder_fixture : ::testing::Test
 {
 protected:
-	MockVarExpr x;
-	MockVarExpr y;
-    MockVar v;
+    MockVarExpr x;
+    MockVarExpr y;
+    MockParam v;
     double d;
     long int i;
 };
@@ -17,13 +17,13 @@ protected:
 TEST_F(expr_builder_fixture, convert_to_param_var)
 {
     using namespace details;
-    static_assert(std::is_same_v<MockVar, std::decay_t<MockVar>>);
-    static_assert(util::is_var_v<MockVar>);
-    static_assert(!std::is_same_v<MockVar, util::cont_param_t>);
-    static_assert(!util::is_var_expr_v<MockVar>);
+    static_assert(std::is_same_v<MockParam, std::decay_t<MockParam>>);
+    static_assert(util::is_var_v<MockParam>);
+    static_assert(!std::is_same_v<MockParam, util::cont_param_t>);
+    static_assert(!util::is_var_expr_v<MockParam>);
     static_assert(std::is_same_v<
-            convert_to_param_t<MockVar>,
-            expr::VariableViewer<MockVar>
+            convert_to_param_t<MockParam>,
+            expr::VariableViewer<MockParam>
             >);
 }
 
@@ -73,7 +73,7 @@ TEST_F(expr_builder_fixture, op_plus)
             expr::BinaryOpNode<expr::AddOp, MockVarExpr, expr::Constant<long int>>,
             std::decay_t<decltype(x + 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, MockVarExpr, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::AddOp, MockVarExpr, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(x + v)> >);
     static_assert(std::is_same_v<
             expr::BinaryOpNode<expr::AddOp, MockVarExpr, MockVarExpr>,
@@ -85,7 +85,7 @@ TEST_F(expr_builder_fixture, op_plus)
             expr::BinaryOpNode<expr::AddOp, MockVarExpr, expr::Constant<long int>>,
             std::decay_t<decltype(MockVarExpr()+ 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, MockVarExpr, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::AddOp, MockVarExpr, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(MockVarExpr()+ v)> >);
 
     // double, [MockVarExpr, double, long int, MockVar]
@@ -99,7 +99,7 @@ TEST_F(expr_builder_fixture, op_plus)
             double,
             std::decay_t<decltype(d + 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::Constant<double>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::AddOp, expr::Constant<double>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(d + v)> >);
     static_assert(std::is_same_v<
             expr::BinaryOpNode<expr::AddOp, expr::Constant<double>, MockVarExpr>,
@@ -111,7 +111,7 @@ TEST_F(expr_builder_fixture, op_plus)
             double,
             std::decay_t<decltype(3. + 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::Constant<double>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::AddOp, expr::Constant<double>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(3. + v)> >);
 
     // long int, [MockVarExpr, double, long int, MockVar]
@@ -125,7 +125,7 @@ TEST_F(expr_builder_fixture, op_plus)
             long,
             std::decay_t<decltype(i + 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::Constant<long>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::AddOp, expr::Constant<long>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(i + v)> >);
     static_assert(std::is_same_v<
             expr::BinaryOpNode<expr::AddOp, expr::Constant<long>, MockVarExpr>,
@@ -137,21 +137,21 @@ TEST_F(expr_builder_fixture, op_plus)
             long,
             std::decay_t<decltype(3l + 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::Constant<long>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::AddOp, expr::Constant<long>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(3l + v)> >);
 
     // MockVar, [MockVarExpr, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::VariableViewer<MockVar>, MockVarExpr>,
+            expr::BinaryOpNode<expr::AddOp, expr::VariableViewer<MockParam>, MockVarExpr>,
             std::decay_t<decltype(v + y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::VariableViewer<MockVar>, expr::Constant<double>>,
+            expr::BinaryOpNode<expr::AddOp, expr::VariableViewer<MockParam>, expr::Constant<double>>,
             std::decay_t<decltype(v + 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::VariableViewer<MockVar>, expr::Constant<long>>,
+            expr::BinaryOpNode<expr::AddOp, expr::VariableViewer<MockParam>, expr::Constant<long>>,
             std::decay_t<decltype(v + 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::VariableViewer<MockVar>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::AddOp, expr::VariableViewer<MockParam>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(v + v)> >);
 }
 
@@ -168,7 +168,7 @@ TEST_F(expr_builder_fixture, op_minus)
             expr::BinaryOpNode<expr::SubOp, MockVarExpr, expr::Constant<long int>>,
             std::decay_t<decltype(x - 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, MockVarExpr, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::SubOp, MockVarExpr, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(x - v)> >);
     static_assert(std::is_same_v<
             expr::BinaryOpNode<expr::SubOp, MockVarExpr, MockVarExpr>,
@@ -180,7 +180,7 @@ TEST_F(expr_builder_fixture, op_minus)
             expr::BinaryOpNode<expr::SubOp, MockVarExpr, expr::Constant<long int>>,
             std::decay_t<decltype(MockVarExpr()- 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, MockVarExpr, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::SubOp, MockVarExpr, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(MockVarExpr()- v)> >);
 
     // double, [MockVarExpr, double, long int, MockVar]
@@ -194,7 +194,7 @@ TEST_F(expr_builder_fixture, op_minus)
             double,
             std::decay_t<decltype(d - 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::Constant<double>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::SubOp, expr::Constant<double>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(d - v)> >);
     static_assert(std::is_same_v<
             expr::BinaryOpNode<expr::SubOp, expr::Constant<double>, MockVarExpr>,
@@ -206,7 +206,7 @@ TEST_F(expr_builder_fixture, op_minus)
             double,
             std::decay_t<decltype(3. - 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::Constant<double>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::SubOp, expr::Constant<double>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(3. - v)> >);
 
     // long int, [MockVarExpr, double, long int, MockVar]
@@ -220,7 +220,7 @@ TEST_F(expr_builder_fixture, op_minus)
             long,
             std::decay_t<decltype(i - 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::Constant<long>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::SubOp, expr::Constant<long>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(i - v)> >);
     static_assert(std::is_same_v<
             expr::BinaryOpNode<expr::SubOp, expr::Constant<long>, MockVarExpr>,
@@ -232,21 +232,21 @@ TEST_F(expr_builder_fixture, op_minus)
             long,
             std::decay_t<decltype(3l - 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::Constant<long>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::SubOp, expr::Constant<long>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(3l - v)> >);
 
     // MockVar, [MockVarExpr, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::VariableViewer<MockVar>, MockVarExpr>,
+            expr::BinaryOpNode<expr::SubOp, expr::VariableViewer<MockParam>, MockVarExpr>,
             std::decay_t<decltype(v - y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::VariableViewer<MockVar>, expr::Constant<double>>,
+            expr::BinaryOpNode<expr::SubOp, expr::VariableViewer<MockParam>, expr::Constant<double>>,
             std::decay_t<decltype(v - 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::VariableViewer<MockVar>, expr::Constant<long>>,
+            expr::BinaryOpNode<expr::SubOp, expr::VariableViewer<MockParam>, expr::Constant<long>>,
             std::decay_t<decltype(v - 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::VariableViewer<MockVar>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::SubOp, expr::VariableViewer<MockParam>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(v - v)> >);
 }
 
@@ -263,7 +263,7 @@ TEST_F(expr_builder_fixture, op_times)
             expr::BinaryOpNode<expr::MultOp, MockVarExpr, expr::Constant<long int>>,
             std::decay_t<decltype(x * 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, MockVarExpr, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::MultOp, MockVarExpr, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(x * v)> >);
     static_assert(std::is_same_v<
             expr::BinaryOpNode<expr::MultOp, MockVarExpr, MockVarExpr>,
@@ -275,7 +275,7 @@ TEST_F(expr_builder_fixture, op_times)
             expr::BinaryOpNode<expr::MultOp, MockVarExpr, expr::Constant<long int>>,
             std::decay_t<decltype(MockVarExpr()* 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, MockVarExpr, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::MultOp, MockVarExpr, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(MockVarExpr()* v)> >);
 
     // double, [MockVarExpr, double, long int, MockVar]
@@ -289,7 +289,7 @@ TEST_F(expr_builder_fixture, op_times)
             double,
             std::decay_t<decltype(d * 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::Constant<double>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::MultOp, expr::Constant<double>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(d * v)> >);
     static_assert(std::is_same_v<
             expr::BinaryOpNode<expr::MultOp, expr::Constant<double>, MockVarExpr>,
@@ -301,7 +301,7 @@ TEST_F(expr_builder_fixture, op_times)
             double,
             std::decay_t<decltype(3. * 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::Constant<double>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::MultOp, expr::Constant<double>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(3. * v)> >);
 
     // long int, [MockVarExpr, double, long int, MockVar]
@@ -315,7 +315,7 @@ TEST_F(expr_builder_fixture, op_times)
             long,
             std::decay_t<decltype(i * 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::Constant<long>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::MultOp, expr::Constant<long>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(i * v)> >);
     static_assert(std::is_same_v<
             expr::BinaryOpNode<expr::MultOp, expr::Constant<long>, MockVarExpr>,
@@ -327,21 +327,21 @@ TEST_F(expr_builder_fixture, op_times)
             long,
             std::decay_t<decltype(3l * 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::Constant<long>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::MultOp, expr::Constant<long>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(3l * v)> >);
 
     // MockVar, [MockVarExpr, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::VariableViewer<MockVar>, MockVarExpr>,
+            expr::BinaryOpNode<expr::MultOp, expr::VariableViewer<MockParam>, MockVarExpr>,
             std::decay_t<decltype(v * y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::VariableViewer<MockVar>, expr::Constant<double>>,
+            expr::BinaryOpNode<expr::MultOp, expr::VariableViewer<MockParam>, expr::Constant<double>>,
             std::decay_t<decltype(v * 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::VariableViewer<MockVar>, expr::Constant<long>>,
+            expr::BinaryOpNode<expr::MultOp, expr::VariableViewer<MockParam>, expr::Constant<long>>,
             std::decay_t<decltype(v * 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::VariableViewer<MockVar>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::MultOp, expr::VariableViewer<MockParam>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(v * v)> >);
 }
 
@@ -358,7 +358,7 @@ TEST_F(expr_builder_fixture, op_div)
             expr::BinaryOpNode<expr::DivOp, MockVarExpr, expr::Constant<long int>>,
             std::decay_t<decltype(x / 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, MockVarExpr, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::DivOp, MockVarExpr, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(x / v)> >);
     static_assert(std::is_same_v<
             expr::BinaryOpNode<expr::DivOp, MockVarExpr, MockVarExpr>,
@@ -370,7 +370,7 @@ TEST_F(expr_builder_fixture, op_div)
             expr::BinaryOpNode<expr::DivOp, MockVarExpr, expr::Constant<long int>>,
             std::decay_t<decltype(MockVarExpr()/ 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, MockVarExpr, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::DivOp, MockVarExpr, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(MockVarExpr()/ v)> >);
 
     // double, [MockVarExpr, double, long int, MockVar]
@@ -384,7 +384,7 @@ TEST_F(expr_builder_fixture, op_div)
             double,
             std::decay_t<decltype(d / 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::Constant<double>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::DivOp, expr::Constant<double>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(d / v)> >);
     static_assert(std::is_same_v<
             expr::BinaryOpNode<expr::DivOp, expr::Constant<double>, MockVarExpr>,
@@ -396,7 +396,7 @@ TEST_F(expr_builder_fixture, op_div)
             double,
             std::decay_t<decltype(3. / 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::Constant<double>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::DivOp, expr::Constant<double>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(3. / v)> >);
 
     // long int, [MockVarExpr, double, long int, MockVar]
@@ -410,7 +410,7 @@ TEST_F(expr_builder_fixture, op_div)
             long,
             std::decay_t<decltype(i / 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::Constant<long>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::DivOp, expr::Constant<long>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(i / v)> >);
     static_assert(std::is_same_v<
             expr::BinaryOpNode<expr::DivOp, expr::Constant<long>, MockVarExpr>,
@@ -422,21 +422,21 @@ TEST_F(expr_builder_fixture, op_div)
             long,
             std::decay_t<decltype(3l / 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::Constant<long>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::DivOp, expr::Constant<long>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(3l / v)> >);
 
     // MockVar, [MockVarExpr, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::VariableViewer<MockVar>, MockVarExpr>,
+            expr::BinaryOpNode<expr::DivOp, expr::VariableViewer<MockParam>, MockVarExpr>,
             std::decay_t<decltype(v / y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::VariableViewer<MockVar>, expr::Constant<double>>,
+            expr::BinaryOpNode<expr::DivOp, expr::VariableViewer<MockParam>, expr::Constant<double>>,
             std::decay_t<decltype(v / 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::VariableViewer<MockVar>, expr::Constant<long>>,
+            expr::BinaryOpNode<expr::DivOp, expr::VariableViewer<MockParam>, expr::Constant<long>>,
             std::decay_t<decltype(v / 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::VariableViewer<MockVar>, expr::VariableViewer<MockVar>>,
+            expr::BinaryOpNode<expr::DivOp, expr::VariableViewer<MockParam>, expr::VariableViewer<MockParam>>,
             std::decay_t<decltype(v / v)> >);
 }
 } // namespace ppl

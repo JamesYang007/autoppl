@@ -208,7 +208,6 @@ struct invalid_tag
 DEFINE_HAS_TYPE(value_t);
 DEFINE_HAS_TYPE(pointer_t);
 DEFINE_HAS_TYPE(const_pointer_t);
-DEFINE_HAS_TYPE(state_t);
 
 DEFINE_HAS_TYPE(dist_value_t);
 
@@ -216,8 +215,6 @@ DEFINE_HAS_FUNC(set_value);
 DEFINE_HAS_FUNC(get_value);
 DEFINE_HAS_FUNC(set_storage);
 DEFINE_HAS_FUNC(get_storage);
-DEFINE_HAS_FUNC(set_state);
-DEFINE_HAS_FUNC(get_state);
 
 DEFINE_HAS_FUNC(pdf);
 DEFINE_HAS_FUNC(log_pdf);

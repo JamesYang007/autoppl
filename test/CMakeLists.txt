@@ -51,7 +51,8 @@ add_test(sample_unittest sample_unittest)
 
 add_executable(var_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/variable_viewer_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/variable_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/param_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/data_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/constant_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/binop_unittest.cpp
     )
@@ -110,6 +111,7 @@ add_test(model_expr_unittest model_expr_unittest)
 
 add_executable(algorithm_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/mh_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/mh_regression_unittest.cpp
     )
 target_compile_options(algorithm_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(algorithm_unittest PRIVATE

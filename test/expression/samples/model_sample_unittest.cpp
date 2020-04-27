@@ -11,9 +11,8 @@ namespace ppl {
 
 struct model_fixture : ::testing::Test {
    protected:
-    Variable<double> v1 {0.1, 0.2, 0.3, 0.4, 0.5};
-    Variable<double> mu;
-    Variable<double> sigma;
+    Data<double> v1 {0.1, 0.2, 0.3, 0.4, 0.5};
+    Param<double> mu, sigma;
 
     double tol = 1e-15;
 };
