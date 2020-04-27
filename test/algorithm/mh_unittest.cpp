@@ -14,7 +14,7 @@ struct mh_fixture : ::testing::Test
 {
 protected:
     size_t sample_size = 20000;
-    std::vector<double> storage, storage_2, storage_3;
+    std::vector<double> storage, storage_2;
     Variable<double> theta, theta_2, x;
     Variable<double> y {0.1, 0.2, 0.3, 0.4, 0.5};
     Variable<int> x_discrete;
@@ -93,7 +93,7 @@ TEST_F(mh_fixture, sample_unif_normal_posterior_mean_stddev)
     EXPECT_NEAR(sample_average(storage_2), 1.868814361437099766, 0.1);
 }
 
-TEST_F(mh_fixture, sample_unif_normal_posterior_mean_stddev_samples) {
+TEST_F(mh_fixture, sample_unif_normal_posterior_mean_samples) {
     auto model = (
         theta |= uniform(-1., 2.), 
         y |= normal(theta, 1.0) // {0.1, 0.2, 0.3, 0.4, 0.5}
@@ -102,6 +102,22 @@ TEST_F(mh_fixture, sample_unif_normal_posterior_mean_stddev_samples) {
     mh_posterior(model, sample_size, 0.5, 0.25, 0.);
     plot_hist(storage);
     EXPECT_NEAR(sample_average(storage), 0.3, 0.1);
+}
+
+TEST_F(mh_fixture, sample_unif_normal_posterior_mean_std_samples) {
+    auto model = (
+        theta |= uniform(-1., 1.),
+        theta_2 |= uniform(0., 1.),
+        y |= normal(theta, theta_2) // {0.1, 0.2, 0.3, 0.4, 0.5}
+    );
+
+    mh_posterior(model, sample_size, 0.5, 0.25, 0.);
+
+    plot_hist(storage, 0.5);
+    plot_hist(storage_2, 0.5);
+
+    EXPECT_NEAR(sample_average(storage), 0.29951, 0.05); // found numerical with Mathematica
+    EXPECT_NEAR(sample_average(storage_2), 0.241658, 0.05);
 }
 
 TEST_F(mh_fixture, sample_unif_bern_posterior_observe_zero)
