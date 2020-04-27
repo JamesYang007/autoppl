@@ -27,3 +27,17 @@ To build and run tests, run the following:
 cd build/debug
 ctest
 ```
+
+## Examples
+
+```cpp
+ppl::Variable<double> x {1.0, 1.5, 1.7, 1.2, 1.5};
+ppl::Variable<double> mu, sigma;
+auto model = (
+  mu |= ppl::normal(0., 3.),
+  sigma |= ppl::uniform(0., 2.),
+  x |= ppl::normal(mu, sigma)
+)
+
+ppl::mh_posterior(model, 1000);
+```
