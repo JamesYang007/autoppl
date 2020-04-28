@@ -1,6 +1,7 @@
 #!/bin/bash
 
-projectdir=$(dirname "BASH_SOURCE")
+projectdir=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
+
 gbenchpath="lib/benchmark"
 gtestpath="$gbenchpath/googletest"
 
@@ -15,23 +16,31 @@ if [ ! -d "$gtestpath" ]; then
     cd ~- # change back to previous dir and no output to terminal
 fi
 
-# install Armadillo only on Linux
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    sudo apt install libopenblas-dev liblapack-dev
+# setup Armadillo
+if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "darwin"* ]]; then
     cd /tmp
+    sudo apt install libopenblas-dev liblapack-dev
     wget http://sourceforge.net/projects/arma/files/armadillo-9.870.2.tar.xz
+    if [ -d "armadillo-9.870.2" ]; then
+        rm -rf armadillo-9.870.2
+    fi
     tar -xvf armadillo-9.870.2.tar.xz
     cd armadillo-9.870.2
-    cmake .
+    cmake . -DCMAKE_INSTALL_PREFIX="$projectdir/lib/armadillo"
     make
-    sudo make install
+    make install
     cd $projectdir
 fi
 
-# install FastAD
+# setup FastAD
 cd /tmp
-git clone --recurse-submodules https://github.com/JamesYang007/FastAD.git FastAD
-cd FastAD
+if [ ! -d "FastAD" ]; then
+    git clone https://github.com/JamesYang007/FastAD.git
+fi
+cd FastAD && git pull
 ./setup.sh
-./install.sh
+./clean-build.sh release -DFASTAD_ENABLE_TEST=OFF \
+    -DCMAKE_INSTALL_PREFIX="$projectdir/lib/FastAD"
+cd build/release
+ninja install
 cd $projectdir
