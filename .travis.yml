@@ -19,7 +19,7 @@ jobs:
                   sources: ['ubuntu-toolchain-r-test']
                   packages: ['g++-7', 'cmake', 'ninja-build', 'valgrind', 
                              'libopenblas-dev', 'liblapack-dev',
-                             'libarpack2-dev']
+                             'libarpack2-dev', 'realpath']
           env:
               - CXX_COMPILER="g++-7"
               - CC_COMPILER="gcc-7"
@@ -34,7 +34,7 @@ jobs:
                   sources: ['ubuntu-toolchain-r-test']
                   packages: ['g++-7', 'cmake', 'ninja-build',
                              'libopenblas-dev', 'liblapack-dev',
-                             'libarpack2-dev']
+                             'libarpack2-dev', 'realpath']
           before_install:
               - sudo -H pip install --upgrade requests[security]
               - pip install --user cpp-coveralls
@@ -65,7 +65,7 @@ jobs:
               sources: ['ubuntu-toolchain-r-test']
               packages: ['g++-7', 'ninja-build',
                          'libopenblas-dev', 'liblapack-dev',
-                         'libarpack2-dev']
+                         'libarpack2-dev', 'realpath']
 
         - os: linux
           compiler: gcc
@@ -77,7 +77,7 @@ jobs:
               sources: ['ubuntu-toolchain-r-test']
               packages: ['g++-8', 'ninja-build',
                          'libopenblas-dev', 'liblapack-dev',
-                         'libarpack2-dev']
+                         'libarpack2-dev', 'realpath']
 
         - os: linux
           compiler: gcc
@@ -89,7 +89,7 @@ jobs:
               sources: ['ubuntu-toolchain-r-test']
               packages: ['g++-9', 'ninja-build',
                          'libopenblas-dev', 'liblapack-dev',
-                         'libarpack2-dev']
+                         'libarpack2-dev', 'realpath']
 
 # Build Script
 
