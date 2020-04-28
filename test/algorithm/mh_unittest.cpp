@@ -13,7 +13,7 @@ namespace ppl {
 struct mh_fixture : ::testing::Test
 {
 protected:
-    size_t sample_size = 100000;
+    size_t sample_size = 20000;
     std::vector<double> storage, storage_2;
     Param<double> theta, theta_2;
     Data<double> y {0.1, 0.2, 0.3, 0.4, 0.5};

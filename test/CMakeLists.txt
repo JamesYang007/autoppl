@@ -113,6 +113,7 @@ add_executable(algorithm_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/mh_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/mh_regression_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/nuts_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/sampler_tools_unittest.cpp
     )
 target_compile_options(algorithm_unittest
     PRIVATE -g -Wall -Werror -Wextra
