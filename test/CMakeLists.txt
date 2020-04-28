@@ -137,10 +137,14 @@ target_link_libraries(algorithm_unittest
     pthread
     ${PROJECT_NAME}
     ${ARMADILLO_LIBRARIES}
-    lapack
-    blas
     FastAD::FastAD
     )
+
+# Only on Linux: link with openblas and lapack
+if (UNIX AND NOT APPLE)
+    target_link_libraries(algorithm_unittest
+        openblas lapack)
+endif()
 add_test(algorithm_unittest algorithm_unittest)
 
 ######################################################
