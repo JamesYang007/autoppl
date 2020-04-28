@@ -45,7 +45,6 @@ TEST_F(mh_fixture, sample_std_normal)
     mh_posterior(model, sample_size, 1.0, 0.25, 0.);
     plot_hist(storage);
     EXPECT_NEAR(sample_average(storage), 0., 0.1);
-    std::cout << sample_average(storage) << std::endl;
 }
 
 TEST_F(mh_fixture, sample_uniform)

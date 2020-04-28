@@ -23,7 +23,7 @@ struct VariableViewer : util::VarExpr<VariableViewer<VariableType>>
         : var_ref_{var}
     {}
 
-    value_t get_value(size_t i) const { return var_ref_.get().get_value(i); }
+    value_t get_value(size_t i = 0) const { return var_ref_.get().get_value(i); }
     size_t size() const { return var_ref_.get().size(); }
 
     /* 

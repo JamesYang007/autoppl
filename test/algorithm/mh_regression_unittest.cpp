@@ -5,7 +5,6 @@
 #include <autoppl/expr_builder.hpp>
 #include <testutil/sample_tools.hpp>
 #include <vector>
-#include <iostream>
 
 namespace ppl {
 
