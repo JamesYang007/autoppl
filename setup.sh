@@ -19,8 +19,8 @@ fi
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
     sudo apt install libopenblas-dev liblapack-dev
     cd /tmp
-    wget http://sourceforge.net/projects/arma/files/armadillo-9.870.2.tar.gz
-    tar -xvf armadillo-9.870.2.tar.gz
+    wget http://sourceforge.net/projects/arma/files/armadillo-9.870.2.tar.xz
+    tar -xvf armadillo-9.870.2.tar.xz
     cd armadillo-9.870.2
     cmake .
     make
