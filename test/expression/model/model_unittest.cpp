@@ -1,8 +1,7 @@
 #include "gtest/gtest.h"
 #include <cmath>
 #include <array>
-#include <autoppl/expression/model/eq_node.hpp>
-#include <autoppl/expression/model/glue_node.hpp>
+#include <autoppl/expression/model/model_utils.hpp>
 #include <testutil/mock_types.hpp>
 
 namespace ppl {
@@ -155,6 +154,41 @@ TEST_F(many_var_dist_fixture, four_vars_traverse_pdf)
         });
     EXPECT_EQ(actual, model_four.pdf());
 }
+
+////////////////////////////////////////////////////////////
+// get_n_params TESTS
+////////////////////////////////////////////////////////////
+
+TEST_F(many_var_dist_fixture, get_n_params_zero)
+{
+    using eq_node_t = EqNode<MockData, MockDistExpr>;
+    static_assert(get_n_params_v<eq_node_t> == 0);
+}
+
+TEST_F(many_var_dist_fixture, get_n_params_one)
+{
+    using eq_node_t = EqNode<MockParam, MockDistExpr>;
+    static_assert(get_n_params_v<eq_node_t> == 1);
+}
+
+TEST_F(many_var_dist_fixture, get_n_params_one_with_data)
+{
+    using model_t = GlueNode<
+        EqNode<MockParam, MockDistExpr>,
+        EqNode<MockData, MockDistExpr>
+            >;
+    static_assert(get_n_params_v<model_t> == 1);
+}
+
+TEST_F(many_var_dist_fixture, get_n_params_two)
+{
+    using model_t = GlueNode<
+        EqNode<MockParam, MockDistExpr>,
+        EqNode<MockParam, MockDistExpr>
+            >;
+    static_assert(get_n_params_v<model_t> == 2);
+}
+
 
 } // namespace expr
 } // namespace ppl

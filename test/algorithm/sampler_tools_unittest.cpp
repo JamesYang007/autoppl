@@ -9,60 +9,15 @@ namespace alg {
 struct sampler_tools_fixture : ::testing::Test
 {
 protected:
-    using var_t = Variable<double>;
-    using state_t = typename util::var_traits<var_t>::state_t;
+    using var_t = Param<double>;
 
     static constexpr size_t n_params = 10;
-    std::array<Variable<double>, n_params> thetas;
-    Variable<double> x;
+    std::array<Param<double>, n_params> thetas;
+    Data<double> x;
 
     sampler_tools_fixture()
-    {
-        x.set_state(state_t::data);
-    }
+    {}
 };
-
-////////////////////////////////////////////////////////////
-// get_n_params TESTS
-////////////////////////////////////////////////////////////
-
-TEST_F(sampler_tools_fixture, get_n_params_zero)
-{
-    auto model = (
-        x |= MockDistExpr()
-    );
-    int actual = get_n_params(model);
-    EXPECT_EQ(actual, 0);
-}
-
-TEST_F(sampler_tools_fixture, get_n_params_one)
-{
-    auto model = (
-        thetas[0] |= MockDistExpr()
-    );
-    int actual = get_n_params(model);
-    EXPECT_EQ(actual, 1);
-}
-
-TEST_F(sampler_tools_fixture, get_n_params_one_with_data)
-{
-    auto model = (
-        thetas[0] |= MockDistExpr(),
-        x |= MockDistExpr()
-    );
-    int actual = get_n_params(model);
-    EXPECT_EQ(actual, 1);
-}
-
-TEST_F(sampler_tools_fixture, get_n_params_two)
-{
-    auto model = (
-        thetas[0] |= MockDistExpr(),
-        thetas[1] |= MockDistExpr()
-    );
-    int actual = get_n_params(model);
-    EXPECT_EQ(actual, 2);
-}
 
 ////////////////////////////////////////////////////////////
 // hamiltonian TESTS

@@ -352,12 +352,10 @@ TEST_F(nuts_build_tree_fixture, nuts)
     constexpr size_t warmup = 10000;
     constexpr size_t n_adapt = 1000;
     double delta = 0.6;
-    using state_t = typename Variable<double>::state_t;
 
-    std::vector<Variable<double>> thetas(2);
+    std::vector<Param<double>> thetas(2);
 
     std::vector<double> samples_0(n_samples);
-    thetas[0].set_state(state_t::parameter);
     thetas[0].set_storage(samples_0.data());
 
     auto model = (

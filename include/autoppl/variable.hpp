@@ -38,7 +38,7 @@ struct Param : util::ParamLike<Param<ValueType>> {
     void set_value(value_t value) { value_ = value; }
 
     constexpr size_t size() const { return 1; }
-    value_t get_value(size_t) const {
+    value_t get_value(size_t = 0) const {
         return value_;
     }
 

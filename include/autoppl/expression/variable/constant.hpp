@@ -12,7 +12,7 @@ struct Constant : util::VarExpr<Constant<ValueType>>
     Constant(value_t c)
         : c_{c}
     {}
-    value_t get_value(size_t) const {
+    value_t get_value(size_t = 0) const {
         return c_;
     }
 
@@ -24,7 +24,7 @@ struct Constant : util::VarExpr<Constant<ValueType>>
     template <class VecRefType, class VecADVarType>
     auto get_ad(const VecRefType&,
                 const VecADVarType&) const
-    { return ad::constant(get_value()); }
+    { return ad::constant(c_); }
 
 private:
     value_t c_;

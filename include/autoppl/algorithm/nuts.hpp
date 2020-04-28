@@ -344,7 +344,7 @@ void nuts(ModelType& model,
     constexpr double gamma = 0.05;
     constexpr double t0 = 10;
     constexpr double kappa = 0.75;
-    const size_t n_params = alg::get_n_params(model);
+    constexpr size_t n_params = get_n_params_v<ModelType>;
     std::mt19937 gen(seed);
     std::uniform_int_distribution direction_sampler(0, 1);
     std::uniform_real_distribution metrop_sampler(0., 1.);
@@ -356,8 +356,7 @@ void nuts(ModelType& model,
     auto get_keys = [=](auto& eq_node) mutable {
         auto& var = eq_node.get_variable();
         using var_t = std::decay_t<decltype(var)>;
-        using state_t = typename util::var_traits<var_t>::state_t;
-        if (var.get_state() == state_t::parameter) {
+        if constexpr (util::is_param_v<var_t>) {
             *keys_it = &var;
             ++keys_it;
         }
@@ -366,13 +365,13 @@ void nuts(ModelType& model,
 
     // momentum matrix
     constexpr uint8_t n_rhos_cached = 2;
-    arma::mat rho_mat(n_params, n_rhos_cached);
+    arma::mat::fixed<n_params, n_rhos_cached> rho_mat;
     auto rho_minus = rho_mat.unsafe_col(0);
     auto rho_plus = rho_mat.unsafe_col(1);
 
     // position matrix for thetas and adjoints
     constexpr uint8_t n_thetas_cached = 7;
-    arma::mat theta_mat(n_params, n_thetas_cached);
+    arma::mat::fixed<n_params, n_thetas_cached> theta_mat;
     auto theta_minus = theta_mat.unsafe_col(0);
     auto theta_minus_adj = theta_mat.unsafe_col(1);
     auto theta_plus = theta_mat.unsafe_col(2);
@@ -406,8 +405,7 @@ void nuts(ModelType& model,
         const auto& var = eq_node.get_variable();
         const auto& dist = eq_node.get_distribution();
         using var_t = std::decay_t<decltype(var)>;
-        using state_t = typename util::var_traits<var_t>::state_t;
-        if (var.get_state() == state_t::parameter) {
+        if constexpr (util::is_param_v<var_t>) {
             *theta_curr_it = var.get_value(); 
             ++theta_curr_it;
             potential_prev += dist.log_pdf_no_constant(var.get_value());
@@ -498,8 +496,7 @@ void nuts(ModelType& model,
             auto store_sample = [=](auto& eq_node) mutable {
                 auto& var = eq_node.get_variable();
                 using var_t = std::decay_t<decltype(var)>;
-                using state_t = typename util::var_traits<var_t>::state_t;
-                if (var.get_state() == state_t::parameter) {
+                if constexpr (util::is_param_v<var_t>) {
                     auto storage_ptr = var.get_storage();
                     storage_ptr[i - warmup] = *theta_curr_it;
                     ++theta_curr_it;

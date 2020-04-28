@@ -42,9 +42,6 @@ struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
         return -0.5 * ((z_score * z_score) + std::log(stddev(index) * stddev(index) * 2 * M_PI));
     }
     
-    auto mean(size_t index=0) const { return mean_.get_value(index);}
-    auto stddev(size_t index=0) const { return stddev_.get_value(index);}
-
     dist_value_t log_pdf_no_constant(value_t x) const
     {
         dist_value_t z_score = (x - mean()) / stddev();
@@ -68,8 +65,8 @@ struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
                ); 
     }
 
-    auto mean() const { return mean_.get_value();}
-    auto stddev() const { return stddev_.get_value();}
+    auto mean(size_t index=0) const { return mean_.get_value(index);}
+    auto stddev(size_t index=0) const { return stddev_.get_value(index);}
     value_t min() const { return std::numeric_limits<value_t>::lowest(); }
     value_t max() const { return std::numeric_limits<value_t>::max(); }
 

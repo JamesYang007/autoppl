@@ -55,7 +55,7 @@ private:
  * Mock variable classes that fulfill 
  * var_traits requirements, but do not fit the rest.
  */
-struct MockVar_no_convertible : util::Var<MockParam>
+struct MockParam_no_convertible : util::Var<MockParam>
 {
     using value_t = double;
     using pointer_t = double*;

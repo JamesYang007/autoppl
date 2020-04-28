@@ -2,6 +2,7 @@
 #include <random>
 #include <fastad>
 #include <armadillo>
+#include <autoppl/expression/model/model_utils.hpp>
 #include <autoppl/util/var_traits.hpp>
 
 #define AUTOPPL_MH_UNKNOWN_VALUE_TYPE_ERROR \
@@ -10,24 +11,6 @@
 
 namespace ppl {
 namespace alg {
-
-/*
- * Returns number of parameters in the model.
- * Note that this assumes every parameter is univariate.
- */
-template <class ModelType>
-size_t get_n_params(const ModelType& model)
-{
-    size_t n = 0;
-    auto get_n_params__ = [&](const auto& eq_node) {
-        const auto& var = eq_node.get_variable();
-        using var_t = std::decay_t<decltype(var)>;
-        using state_t = typename util::var_traits<var_t>::state_t;
-        n += (var.get_state() == state_t::parameter);
-    };
-    model.traverse(get_n_params__);
-    return n;
-}
 
 /*
  * Initializes parameters with the given priors and
@@ -46,9 +29,8 @@ void init_params(ModelType& model, GenType& gen)
 
         using var_t = std::decay_t<decltype(var)>;
         using value_t = typename util::var_traits<var_t>::value_t;
-        using state_t = typename util::var_traits<var_t>::state_t;
 
-        if (var.get_state() == state_t::parameter) {
+        if constexpr (util::is_param_v<var_t>) {
             if constexpr (std::is_integral_v<value_t>) {
                 std::uniform_int_distribution init_sampler(dist.min(), dist.max());
                 var.set_value(init_sampler(gen));
