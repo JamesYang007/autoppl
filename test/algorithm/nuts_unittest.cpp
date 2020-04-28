@@ -167,7 +167,7 @@ TEST_F(nuts_build_tree_fixture, build_tree_base_plus_no_opt_output)
         epsilon, ham
     );
 
-    build_tree(input, output, 0);
+    build_tree<3>(input, output, 0);
 
     // output optional theta/rho still unset
     EXPECT_FALSE(output.opt_theta_ref.has_value());
@@ -220,7 +220,7 @@ TEST_F(nuts_build_tree_fixture, build_tree_base_plus_opt_output)
     output.opt_theta_ref = opt_theta;
     output.opt_rho_ref = opt_rho;
 
-    build_tree(input, output, 0);
+    build_tree<3>(input, output, 0);
 
     // optional theta and rho are the same as input ones
     EXPECT_DOUBLE_EQ(opt_theta[0], theta[0]);
@@ -253,7 +253,7 @@ TEST_F(nuts_build_tree_fixture, build_tree_base_plus_no_opt_output_2)
         epsilon, ham
     );
 
-    build_tree(input, output, 0);
+    build_tree<3>(input, output, 0);
 
     // input theta properly updated
     EXPECT_DOUBLE_EQ(theta[0], 4.);
@@ -302,7 +302,7 @@ TEST_F(nuts_build_tree_fixture, build_tree_recursion_plus_no_opt_output)
 
     // custom uniform distribution will always accept candidate
     // except when optimized for n'' == 0 in the recursion
-    build_tree(input, output, 1, [](const auto&) {return 0;});
+    build_tree<3>(input, output, 1, [](const auto&) {return 0;});
 
     // input theta properly updated
     EXPECT_DOUBLE_EQ(theta[0], 4.);
@@ -341,7 +341,7 @@ TEST_F(nuts_build_tree_fixture, find_reasonable_log_epsilon)
                     ad_vars[1] * ad_vars[1] +
                     ad_vars[2] * ad_vars[2]
                    ) ;
-    double eps = alg::find_reasonable_epsilon(ad_expr, theta, theta_adj);
+    double eps = alg::find_reasonable_epsilon<3>(ad_expr, theta, theta_adj);
     static_cast<void>(eps);
 }
 
