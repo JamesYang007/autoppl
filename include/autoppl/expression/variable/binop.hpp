@@ -2,8 +2,6 @@
 #include <autoppl/util/var_expr_traits.hpp>
 #include <autoppl/variable.hpp>
 
-#define MAX(a, b) ((a) > (b)) ? (a) : (b)
-
 namespace ppl {
 namespace expr {
 
@@ -23,13 +21,25 @@ struct BinaryOpNode :
 		: lhs_{lhs}, rhs_{rhs}
 	{ assert(lhs.size() == rhs.size() || lhs.size() == 1 || rhs.size() == 1); }
 
-        value_t get_value(size_t i) const {
-            auto lhs_value = lhs_.get_value(i);
-            auto rhs_value = rhs_.get_value(i);
-            return BinaryOp::evaluate(lhs_value, rhs_value);
-        }
+    value_t get_value(size_t i = 0) const {
+        auto lhs_value = lhs_.get_value(i);
+        auto rhs_value = rhs_.get_value(i);
+        return BinaryOp::evaluate(lhs_value, rhs_value);
+    }
 
-		size_t size() const { return MAX(lhs_.size(), rhs_.size()); }
+    size_t size() const { return std::max(lhs_.size(), rhs_.size()); }
+
+    /* 
+     * Returns ad expression of the binary operation.
+     */
+    template <class VecRefType, class VecADVarType>
+    auto get_ad(const VecRefType& keys,
+                const VecADVarType& vars,
+                size_t idx = 0) const
+    {  
+        return BinaryOp::evaluate(lhs_.get_ad(keys, vars, idx),
+                                  rhs_.get_ad(keys, vars, idx));
+    }
 
 private:
 	LHSVarExprType lhs_;

@@ -17,7 +17,7 @@ TEST_F(var_traits_fixture, is_var_v_true)
 
 TEST_F(var_traits_fixture, is_var_v_false)
 {
-    static_assert(!is_var_v<MockVar_no_convertible>);
+    static_assert(!is_var_v<MockParam_no_convertible>);
 }
 
 } // namespace util

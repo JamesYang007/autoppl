@@ -17,9 +17,12 @@ jobs:
           addons:
               apt:
                   sources: ['ubuntu-toolchain-r-test']
-                  packages: ['g++-7', 'cmake', 'ninja-build', 'valgrind']
+                  packages: ['g++-7', 'cmake', 'ninja-build', 'valgrind', 
+                             'libopenblas-dev', 'liblapack-dev',
+                             'libarpack2-dev']
           env:
-              - COMPILER="g++-7"
+              - CXX_COMPILER="g++-7"
+              - CC_COMPILER="gcc-7"
               - CTEST_OPTIONS="-T memcheck"
               - VALGRIND="ON"
 
@@ -29,7 +32,9 @@ jobs:
           addons:
               apt:
                   sources: ['ubuntu-toolchain-r-test']
-                  packages: ['g++-7', 'cmake', 'ninja-build']
+                  packages: ['g++-7', 'cmake', 'ninja-build',
+                             'libopenblas-dev', 'liblapack-dev',
+                             'libarpack2-dev']
           before_install:
               - sudo -H pip install --upgrade requests[security]
               - pip install --user cpp-coveralls
@@ -43,7 +48,8 @@ jobs:
                 --gcov 'gcov-7' 
                 --gcov-options '\-lp'
           env:
-              - COMPILER="g++-7"
+              - CXX_COMPILER="g++-7"
+              - CC_COMPILER="gcc-7"
               - COVERALL="ON"
               - CMAKE_OPTIONS="-DAUTOPPL_ENABLE_TEST_COVERAGE=ON"
 
@@ -51,40 +57,54 @@ jobs:
 
         - os: linux
           compiler: gcc
-          env: COMPILER=g++-7
+          env:
+              - CXX_COMPILER="g++-7"
+              - CC_COMPILER="gcc-7"
           addons:
             apt:
               sources: ['ubuntu-toolchain-r-test']
-              packages: ['g++-7', 'ninja-build']
+              packages: ['g++-7', 'ninja-build',
+                         'libopenblas-dev', 'liblapack-dev',
+                         'libarpack2-dev']
 
         - os: linux
           compiler: gcc
-          env: COMPILER=g++-8
+          env: 
+              - CXX_COMPILER="g++-8"
+              - CC_COMPILER="gcc-8"
           addons:
             apt:
               sources: ['ubuntu-toolchain-r-test']
-              packages: ['g++-8', 'ninja-build']
+              packages: ['g++-8', 'ninja-build',
+                         'libopenblas-dev', 'liblapack-dev',
+                         'libarpack2-dev']
 
         - os: linux
           compiler: gcc
-          env: COMPILER=g++-9
+          env: 
+              - CXX_COMPILER="g++-9"
+              - CC_COMPILER="gcc-9"
           addons:
             apt:
               sources: ['ubuntu-toolchain-r-test']
-              packages: ['g++-9', 'ninja-build']
+              packages: ['g++-9', 'ninja-build',
+                         'libopenblas-dev', 'liblapack-dev',
+                         'libarpack2-dev']
 
 # Build Script
 
 script:
 
     # set CXX to correct compiler
-    - if [[ "${COMPILER}" != "" ]]; then
-        export CXX=${COMPILER};
+    - if [[ "${CXX_COMPILER}" != "" ]]; then
+        export CXX=${CXX_COMPILER};
+        export CC=${CC_COMPILER};
       fi 
 
     # show OS/compiler/cmake version
     - uname -a
     - ${CXX} --version
+    - ${CC} --version
     - cmake --version
 
     # setup, clean build, and test

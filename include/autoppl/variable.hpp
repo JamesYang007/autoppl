@@ -38,7 +38,7 @@ struct Param : util::ParamLike<Param<ValueType>> {
     void set_value(value_t value) { value_ = value; }
 
     constexpr size_t size() const { return 1; }
-    value_t get_value(size_t) const {
+    value_t get_value(size_t = 0) const {
         return value_;
     }
 
@@ -87,6 +87,9 @@ struct Data : util::DataLike<Data<ValueType>>
 
     void observe(value_t value) { values_.push_back(value); }
     void clear() { values_.clear(); }
+
+    auto begin() const { return values_.begin(); }
+    auto end() const { return values_.end(); }
 
 private:
     std::vector<value_t> values_;  // store value associated with var

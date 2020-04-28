@@ -1,3 +1,6 @@
 [submodule "lib/benchmark"]
 	path = lib/benchmark
 	url = https://github.com/google/benchmark.git
+[submodule "lib/FastAD"]
+	path = lib/FastAD
+	url = https://github.com/JamesYang007/FastAD.git

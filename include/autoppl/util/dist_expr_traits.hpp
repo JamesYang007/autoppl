@@ -22,7 +22,7 @@ struct DistExpr : BaseCRTP<T>
     std::enable_if_t<is_var_v<std::decay_t<VarType>>, dist_value_t> 
     log_pdf(const VarType& var) const {
         dist_value_t value = 0.0;
-        for (size_t i = 0; i < var.size(); i++) {
+        for (size_t i = 0; i < var.size(); ++i) {
             value += self().log_pdf(var.get_value(i), i);
         }
 
@@ -33,7 +33,7 @@ struct DistExpr : BaseCRTP<T>
     std::enable_if_t<is_var_v<std::decay_t<VarType>>, dist_value_t>
     pdf(const VarType& var) const {
         dist_value_t value = 1.0;
-        for (size_t i = 0; i < var.size(); i++) {
+        for (size_t i = 0; i < var.size(); ++i) {
             value *= self().pdf(var.get_value(i), i);
         }
 
