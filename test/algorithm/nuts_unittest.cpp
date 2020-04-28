@@ -7,12 +7,17 @@
 
 namespace ppl {
 
-struct nuts_fixture : ::testing::Test
+struct nuts_tools_fixture : ::testing::Test
 {
 protected:
+    template <class VecType>
+    double sample_average(const VecType& v)
+    {
+        return std::accumulate(v.begin(), v.end(), 0.)/v.size();
+    }
 };
 
-TEST_F(nuts_fixture, check_entropy_1d)
+TEST_F(nuts_tools_fixture, check_entropy_1d)
 {
     using namespace alg;
     constexpr size_t n_params = 1;
@@ -51,7 +56,7 @@ TEST_F(nuts_fixture, check_entropy_1d)
 }
 
 
-TEST_F(nuts_fixture, check_entropy_3d)
+TEST_F(nuts_tools_fixture, check_entropy_3d)
 {
     using namespace alg;
     constexpr size_t n_params = 3;
@@ -99,7 +104,7 @@ TEST_F(nuts_fixture, check_entropy_3d)
 /*
  * Fixture just to test for this build_tree function
  */
-struct nuts_build_tree_fixture : ::testing::Test
+struct nuts_build_tree_fixture : nuts_tools_fixture
 {
 protected:
     using ad_vec_t = std::vector<ad::Var<double>>;
@@ -143,12 +148,6 @@ protected:
 
         // theta adjoint MUST be set
         theta_adj[0] = 0.; theta_adj[1] = 0.; theta_adj[2] = 0.;
-    }
-
-    template <class VecType>
-    double sample_average(const VecType& v)
-    {
-        return std::accumulate(v.begin(), v.end(), 0.)/v.size();
     }
 };
 
@@ -342,33 +341,89 @@ TEST_F(nuts_build_tree_fixture, find_reasonable_log_epsilon)
                     ad_vars[1] * ad_vars[1] +
                     ad_vars[2] * ad_vars[2]
                    ) ;
-    double eps = alg::find_reasonable_epsilon(ad_expr, theta, theta_adj, 10000);
+    double eps = alg::find_reasonable_epsilon(ad_expr, theta, theta_adj);
     static_cast<void>(eps);
 }
 
-TEST_F(nuts_build_tree_fixture, nuts)
+struct nuts_fixture : nuts_tools_fixture
 {
-    constexpr size_t n_samples = 10000;
-    constexpr size_t warmup = 10000;
-    constexpr size_t n_adapt = 1000;
+protected:
+    size_t n_adapt = 1000;
+    size_t n_samples = 10000;
+    size_t warmup = 10000;
     double delta = 0.6;
-
-    std::vector<Param<double>> thetas(2);
-
-    std::vector<double> samples_0(n_samples);
-    thetas[0].set_storage(samples_0.data());
-
-    auto model = (
-        thetas[0] |= normal(0., 1.)
-    );
-
     size_t max_depth = 10;
     size_t seed = 4821;
+
+    std::vector<double> w_storage, b_storage;
+    Param<double> w, b;
+    ppl::Data<double> x {2.5, 3, 3.5, 4, 4.5, 5.};
+    ppl::Data<double> y {3.5, 4, 4.5, 5, 5.5, 6.};
+
+    nuts_fixture()
+        : w_storage(n_samples)
+        , b_storage(n_samples)
+        , w{w_storage.data()}
+        , b{b_storage.data()}
+    {}
+
+    void reconfigure(size_t n)
+    {
+        w_storage.resize(n);
+        b_storage.resize(n);
+        w.set_storage(w_storage.data());
+        b.set_storage(b_storage.data());
+    }
+};
+
+TEST_F(nuts_fixture, nuts_std_normal)
+{
+    auto model = (
+        w |= normal(0., 1.)
+    );
+
     nuts(model, warmup, n_samples, n_adapt, seed,
          max_depth, delta);
 
-    plot_hist(samples_0);
-    EXPECT_NEAR(sample_average(samples_0), 0., 0.1);
+    plot_hist(w_storage);
+    EXPECT_NEAR(sample_average(w_storage), 0., 0.1);
+}
+
+TEST_F(nuts_fixture, nuts_sample_regression_dist_weight) 
+{
+    reconfigure(n_samples);
+
+    auto model = (w |= normal(0., 2.),
+                  y |= normal(x * w + 1., 0.5)
+    );
+
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+
+    plot_hist(w_storage, 0.1);
+    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
+}
+
+TEST_F(nuts_fixture, nuts_sample_regression_dist_weight_bias) 
+{
+    n_adapt = 1000;
+    n_samples = 1000;
+    warmup = 1000;
+
+    reconfigure(n_samples);
+
+    auto model = (b |= normal(0., 2.),
+                  w |= normal(0., 2.),
+                  y |= normal(x * w + b, 0.5)
+    );
+
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+
+    plot_hist(w_storage, 0.1);
+    plot_hist(b_storage);
+    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
+    EXPECT_NEAR(sample_average(b_storage), 1.0, 0.3);
 }
 
 } // namespace ppl

@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include <array>
 #include <testutil/mock_types.hpp>
 #include <autoppl/expr_builder.hpp>
 #include <autoppl/algorithm/sampler_tools.hpp>

@@ -42,22 +42,17 @@ struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
         return -0.5 * ((z_score * z_score) + std::log(stddev(index) * stddev(index) * 2 * M_PI));
     }
     
-    dist_value_t log_pdf_no_constant(value_t x) const
-    {
-        dist_value_t z_score = (x - mean()) / stddev();
-        return -0.5 * (z_score * z_score) - std::log(stddev());
-    }
-
     /* 
      * Up to constant addition, returns ad expression of log pdf
      */
-    template <class T, class VecRefType, class VecADVarType>
-    auto ad_log_pdf(const ad::Var<T>& x,
+    template <class ADVarType, class VecRefType, class VecADVarType>
+    auto ad_log_pdf(const ADVarType& x,
                     const VecRefType& keys,
-                    const VecADVarType& vars) const
+                    const VecADVarType& vars,
+                    size_t idx = 0) const
     {
-        auto ad_mean_expr = mean_.get_ad(keys, vars);
-        auto ad_stddev_expr = stddev_.get_ad(keys, vars);
+        auto ad_mean_expr = mean_.get_ad(keys, vars, idx);
+        auto ad_stddev_expr = stddev_.get_ad(keys, vars, idx);
         return ((ad::constant(-0.5) * 
                 ((x - ad_mean_expr) * (x - ad_mean_expr) / 
                     (ad_stddev_expr * ad_stddev_expr)))

@@ -23,7 +23,8 @@ struct Constant : util::VarExpr<Constant<ValueType>>
      */
     template <class VecRefType, class VecADVarType>
     auto get_ad(const VecRefType&,
-                const VecADVarType&) const
+                const VecADVarType&,
+                size_t = 0) const
     { return ad::constant(c_); }
 
 private:

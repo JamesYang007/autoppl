@@ -36,10 +36,11 @@ struct BinaryOpNode :
      */
     template <class VecRefType, class VecADVarType>
     auto get_ad(const VecRefType& keys,
-                const VecADVarType& vars) const
+                const VecADVarType& vars,
+                size_t idx = 0) const
     {  
-        return BinaryOp::evaluate(lhs_.get_ad(keys, vars),
-                                  rhs_.get_ad(keys, vars));
+        return BinaryOp::evaluate(lhs_.get_ad(keys, vars, idx),
+                                  rhs_.get_ad(keys, vars, idx));
     }
 
 private:

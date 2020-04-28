@@ -75,4 +75,15 @@ TEST_F(mh_regression_fixture, sample_regression_fuzzy_dist) {
     EXPECT_NEAR(sample_average(b_storage), 0.95, 0.1);
 }
 
+TEST_F(mh_regression_fixture, sample_regression_normal_weight) {
+    auto model = (w |= ppl::normal(0., 2.),
+                  y |= ppl::normal(x * w + 1., 0.5));
+
+    ppl::mh_posterior(model, sample_size);
+
+    plot_hist(w_storage, 0.2, 0., 1.);
+
+    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
+}
+
 } // ppl

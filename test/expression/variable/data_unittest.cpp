@@ -29,6 +29,7 @@ TEST_F(data_fixture, test_multiple_value) {
     EXPECT_EQ(var1.get_value(1), 2.0);
     EXPECT_EQ(var1.get_value(2), 3.0);
 
+#ifndef NDEBUG
     EXPECT_DEATH({
         var2.get_value(1);
     }, "");
@@ -40,6 +41,7 @@ TEST_F(data_fixture, test_multiple_value) {
     EXPECT_DEATH({
         var1.get_value(3);
     }, "");
+#endif
 
     var1.clear();
     expected_size = 0;

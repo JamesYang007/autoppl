@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <fastad>
 #include <autoppl/util/var_traits.hpp>
 #include <autoppl/util/var_expr_traits.hpp>
 
@@ -26,18 +27,25 @@ struct VariableViewer : util::VarExpr<VariableViewer<VariableType>>
     size_t size() const { return var_ref_.get().size(); }
 
     /* 
-     * Returns ad expression of the constant.
-     * Assumes that AD variables in vars will always be parameters.
+     * Returns ad expression of the variable.
+     * If variable is parameter, find from vars and return.
+     * Otherwise if data, return idx'th ad::constant of that value.
      */
     template <class VecRefType, class VecADVarType>
     auto get_ad(const VecRefType& keys,
-                const VecADVarType& vars) const
+                const VecADVarType& vars,
+                size_t idx = 0) const
     {
-        const void* addr = &var_ref_.get();
-        auto it = std::find(keys.begin(), keys.end(), addr);
-        assert(it != keys.end());
-        size_t idx = std::distance(keys.begin(), it);
-        return vars[idx];
+        if constexpr (util::is_param_v<var_t>) {
+            static_cast<void>(idx);
+            const void* addr = &var_ref_.get();
+            auto it = std::find(keys.begin(), keys.end(), addr);
+            assert(it != keys.end());
+            size_t i = std::distance(keys.begin(), it);
+            return vars[i];
+        } else if constexpr (util::is_data_v<var_t>) {
+            return ad::constant(this->get_value(idx));
+        }
     }
 
 private:

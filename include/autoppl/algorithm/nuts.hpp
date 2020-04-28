@@ -263,8 +263,7 @@ template <class ADExprType
         , class MatType>
 double find_reasonable_epsilon(ADExprType& ad_expr,
                                MatType& theta,
-                               MatType& theta_adj,
-                               size_t max_iter)
+                               MatType& theta_adj)
 {
     double eps = 1.;
     const double diff_bound = -std::log(2);
@@ -296,8 +295,7 @@ double find_reasonable_epsilon(ADExprType& ad_expr,
 
     int a = 2*(ham_curr - ham_orig > diff_bound) - 1;
 
-    while ((a * (ham_curr - ham_orig) > a * diff_bound) &&
-            max_iter--) {
+    while ((a * (ham_curr - ham_orig) > a * diff_bound)) {
 
         eps *= std::pow(2, a);
 
@@ -333,8 +331,8 @@ void nuts(ModelType& model,
           size_t n_adapt,
           size_t seed = 0,
           size_t max_depth = 10,
-          double delta = 0.6,
-          size_t max_init_iter = 10
+          double delta = 0.6
+          //size_t max_init_iter = 10
           )
 {
 
@@ -397,26 +395,25 @@ void nuts(ModelType& model,
     
     // initialize model tags using model specs
     // copies the initialized values into theta_curr
-    // initialize potential energy
     alg::init_params(model, gen);    
     auto theta_curr_it = theta_curr.begin();
-    double potential_prev = 0.;
-    auto copy_params_potential = [=, &potential_prev](const auto& eq_node) mutable {
+    auto copy_params_potential = [=](const auto& eq_node) mutable {
         const auto& var = eq_node.get_variable();
-        const auto& dist = eq_node.get_distribution();
         using var_t = std::decay_t<decltype(var)>;
         if constexpr (util::is_param_v<var_t>) {
             *theta_curr_it = var.get_value(); 
             ++theta_curr_it;
-            potential_prev += dist.log_pdf_no_constant(var.get_value());
         }
     };
     model.traverse(copy_params_potential);
 
+    // initialize current potential (will be "previous" starting in for-loop)
+    double potential_prev = ad::evaluate(theta_curr_ad_expr);
+
     // initialize rest of the metavariables
     double log_eps = std::log(alg::find_reasonable_epsilon(
-            theta_curr_ad_expr, theta_curr, theta_curr_adj, max_init_iter)); 
-    const double mu = std::log(10) + log_eps;
+            theta_curr_ad_expr, theta_curr, theta_curr_adj)); 
+    const double mu = std::log(10.) + log_eps;
 
     // tree output struct type
     using subview_t = std::decay_t<decltype(rho_minus)>;

@@ -149,6 +149,7 @@ add_test(algorithm_unittest algorithm_unittest)
 
 add_executable(expr_builder_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expr_builder_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ad_integration_unittest.cpp
     )
 target_compile_options(expr_builder_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(expr_builder_unittest PRIVATE

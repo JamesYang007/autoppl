@@ -88,6 +88,9 @@ struct Data : util::DataLike<Data<ValueType>>
     void observe(value_t value) { values_.push_back(value); }
     void clear() { values_.clear(); }
 
+    auto begin() const { return values_.begin(); }
+    auto end() const { return values_.end(); }
+
 private:
     std::vector<value_t> values_;  // store value associated with var
 };
