@@ -34,6 +34,9 @@ target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 # Find Armadillo C++
 find_package(Armadillo REQUIRED)
 
+# Find FastAD
+find_package(FastAD CONFIG REQUIRED)
+
 # Configure tests
 if (AUTOPPL_ENABLE_TEST)
     include(CTest) # enable memcheck

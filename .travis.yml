@@ -98,7 +98,7 @@ script:
     # set CXX to correct compiler
     - if [[ "${CXX_COMPILER}" != "" ]]; then
         export CXX=${CXX_COMPILER};
-        export CC=${CC_COMPILER}
+        export CC=${CC_COMPILER};
       fi 
 
     # show OS/compiler/cmake version

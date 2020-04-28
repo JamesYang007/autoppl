@@ -23,7 +23,8 @@ target_include_directories(util_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(util_unittest gcov)
 endif()
-target_link_libraries(util_unittest gtest_main pthread ${PROJECT_NAME})
+target_link_libraries(util_unittest
+    gtest_main pthread ${PROJECT_NAME} FastAD::FastAD)
 add_test(util_unittest util_unittest)
 
 ######################################################
@@ -42,7 +43,8 @@ target_include_directories(sample_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(sample_unittest gcov)
 endif()
-target_link_libraries(sample_unittest gtest_main pthread ${PROJECT_NAME})
+target_link_libraries(sample_unittest
+    gtest_main pthread ${PROJECT_NAME} FastAD::FastAD)
 add_test(sample_unittest sample_unittest)
 
 ######################################################
@@ -64,7 +66,8 @@ target_include_directories(var_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(var_unittest gcov)
 endif()
-target_link_libraries(var_unittest gtest_main pthread ${PROJECT_NAME})
+target_link_libraries(var_unittest
+    gtest_main pthread ${PROJECT_NAME} FastAD::FastAD)
 add_test(var_unittest var_unittest)
 
 ######################################################
@@ -84,7 +87,8 @@ target_include_directories(dist_expr_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(dist_expr_unittest gcov)
 endif()
-target_link_libraries(dist_expr_unittest gtest_main pthread ${PROJECT_NAME})
+target_link_libraries(dist_expr_unittest
+    gtest_main pthread ${PROJECT_NAME} FastAD::FastAD)
 add_test(dist_expr_unittest dist_expr_unittest)
 
 ######################################################
@@ -102,7 +106,8 @@ target_include_directories(model_expr_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(model_expr_unittest gcov)
 endif()
-target_link_libraries(model_expr_unittest gtest_main pthread ${PROJECT_NAME})
+target_link_libraries(model_expr_unittest
+    gtest_main pthread ${PROJECT_NAME} FastAD::FastAD)
 add_test(model_expr_unittest model_expr_unittest)
 
 ######################################################
@@ -134,6 +139,7 @@ target_link_libraries(algorithm_unittest
     ${ARMADILLO_LIBRARIES}
     lapack
     blas
+    FastAD::FastAD
     )
 add_test(algorithm_unittest algorithm_unittest)
 
@@ -152,5 +158,6 @@ target_include_directories(expr_builder_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(expr_builder_unittest gcov)
 endif()
-target_link_libraries(expr_builder_unittest gtest_main pthread ${PROJECT_NAME})
+target_link_libraries(expr_builder_unittest
+    gtest_main pthread ${PROJECT_NAME} FastAD::FastAD)
 add_test(expr_builder_unittest expr_builder_unittest)
