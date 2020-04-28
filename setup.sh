@@ -21,8 +21,6 @@ if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "darwin"* ]]; then
     cd /tmp
     if [[ "$OSTYPE" == "linux-gnu" ]]; then
         sudo apt install libopenblas-dev liblapack-dev
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-        brew install openblas lapack
     fi
     wget http://sourceforge.net/projects/arma/files/armadillo-9.870.2.tar.xz
     if [ -d "armadillo-9.870.2" ]; then
