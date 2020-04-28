@@ -32,6 +32,6 @@ fi
 cd /tmp
 git clone --recurse-submodules https://github.com/JamesYang007/FastAD.git FastAD
 cd FastAD
-sudo ./setup.sh
-sudo ./install.sh
+./setup.sh
+./install.sh
 cd $projectdir
