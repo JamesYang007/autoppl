@@ -27,3 +27,11 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     sudo make install
     cd $projectdir
 fi
+
+# install FastAD
+cd /tmp
+git clone --recurse-submodules https://github.com/JamesYang007/FastAD.git FastAD
+cd FastAD
+./setup.sh
+./install.sh
+cd $projectdir
