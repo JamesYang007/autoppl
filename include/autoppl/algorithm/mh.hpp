@@ -81,10 +81,9 @@ inline void mh_posterior__(ModelType& model,
             auto& var = eq_node.get_variable();
             using var_t = std::decay_t<decltype(var)>;
             using value_t = typename util::var_traits<var_t>::value_t;
-            using state_t = typename util::var_traits<var_t>::state_t;
 
-            if (var.get_state() == state_t::parameter) {
-                auto curr = var.get_value();
+            if constexpr (util::param_is_base_of_v<var_t>) {
+                auto curr = var.get_value(0);
                 const auto& dist = eq_node.get_distribution();
 
                 // Choose either continuous or discrete sampler depending on value_t
@@ -126,8 +125,7 @@ inline void mh_posterior__(ModelType& model,
                 auto& var = eq_node.get_variable();
                 using var_t = std::decay_t<decltype(var)>;
                 using value_t = typename util::var_traits<var_t>::value_t;
-                using state_t = typename util::var_traits<var_t>::state_t;
-                if (var.get_state() == state_t::parameter) {
+                if constexpr (util::param_is_base_of_v<var_t>) {
                     if (n_swaps) {
                         using converted_value_t = details::value_to_param_t<value_t>;
                         var.set_value(std::get<converted_value_t>(params_it->next));
@@ -135,7 +133,7 @@ inline void mh_posterior__(ModelType& model,
                         --n_swaps;
                     }
                     auto storage = var.get_storage();
-                    storage[iter] = var.get_value();
+                    storage[iter] = var.get_value(0);
                 } 
             };
             model.traverse(add_to_storage);
@@ -155,15 +153,14 @@ inline void mh_posterior__(ModelType& model,
             auto& var = eq_node.get_variable();
             using var_t = std::decay_t<decltype(var)>;
             using value_t = typename util::var_traits<var_t>::value_t;
-            using state_t = typename util::var_traits<var_t>::state_t;
-            if (var.get_state() == state_t::parameter) {
+            if constexpr(util::param_is_base_of_v<var_t>) {
                 if (!accept) {
                     using converted_value_t = details::value_to_param_t<value_t>;
                     var.set_value(std::get<converted_value_t>(params_it->next));
                     ++params_it;
                 }
                 auto storage = var.get_storage();
-                storage[iter] = var.get_value();
+                storage[iter] = var.get_value(0);
             } 
         };
         model.traverse(add_to_storage);
@@ -178,8 +175,8 @@ inline void mh_posterior__(ModelType& model,
 /*
  * Metropolis-Hastings algorithm to sample from posterior distribution.
  * The posterior distribution is a constant multiple of model.pdf().
- * Any variables that model references which are in state "parameter"
- * is sampled and in state "data" are not.
+ * Any variables that model references which are Params
+ * are sampled but Data variables are ignored.
  * So, model.pdf() is proportional to p(parameters... | data...).
  *
  * User must ensure that they allocated at least as large as n_sample
@@ -216,9 +213,8 @@ inline void mh_posterior(ModelType& model,
 
         using var_t = std::decay_t<decltype(var)>;
         using value_t = typename util::var_traits<var_t>::value_t;
-        using state_t = typename util::var_traits<var_t>::state_t;
 
-        if (var.get_state() == state_t::parameter) {
+        if constexpr (util::param_is_base_of_v<var_t>) {
             if constexpr (std::is_integral_v<value_t>) {
                 std::uniform_int_distribution init_sampler(dist.min(), dist.max());
                 var.set_value(init_sampler(gen));
@@ -235,7 +231,7 @@ inline void mh_posterior(ModelType& model,
             }
             ++n_params;
         }
-        curr_log_pdf += dist.log_pdf(var.get_value()); 
+        curr_log_pdf += dist.log_pdf(var);
     };
     model.traverse(init_params);
 

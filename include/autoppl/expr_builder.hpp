@@ -167,8 +167,7 @@ inline constexpr auto bernoulli(ProbType&& p_expr)
  */
 template <class VarType, class DistType>
 inline constexpr auto operator|=(util::Var<VarType>& var,
-                                 const util::DistExpr<DistType>& dist)
-{ return expr::EqNode(var.self(), dist.self()); }
+           const util::DistExpr<DistType>& dist) { return expr::EqNode(var.self(), dist.self()); }
 
 /*
  * Builds a GlueNode to "glue" the left expression with the right

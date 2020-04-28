@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include <autoppl/util/traits.hpp>
+#include <cassert>
 
 namespace ppl {
 
@@ -16,39 +17,55 @@ enum class MockState {
  * Mock Variable class that should meet the requirements
  * of is_var_v.
  */
-struct MockVar : util::Var<MockVar>
+struct MockParam : util::ParamLike<MockParam> {
+
+    using value_t = double;
+    using pointer_t = double*;
+    using const_pointer_t = const double*;
+
+    void set_value(value_t x) { value_ = x; }
+    value_t get_value(size_t) const { return value_; }
+    constexpr size_t size() const { return 1; }
+
+    void set_storage(pointer_t ptr) {ptr_ = ptr;}
+
+private:
+    value_t value_ = 0.0;
+    pointer_t ptr_ = nullptr;
+};
+
+struct MockData : util::DataLike<MockData>
 {
     using value_t = double;
     using pointer_t = double*;
     using const_pointer_t = const double*;
-    using state_t = MockState;
 
-    value_t get_value() const {return x_;}
-    explicit operator value_t() const { return get_value(); }
+    value_t get_value(size_t) const { 
+        return value_;
+    }
 
-    void set_value(value_t x) {x_ = x;}
-
-    void set_storage(pointer_t ptr) {ptr_ = ptr;}
-
-    void set_state(state_t state) {state_ = state;}
-    state_t get_state() const {return state_;}
+    constexpr size_t size() const { return 1; }
 
 private:
-    value_t x_ = 0.;
-    pointer_t ptr_ = nullptr;
-    state_t state_ = state_t::parameter;
+    value_t value_ = 0.0;
 };
+
 
 /*
  * Mock variable classes that fulfill 
  * var_traits requirements, but do not fit the rest.
  */
-struct MockVar_no_convertible : util::Var<MockVar>
+struct MockVar_no_convertible : util::Var<MockParam>
 {
     using value_t = double;
     using pointer_t = double*;
     using const_pointer_t = const double*;
-    using state_t = void;
+};
+
+struct MockData_no_convertible : util::Var<MockData> {
+    using value_t = double;
+    using pointer_t = double*;
+    using const_pointer_t = const double*;
 };
 
 /*
@@ -58,8 +75,11 @@ struct MockVar_no_convertible : util::Var<MockVar>
 struct MockVarExpr : util::VarExpr<MockVarExpr>
 {
     using value_t = double;
-    value_t get_value() const { return x_; }
-    explicit operator value_t() const { return get_value(); }
+    value_t get_value(size_t) const { 
+        return x_; 
+    }
+
+    constexpr size_t size() const { return 1; }
 
     /* not part of API */
     MockVarExpr(value_t x = 0.)
@@ -87,16 +107,18 @@ struct MockVarExpr_no_convertible : util::VarExpr<MockVarExpr>
 struct MockDistExpr : util::DistExpr<MockDistExpr>
 {
     using value_t = double;
-    using dist_value_t = double;
 
-    dist_value_t pdf(value_t x) const
-    { return x; }
+    using base_t = util::DistExpr<MockDistExpr>;
+    using dist_value_t = typename base_t::dist_value_t;
+    using base_t::pdf;
+    using base_t::log_pdf;
 
-    dist_value_t log_pdf(value_t x) const
-    { return std::log(x); }
+    dist_value_t pdf(value_t x, size_t=0) const { return x; }
 
-    value_t min() const { return 0.; }
-    value_t max() const { return 1.; }
+    dist_value_t log_pdf(value_t x, size_t=0) const { return std::log(x); }
+
+    value_t min(size_t=0) const { return 0.; }
+    value_t max(size_t=0) const { return 1.; }
 };
 
 /*

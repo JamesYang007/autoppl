@@ -21,9 +21,9 @@ TEST_F(constant_fixture, ctor)
 
 TEST_F(constant_fixture, convertible_value)
 {
-    EXPECT_EQ(static_cast<value_t>(x), 0.3);
+    EXPECT_EQ(x.get_value(0), 0.3);
     c = 3.41;
-    EXPECT_EQ(static_cast<value_t>(x), 0.3);
+    EXPECT_EQ(x.get_value(0), 0.3);
 }
 
 } // namespace expr

@@ -84,7 +84,7 @@ TEST_F(binop_fixture, binop_node)
 	reconfigureY(4);
 
 	binop_node_t addNode = {x, y};
-	double res = addNode.get_value();
+	double res = addNode.get_value(0);
 
 	EXPECT_EQ(res, 7);
 

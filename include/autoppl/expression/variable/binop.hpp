@@ -2,6 +2,8 @@
 #include <autoppl/util/var_expr_traits.hpp>
 #include <autoppl/variable.hpp>
 
+#define MAX(a, b) ((a) > (b)) ? (a) : (b)
+
 namespace ppl {
 namespace expr {
 
@@ -19,19 +21,15 @@ struct BinaryOpNode :
 
 	BinaryOpNode(const LHSVarExprType& lhs, const RHSVarExprType& rhs)
 		: lhs_{lhs}, rhs_{rhs}
-	{}
-	
-	value_t get_value() const
-	{
-		auto lhs_value = lhs_.get_value();
-		auto rhs_value = rhs_.get_value();
-		return BinaryOp::evaluate(lhs_value, rhs_value);
-	}
+	{ assert(lhs.size() == rhs.size() || lhs.size() == 1 || rhs.size() == 1); }
 
-	explicit operator value_t () const 
-	{
-		return get_value();
-	}
+        value_t get_value(size_t i) const {
+            auto lhs_value = lhs_.get_value(i);
+            auto rhs_value = rhs_.get_value(i);
+            return BinaryOp::evaluate(lhs_value, rhs_value);
+        }
+
+		size_t size() const { return MAX(lhs_.size(), rhs_.size()); }
 
 private:
 	LHSVarExprType lhs_;

@@ -16,7 +16,7 @@ struct VarExpr : BaseCRTP<T>
 { using BaseCRTP<T>::self; };
 
 /*
- * Checks if DistExpr<T> is base of type T 
+ * Checks if VarExpr<T> is base of type T 
  */
 template <class T>
 inline constexpr bool var_expr_is_base_of_v =
@@ -42,8 +42,7 @@ inline constexpr bool is_var_expr_v =
     var_expr_is_base_of_v<T> &&
     !is_var_v<T> &&
     has_type_value_t_v<T> &&
-    has_func_get_value_v<const T> &&
-    is_explicitly_convertible_v<const T, get_type_value_t_t<T>>
+    has_func_get_value_v<const T>
     ;
 
 namespace details {
@@ -60,8 +59,7 @@ inline constexpr bool assert_is_var_expr_v =
     assert_var_expr_is_base_of_v<T> &&
     details::assert_is_not_var_v<T> &&
     assert_has_type_value_t_v<T> &&
-    assert_has_func_get_value_v<const T> &&
-    assert_is_explicitly_convertible_v<const T, get_type_value_t_t<T>>
+    assert_has_func_get_value_v<const T>
     ;
 
 } // namespace util

@@ -28,8 +28,8 @@ TEST_F(normal_fixture, ctor)
 }
 
 TEST_F(normal_fixture, normal_check_params) {
-    EXPECT_DOUBLE_EQ(norm.mean(), static_cast<value_t>(x));
-    EXPECT_DOUBLE_EQ(norm.stddev(), static_cast<value_t>(y));
+    EXPECT_DOUBLE_EQ(norm.mean(), x.get_value(0));
+    EXPECT_DOUBLE_EQ(norm.stddev(), y.get_value(0));
 }
 
 TEST_F(normal_fixture, normal_pdf)

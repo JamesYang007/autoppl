@@ -14,7 +14,10 @@ struct Uniform : util::DistExpr<Uniform<min_type, max_type>>
     static_assert(util::assert_is_var_expr_v<max_type>);
 
     using value_t = util::cont_param_t;
-    using dist_value_t = double;
+    using base_t = util::DistExpr<Uniform<min_type, max_type>>; 
+    using dist_value_t = typename base_t::dist_value_t;
+    using base_t::pdf;
+    using base_t::log_pdf;
 
     Uniform(min_type min, max_type max)
         : min_{min}, max_{max} 
@@ -28,23 +31,23 @@ struct Uniform : util::DistExpr<Uniform<min_type, max_type>>
         return dist(gen);
     }
 
-    dist_value_t pdf(value_t x) const
+    dist_value_t pdf(value_t x, size_t index=0) const
     {
-        return (min() < x && x < max()) ? 1. / (max() - min()) : 0;
+        return (min(index) < x && x < max(index)) ? 1. / (max(index) - min(index)) : 0;
     }
 
-    dist_value_t log_pdf(value_t x) const
+    dist_value_t log_pdf(value_t x, size_t index=0) const
     {
-        return (min() < x && x < max()) ? 
-            -std::log(max() - min()) : 
+        return (min(index) < x && x < max(index)) ? 
+            -std::log(max(index) - min(index)) : 
             std::numeric_limits<dist_value_t>::lowest();
     }
 
-    value_t min() const { return min_.get_value(); }
-    value_t max() const { return max_.get_value(); }
+    value_t min(size_t index=0) const { return min_.get_value(index); }
+    value_t max(size_t index=0) const { return max_.get_value(index); }
 
 private:
-    min_type min_;
+    min_type min_;  // TODO enforce that these are at least descended from a Param class.
     max_type max_;
 };
 

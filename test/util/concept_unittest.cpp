@@ -11,7 +11,6 @@ struct MockType2
 {
     using value_t = double;
     using pointer_t = double*;
-    using state_t = void;
 
     void pdf() {};
     void log_pdf() {};
@@ -46,19 +45,6 @@ TEST_F(concept_fixture, has_type_pointer_t_v_false)
 TEST_F(concept_fixture, has_type_pointer_t_v_true)
 {
     static_assert(has_type_pointer_t_v<MockType2>);
-}
-
-TEST_F(concept_fixture, has_type_state_t_v_false)
-{
-    static_assert(!has_type_state_t_v<int>);
-    static_assert(!has_type_state_t_v<const char>);
-    static_assert(!has_type_state_t_v<void>);
-    static_assert(!has_type_state_t_v<MockType>);
-}
-
-TEST_F(concept_fixture, has_type_state_t_v_true)
-{
-    static_assert(has_type_state_t_v<MockType2>);
 }
 
 TEST_F(concept_fixture, has_func_pdf_v_false)

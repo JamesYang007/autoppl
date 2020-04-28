@@ -14,7 +14,10 @@ struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
     static_assert(util::assert_is_var_expr_v<stddev_type>);
 
     using value_t = util::cont_param_t;
-    using dist_value_t = double;
+    using base_t = util::DistExpr<Normal<mean_type, stddev_type>>;
+    using dist_value_t = typename base_t::dist_value_t;
+    using base_t::pdf;
+    using base_t::log_pdf;
 
     Normal(mean_type mean, stddev_type stddev)
         : mean_{mean}, stddev_{stddev} 
@@ -26,25 +29,25 @@ struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
         return dist(gen);
     }
 
-    dist_value_t pdf(value_t x) const 
+    dist_value_t pdf(value_t x, size_t index=0) const 
     {
-        dist_value_t z_score = (x - mean()) / stddev();
-        return std::exp(- 0.5 * z_score * z_score) / (stddev() * std::sqrt(2 * M_PI));
+        dist_value_t z_score = (x - mean(index)) / stddev(index);
+        return std::exp(- 0.5 * z_score * z_score) / (stddev(index) * std::sqrt(2 * M_PI));
     }
 
-    dist_value_t log_pdf(value_t x) const 
+    dist_value_t log_pdf(value_t x, size_t index=0) const 
     {
-        dist_value_t z_score = (x - mean()) / stddev();
-        return -0.5 * ((z_score * z_score) + std::log(stddev() * stddev() * 2 * M_PI));
+        dist_value_t z_score = (x - mean(index)) / stddev(index);
+        return -0.5 * ((z_score * z_score) + std::log(stddev(index) * stddev(index) * 2 * M_PI));
     }
-
-    auto mean() const { return mean_.get_value();}
-    auto stddev() const { return stddev_.get_value();}
+    
+    auto mean(size_t index=0) const { return mean_.get_value(index);}
+    auto stddev(size_t index=0) const { return stddev_.get_value(index);}
     value_t min() const { return std::numeric_limits<value_t>::lowest(); }
     value_t max() const { return std::numeric_limits<value_t>::max(); }
 
 private:
-    mean_type mean_;
+    mean_type mean_;  // TODO enforce that these are at least descended from a Param class.
     stddev_type stddev_;
 };
 
