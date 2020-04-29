@@ -12,6 +12,45 @@
 
 AutoPPL is a C++ library providing high-level support for probabilistic programming.
 
+## Design Choices
+
+### Intuitive Model Specification 
+
+In hierarchical Bayesian statistics, the first step before doing any inference
+is to specify a probabilistic model for the data of interest.
+For example, in mathematical notation, a Gaussian model could resemble the following:
+```
+X ~ N(m, I)
+m ~ U(-1, 1)
+```
+
+We wanted to mimic this compact notation as much as possible in code
+due to its simplicity and expressiveness.
+
+For the model specified above, the code in AutoPPL could look like the following:
+```cpp
+ppl::Data<double> X;
+ppl::Param<double> m;
+auto model = (
+    m |= uniform(-1., 1.),
+    X |= normal(m, 1)
+);
+```
+
+### Efficient Memory Usage
+
+We made the assumption that users know which variables
+represent data or parameter as well as the probabilistic model specification.
+With this assumption, we build a graphical model 
+at compile-time using expression templates.
+As an example, the object `model` in the previous [section](#intuitive-model-specification)
+is a compile-time constructed tree that stores 
+the relationship between variables and distributions.
+
+A model object is very cheap
+
+### High-performance Inference Methods
+
 ## Installation
 
 First, clone the repository:
