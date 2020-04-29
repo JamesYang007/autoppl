@@ -111,7 +111,7 @@ script:
     - ./setup.sh
     - >
       ./clean-build.sh 
-      debug 
+      release
       ${CMAKE_OPTIONS} 
       -DAUTOPPL_ENABLE_BENCHMARK=OFF 
       -DAUTOPPL_ENABLE_TEST=ON
