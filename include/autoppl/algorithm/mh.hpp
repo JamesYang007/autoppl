@@ -52,7 +52,7 @@ struct MHData
 };
 
 template <class ModelType, class RGenType, class Iter>
-inline void mh_posterior__(ModelType& model,
+inline void mh__(ModelType& model,
                            Iter params_it,
                            RGenType& gen,
                            size_t n_sample,
@@ -180,7 +180,7 @@ inline void mh_posterior__(ModelType& model,
  * in the storage associated with every parameter referenced in model.
  */
 template <class ModelType>
-inline void mh_posterior(ModelType& model,
+inline void mh(ModelType& model,
                          double n_sample,
                          double stddev = 1.0,
                          double alpha = 0.25,
@@ -233,13 +233,13 @@ inline void mh_posterior(ModelType& model,
     model.traverse(init_params);
 
     std::vector<data_t> params(n_params);   // vector of parameter-related data with candidate
-    alg::mh_posterior__(model,
-                        params.begin(),
-                        gen,
-                        n_sample,
-                        curr_log_pdf,
-                        alpha,
-                        stddev);
+    alg::mh__(model,
+              params.begin(),
+              gen,
+              n_sample,
+              curr_log_pdf,
+              alpha,
+              stddev);
 }
 
 } // namespace ppl
