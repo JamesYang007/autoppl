@@ -436,6 +436,19 @@ TEST_F(nuts_fixture, nuts_sample_normal_stddev)
     // both of those (rare)
 }
 
+TEST_F(nuts_fixture, nuts_sample_unif_normal_posterior_mean)
+{
+    Data<double> x(3.);
+    auto model = (
+        w |= uniform(-20., 20.),
+        x |= normal(w, 1.)
+    );
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+    plot_hist(w_storage); 
+    EXPECT_NEAR(sample_average(w_storage), 3.0, 0.1);
+}
+
 TEST_F(nuts_fixture, nuts_sample_regression_dist_weight) 
 {
     reconfigure(n_samples);
