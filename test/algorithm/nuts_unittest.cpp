@@ -353,9 +353,9 @@ TEST_F(nuts_build_tree_fixture, find_reasonable_log_epsilon)
 struct nuts_fixture : nuts_tools_fixture
 {
 protected:
-    size_t n_adapt = 1000;
-    size_t n_samples = 10000;
-    size_t warmup = 10000;
+    size_t n_samples = 2000;
+    size_t warmup = 2000;
+    size_t n_adapt = warmup;
     double delta = 0.6;
     size_t max_depth = 10;
     size_t seed = 4821;
@@ -398,10 +398,6 @@ TEST_F(nuts_fixture, nuts_std_normal)
 
 TEST_F(nuts_fixture, nuts_uniform)
 {
-    n_samples = 1000;
-    warmup = 20000;
-    n_adapt = n_samples;
-    reconfigure(n_samples);
     auto model = (
         w |= uniform(0., 1.)
     );
@@ -456,8 +452,6 @@ TEST_F(nuts_fixture, nuts_sample_unif_normal_posterior_mean)
 
 TEST_F(nuts_fixture, nuts_sample_regression_dist_weight) 
 {
-    reconfigure(n_samples);
-
     auto model = (w |= normal(0., 2.),
                   y |= normal(x * w + 1., 0.5)
     );
@@ -471,12 +465,6 @@ TEST_F(nuts_fixture, nuts_sample_regression_dist_weight)
 
 TEST_F(nuts_fixture, nuts_sample_regression_dist_weight_bias) 
 {
-    n_adapt = 1000;
-    n_samples = 1000;
-    warmup = 1000;
-
-    reconfigure(n_samples);
-
     auto model = (b |= normal(0., 2.),
                   w |= normal(0., 2.),
                   y |= normal(x * w + b, 0.5)
