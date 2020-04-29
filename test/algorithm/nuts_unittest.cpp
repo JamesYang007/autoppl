@@ -128,6 +128,9 @@ protected:
     using output_t = alg::TreeOutput<subview_t>;
     output_t output;
 
+    std::uniform_real_distribution<double> unif_sampler;
+    std::mt19937 gen;
+
     nuts_build_tree_fixture()
         : ad_vars(3)
         , data(n_params, 6)
@@ -138,6 +141,7 @@ protected:
         , opt_rho(data.unsafe_col(4))
         , theta_prime(data.unsafe_col(5))
         , output(theta_prime)
+        , unif_sampler(0., 1.)
     {
         // bind theta and theta_adj to be the value/adj storage
         alg::ad_bind_storage(ad_vars, theta, theta_adj);
@@ -167,7 +171,7 @@ TEST_F(nuts_build_tree_fixture, build_tree_base_plus_no_opt_output)
         epsilon, ham
     );
 
-    build_tree<3>(input, output, 0);
+    build_tree<3>(input, output, 0, unif_sampler, gen);
 
     // output optional theta/rho still unset
     EXPECT_FALSE(output.opt_theta_ref.has_value());
@@ -220,7 +224,7 @@ TEST_F(nuts_build_tree_fixture, build_tree_base_plus_opt_output)
     output.opt_theta_ref = opt_theta;
     output.opt_rho_ref = opt_rho;
 
-    build_tree<3>(input, output, 0);
+    build_tree<3>(input, output, 0, unif_sampler, gen);
 
     // optional theta and rho are the same as input ones
     EXPECT_DOUBLE_EQ(opt_theta[0], theta[0]);
@@ -253,7 +257,7 @@ TEST_F(nuts_build_tree_fixture, build_tree_base_plus_no_opt_output_2)
         epsilon, ham
     );
 
-    build_tree<3>(input, output, 0);
+    build_tree<3>(input, output, 0, unif_sampler, gen);
 
     // input theta properly updated
     EXPECT_DOUBLE_EQ(theta[0], 4.);
@@ -302,7 +306,8 @@ TEST_F(nuts_build_tree_fixture, build_tree_recursion_plus_no_opt_output)
 
     // custom uniform distribution will always accept candidate
     // except when optimized for n'' == 0 in the recursion
-    build_tree<3>(input, output, 1, [](const auto&) {return 0;});
+    auto always_accept = [](const auto&) {return 0;};
+    build_tree<3>(input, output, 1, always_accept, gen);
 
     // input theta properly updated
     EXPECT_DOUBLE_EQ(theta[0], 4.);
@@ -348,9 +353,9 @@ TEST_F(nuts_build_tree_fixture, find_reasonable_log_epsilon)
 struct nuts_fixture : nuts_tools_fixture
 {
 protected:
-    size_t n_adapt = 1000;
-    size_t n_samples = 10000;
-    size_t warmup = 10000;
+    size_t n_samples = 2000;
+    size_t warmup = 2000;
+    size_t n_adapt = warmup;
     double delta = 0.6;
     size_t max_depth = 10;
     size_t seed = 4821;
@@ -359,10 +364,12 @@ protected:
     Param<double> w, b;
     ppl::Data<double> x {2.5, 3, 3.5, 4, 4.5, 5.};
     ppl::Data<double> y {3.5, 4, 4.5, 5, 5.5, 6.};
+    ppl::Data<double> q{2.4, 3.1, 3.6, 4, 4.5, 5.};
+    ppl::Data<double> r{3.5, 4, 4.4, 5.01, 5.46, 6.1};
 
     nuts_fixture()
-        : w_storage(n_samples)
-        , b_storage(n_samples)
+        : w_storage(n_samples, 0.)
+        , b_storage(n_samples, 0.)
         , w{w_storage.data()}
         , b{b_storage.data()}
     {}
@@ -389,10 +396,62 @@ TEST_F(nuts_fixture, nuts_std_normal)
     EXPECT_NEAR(sample_average(w_storage), 0., 0.1);
 }
 
+TEST_F(nuts_fixture, nuts_uniform)
+{
+    auto model = (
+        w |= uniform(0., 1.)
+    );
+
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+
+    plot_hist(w_storage, 0.1);
+    EXPECT_NEAR(sample_average(w_storage), 0.5, 0.1);
+}
+
+TEST_F(nuts_fixture, nuts_sample_unif_normal_posterior_stddev)
+{
+    Data<double> x(3.14);
+    auto model = (
+        w |= uniform(0.1, 5.),
+        x |= normal(0., w)
+    );
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+    plot_hist(w_storage, 0.2);
+    EXPECT_NEAR(sample_average(w_storage), 3.27226, 0.1);
+}
+
+TEST_F(nuts_fixture, nuts_sample_normal_stddev)
+{
+    Data<double> x(3.);
+    auto model = (
+        w |= normal(0., 2.),
+        x |= normal(0., w * w)
+    );
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+    plot_hist(w_storage, 0.2); 
+    // should be either gradually increasing then suddenly dropping to 0 or
+    // suddenly jumping to 0 then gradually decreasing or
+    // both of those (rare)
+}
+
+TEST_F(nuts_fixture, nuts_sample_unif_normal_posterior_mean)
+{
+    Data<double> x(3.);
+    auto model = (
+        w |= uniform(-20., 20.),
+        x |= normal(w, 1.)
+    );
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+    plot_hist(w_storage); 
+    EXPECT_NEAR(sample_average(w_storage), 3.0, 0.1);
+}
+
 TEST_F(nuts_fixture, nuts_sample_regression_dist_weight) 
 {
-    reconfigure(n_samples);
-
     auto model = (w |= normal(0., 2.),
                   y |= normal(x * w + 1., 0.5)
     );
@@ -406,12 +465,6 @@ TEST_F(nuts_fixture, nuts_sample_regression_dist_weight)
 
 TEST_F(nuts_fixture, nuts_sample_regression_dist_weight_bias) 
 {
-    n_adapt = 1000;
-    n_samples = 1000;
-    warmup = 1000;
-
-    reconfigure(n_samples);
-
     auto model = (b |= normal(0., 2.),
                   w |= normal(0., 2.),
                   y |= normal(x * w + b, 0.5)
@@ -424,6 +477,37 @@ TEST_F(nuts_fixture, nuts_sample_regression_dist_weight_bias)
     plot_hist(b_storage);
     EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
     EXPECT_NEAR(sample_average(b_storage), 1.0, 0.3);
+}
+
+TEST_F(nuts_fixture, nuts_sample_regression_dist_uniform) {
+    auto model = (w |= uniform(0., 2.),
+                  b |= uniform(0., 2.),
+                  y |= normal(x * w + b, 0.5)
+    );
+
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+
+    plot_hist(w_storage, 0.2, 0., 2.);
+    plot_hist(b_storage, 0.2, 0., 2.);
+
+    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
+    EXPECT_NEAR(sample_average(b_storage), 1.0, 0.1);
+}
+
+TEST_F(nuts_fixture, nuts_sample_regression_fuzzy_uniform) {
+    auto model = (w |= uniform(0., 2.),
+                  b |= uniform(0., 2.),
+                  r |= normal(q * w + b, 0.5));
+
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+
+    plot_hist(w_storage, 0.2, 0., 1.);
+    plot_hist(b_storage, 0.2, 0., 1.);
+
+    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
+    EXPECT_NEAR(sample_average(b_storage), 0.95, 0.1);
 }
 
 } // namespace ppl
