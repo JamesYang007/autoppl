@@ -1,6 +1,7 @@
 #pragma once
 #include <cassert>
 #include <random>
+#include <fastad>
 #include <autoppl/util/dist_expr_traits.hpp>
 #include <autoppl/util/var_expr_traits.hpp>
 
@@ -41,6 +42,24 @@ struct Uniform : util::DistExpr<Uniform<min_type, max_type>>
         return (min(index) < x && x < max(index)) ? 
             -std::log(max(index) - min(index)) : 
             std::numeric_limits<dist_value_t>::lowest();
+    }
+
+    /* 
+     * Up to constant addition, returns ad expression of log pdf
+     */
+    template <class ADVarType, class VecRefType, class VecADVarType>
+    auto ad_log_pdf(const ADVarType& x,
+                    const VecRefType& keys,
+                    const VecADVarType& vars,
+                    size_t idx = 0) const
+    {
+        auto&& ad_min_expr = min_.get_ad(keys, vars, idx);
+        auto&& ad_max_expr = max_.get_ad(keys, vars, idx);
+        return ad::if_else(
+                ((ad_min_expr < x) && (x < ad_max_expr)),
+                -ad::log(ad_max_expr - ad_min_expr),
+                ad::constant(std::numeric_limits<dist_value_t>::lowest())
+                );
     }
 
     value_t min(size_t index=0) const { return min_.get_value(index); }

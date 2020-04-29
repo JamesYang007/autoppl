@@ -51,12 +51,14 @@ struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
                     const VecADVarType& vars,
                     size_t idx = 0) const
     {
-        auto ad_mean_expr = mean_.get_ad(keys, vars, idx);
-        auto ad_stddev_expr = stddev_.get_ad(keys, vars, idx);
-        return ((ad::constant(-0.5) * 
-                ((x - ad_mean_expr) * (x - ad_mean_expr) / 
-                    (ad_stddev_expr * ad_stddev_expr)))
-                - ad::log(ad_stddev_expr)
+        auto&& ad_mean_expr = mean_.get_ad(keys, vars, idx);
+        auto&& ad_stddev_expr = stddev_.get_ad(keys, vars, idx);
+        return ad::if_else(
+                ad_stddev_expr > ad::constant(0.),
+                (ad::constant(-0.5) * 
+                ad::pow<2>((x - ad_mean_expr) / ad_stddev_expr))
+                - ad::log(ad_stddev_expr),
+                ad::constant(std::numeric_limits<dist_value_t>::lowest())
                ); 
     }
 

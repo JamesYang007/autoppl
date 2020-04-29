@@ -359,6 +359,8 @@ protected:
     Param<double> w, b;
     ppl::Data<double> x {2.5, 3, 3.5, 4, 4.5, 5.};
     ppl::Data<double> y {3.5, 4, 4.5, 5, 5.5, 6.};
+    ppl::Data<double> q{2.4, 3.1, 3.6, 4, 4.5, 5.};
+    ppl::Data<double> r{3.5, 4, 4.4, 5.01, 5.46, 6.1};
 
     nuts_fixture()
         : w_storage(n_samples)
@@ -387,6 +389,51 @@ TEST_F(nuts_fixture, nuts_std_normal)
 
     plot_hist(w_storage);
     EXPECT_NEAR(sample_average(w_storage), 0., 0.1);
+}
+
+TEST_F(nuts_fixture, nuts_uniform)
+{
+    n_samples = 1000;
+    warmup = 20000;
+    n_adapt = n_samples;
+    reconfigure(n_samples);
+    auto model = (
+        w |= uniform(0., 1.)
+    );
+
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+
+    plot_hist(w_storage, 0.1);
+    EXPECT_NEAR(sample_average(w_storage), 0.5, 0.1);
+}
+
+TEST_F(nuts_fixture, nuts_sample_unif_normal_posterior_stddev)
+{
+    Data<double> x(3.14);
+    auto model = (
+        w |= uniform(0.1, 5.),
+        x |= normal(0., w)
+    );
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+    plot_hist(w_storage, 0.2);
+    EXPECT_NEAR(sample_average(w_storage), 3.27226, 0.1);
+}
+
+TEST_F(nuts_fixture, nuts_sample_normal_stddev)
+{
+    Data<double> x(3.);
+    auto model = (
+        w |= normal(0., 2.),
+        x |= normal(0., w * w)
+    );
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+    plot_hist(w_storage, 0.2); 
+    // should be either gradually increasing then suddenly dropping to 0 or
+    // suddenly jumping to 0 then gradually decreasing or
+    // both of those (rare)
 }
 
 TEST_F(nuts_fixture, nuts_sample_regression_dist_weight) 
@@ -424,6 +471,37 @@ TEST_F(nuts_fixture, nuts_sample_regression_dist_weight_bias)
     plot_hist(b_storage);
     EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
     EXPECT_NEAR(sample_average(b_storage), 1.0, 0.3);
+}
+
+TEST_F(nuts_fixture, nuts_sample_regression_dist_uniform) {
+    auto model = (w |= uniform(0., 2.),
+                  b |= uniform(0., 2.),
+                  y |= normal(x * w + b, 0.5)
+    );
+
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+
+    plot_hist(w_storage, 0.2, 0., 2.);
+    plot_hist(b_storage, 0.2, 0., 2.);
+
+    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
+    EXPECT_NEAR(sample_average(b_storage), 1.0, 0.1);
+}
+
+TEST_F(nuts_fixture, nuts_sample_regression_fuzzy_uniform) {
+    auto model = (w |= uniform(0., 2.),
+                  b |= uniform(0., 2.),
+                  r |= normal(q * w + b, 0.5));
+
+    nuts(model, warmup, n_samples, n_adapt, seed,
+         max_depth, delta);
+
+    plot_hist(w_storage, 0.2, 0., 1.);
+    plot_hist(b_storage, 0.2, 0., 1.);
+
+    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
+    EXPECT_NEAR(sample_average(b_storage), 0.95, 0.1);
 }
 
 } // namespace ppl

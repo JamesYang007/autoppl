@@ -217,7 +217,8 @@ void build_tree(InputType& input,
     // if accepting, also copy over potential from second output
     // otherwise, only copy potential from FIRST output
     if (second_output.n) {
-        double accept_prob = second_output.n / (first_output.n + second_output.n);
+        double accept_prob = static_cast<double>(second_output.n) / 
+            (first_output.n + second_output.n);
         bool accept = accept_or_reject(accept_prob, unif_sampler, gen);
         if (accept) { 
             first_output.theta_prime_ref.get() = 
@@ -226,7 +227,7 @@ void build_tree(InputType& input,
         } else {
             output.potential = first_output.potential;
         }
-    } else {    // if second output n were 0, no need to sample: always reject
+    } else {    // if second output n were 0, but first n nonzero, no need to sample: always reject
         output.potential = first_output.potential;
     }
 
