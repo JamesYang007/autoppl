@@ -115,7 +115,7 @@ script:
       ${CMAKE_OPTIONS} 
       -DAUTOPPL_ENABLE_BENCHMARK=OFF 
       -DAUTOPPL_ENABLE_TEST=ON
-    - cd build/debug
+    - cd build/release
     - ctest ${CTEST_OPTIONS} -j12
 
     # if testing valgrind
