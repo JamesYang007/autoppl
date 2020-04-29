@@ -128,6 +128,9 @@ protected:
     using output_t = alg::TreeOutput<subview_t>;
     output_t output;
 
+    std::uniform_real_distribution<double> unif_sampler;
+    std::mt19937 gen;
+
     nuts_build_tree_fixture()
         : ad_vars(3)
         , data(n_params, 6)
@@ -138,6 +141,7 @@ protected:
         , opt_rho(data.unsafe_col(4))
         , theta_prime(data.unsafe_col(5))
         , output(theta_prime)
+        , unif_sampler(0., 1.)
     {
         // bind theta and theta_adj to be the value/adj storage
         alg::ad_bind_storage(ad_vars, theta, theta_adj);
@@ -167,7 +171,7 @@ TEST_F(nuts_build_tree_fixture, build_tree_base_plus_no_opt_output)
         epsilon, ham
     );
 
-    build_tree<3>(input, output, 0);
+    build_tree<3>(input, output, 0, unif_sampler, gen);
 
     // output optional theta/rho still unset
     EXPECT_FALSE(output.opt_theta_ref.has_value());
@@ -220,7 +224,7 @@ TEST_F(nuts_build_tree_fixture, build_tree_base_plus_opt_output)
     output.opt_theta_ref = opt_theta;
     output.opt_rho_ref = opt_rho;
 
-    build_tree<3>(input, output, 0);
+    build_tree<3>(input, output, 0, unif_sampler, gen);
 
     // optional theta and rho are the same as input ones
     EXPECT_DOUBLE_EQ(opt_theta[0], theta[0]);
@@ -253,7 +257,7 @@ TEST_F(nuts_build_tree_fixture, build_tree_base_plus_no_opt_output_2)
         epsilon, ham
     );
 
-    build_tree<3>(input, output, 0);
+    build_tree<3>(input, output, 0, unif_sampler, gen);
 
     // input theta properly updated
     EXPECT_DOUBLE_EQ(theta[0], 4.);
@@ -302,7 +306,8 @@ TEST_F(nuts_build_tree_fixture, build_tree_recursion_plus_no_opt_output)
 
     // custom uniform distribution will always accept candidate
     // except when optimized for n'' == 0 in the recursion
-    build_tree<3>(input, output, 1, [](const auto&) {return 0;});
+    auto always_accept = [](const auto&) {return 0;};
+    build_tree<3>(input, output, 1, always_accept, gen);
 
     // input theta properly updated
     EXPECT_DOUBLE_EQ(theta[0], 4.);
@@ -363,8 +368,8 @@ protected:
     ppl::Data<double> r{3.5, 4, 4.4, 5.01, 5.46, 6.1};
 
     nuts_fixture()
-        : w_storage(n_samples)
-        , b_storage(n_samples)
+        : w_storage(n_samples, 0.)
+        , b_storage(n_samples, 0.)
         , w{w_storage.data()}
         , b{b_storage.data()}
     {}

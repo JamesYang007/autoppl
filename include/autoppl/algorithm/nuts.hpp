@@ -131,14 +131,14 @@ bool check_entropy(const MatType& theta_plus,
 template <size_t n_params
         , class InputType
         , class OutputType
-        , class UniformDistType = std::uniform_real_distribution<double>
-        , class GenType = std::mt19937
+        , class UniformDistType
+        , class GenType
     >
 void build_tree(InputType& input, 
                 OutputType& output,
                 uint8_t depth,
-                UniformDistType unif_sampler = UniformDistType(0., 1.),
-                GenType gen = GenType()
+                UniformDistType& unif_sampler,
+                GenType& gen
                 )
 {
     constexpr double delta_max = 1000;  // suggested by Gelman
@@ -192,7 +192,7 @@ void build_tree(InputType& input,
         first_output.opt_rho_ref = rho;
     }
     
-    build_tree<n_params>(input, first_output, depth - 1);
+    build_tree<n_params>(input, first_output, depth - 1, unif_sampler, gen);
 
     // ham way below threshold of delta_max: early finish
     // simply copy first output's values into caller's output.
@@ -211,7 +211,7 @@ void build_tree(InputType& input,
     second_output.opt_rho_ref.reset();
     second_output.theta_prime_ref = theta_double_prime;
 
-    build_tree<n_params>(input, second_output, depth - 1);
+    build_tree<n_params>(input, second_output, depth - 1, unif_sampler, gen);
 
     // accept with n''/(n' + n'') probability
     // if accepting, also copy over potential from second output
@@ -270,11 +270,11 @@ double find_reasonable_epsilon(ADExprType& ad_expr,
     double eps = 1.;
     const double diff_bound = -std::log(2);
 
-    arma::mat::fixed<n_params, 2> r_mat;
+    arma::mat::fixed<n_params, 2> r_mat(arma::fill::zeros);
     auto r = r_mat.unsafe_col(0);
     auto r_orig = r_mat.unsafe_col(1);
 
-    arma::mat::fixed<n_params, 2> theta_mat;
+    arma::mat::fixed<n_params, 2> theta_mat(arma::fill::zeros);
     auto theta_orig = theta_mat.unsafe_col(0);
     auto theta_adj_orig = theta_mat.unsafe_col(1);
 
@@ -363,13 +363,13 @@ void nuts(ModelType& model,
 
     // momentum matrix
     constexpr uint8_t n_rhos_cached = 2;
-    arma::mat::fixed<n_params, n_rhos_cached> rho_mat;
+    arma::mat::fixed<n_params, n_rhos_cached> rho_mat(arma::fill::zeros);
     auto rho_minus = rho_mat.unsafe_col(0);
     auto rho_plus = rho_mat.unsafe_col(1);
 
     // position matrix for thetas and adjoints
     constexpr uint8_t n_thetas_cached = 7;
-    arma::mat::fixed<n_params, n_thetas_cached> theta_mat;
+    arma::mat::fixed<n_params, n_thetas_cached> theta_mat(arma::fill::zeros);
     auto theta_minus = theta_mat.unsafe_col(0);
     auto theta_minus_adj = theta_mat.unsafe_col(1);
     auto theta_plus = theta_mat.unsafe_col(2);
