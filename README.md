@@ -247,10 +247,12 @@ ppl::nuts(model, warmup, n_samples, n_adapt);
 ## Third Party Tools
 
 Many thanks to the following third party tools used in this project:
+- [Armadillo](http://arma.sourceforge.net/): matrix library used for inference algorithms.
 - [Clang](https://clang.llvm.org/): one of the main compilers used.
 - [CMake](https://cmake.org/): build system.
 - [Coveralls](https://coveralls.io/): check test coverage.
 - [Cpp Coveralls](https://github.com/eddyxu/cpp-coveralls): check test coverage specifically for C++ code.
+- [FastAD](https://github.com/JamesYang007/FastAD): automatic differentiation library.
 - [GCC](https://gcc.gnu.org/): one of the main compilers used.
 - [Google Benchmark](https://github.com/google/benchmark): benchmark library algorithms.
 - [GoogleTest](https://github.com/google/googletest): unit/integration-tests.
