@@ -51,7 +51,7 @@ TEST_F(mh_regression_fixture, sample_regression_dist) {
                   y |= ppl::normal(x * w + b, 0.5)
     );
 
-    ppl::mh_posterior(model, sample_size);
+    ppl::mh(model, sample_size);
 
     plot_hist(w_storage, 0.2, 0., 1.);
     plot_hist(b_storage, 0.2, 0., 1.);
@@ -65,7 +65,7 @@ TEST_F(mh_regression_fixture, sample_regression_fuzzy_dist) {
                   b |= ppl::uniform(0, 2),
                   r |= ppl::normal(q * w + b, 0.5));
 
-    ppl::mh_posterior(model, sample_size);
+    ppl::mh(model, sample_size);
 
     plot_hist(w_storage, 0.2, 0., 1.);
     plot_hist(b_storage, 0.2, 0., 1.);
@@ -78,7 +78,7 @@ TEST_F(mh_regression_fixture, sample_regression_normal_weight) {
     auto model = (w |= ppl::normal(0., 2.),
                   y |= ppl::normal(x * w + 1., 0.5));
 
-    ppl::mh_posterior(model, sample_size);
+    ppl::mh(model, sample_size);
 
     plot_hist(w_storage, 0.2, 0., 1.);
 

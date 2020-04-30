@@ -52,17 +52,18 @@ struct MHData
 };
 
 template <class ModelType, class RGenType, class Iter>
-inline void mh_posterior__(ModelType& model,
-                           Iter params_it,
-                           RGenType& gen,
-                           size_t n_sample,
-                           double curr_log_pdf,
-                           double alpha,
-                           double stddev)
+inline void mh__(ModelType& model,
+                 Iter params_it,
+                 RGenType& gen,
+                 size_t n_sample,
+                 size_t warmup,
+                 double curr_log_pdf,
+                 double alpha,
+                 double stddev)
 {
     std::uniform_real_distribution unif_sampler(0., 1.);
 
-    for (size_t iter = 0; iter < n_sample; ++iter) {
+    for (size_t iter = 0; iter < n_sample + warmup; ++iter) {
         
         size_t n_swaps = 0;                     // during candidate sampling, if sample out-of-bounds,
                                                 // traversal will prematurely return and n_swaps < n_params
@@ -118,7 +119,7 @@ inline void mh_posterior__(ModelType& model,
         if (early_reject) {
 
             // swap back original params only up until when candidate was out of bounds.
-            auto add_to_storage = [&n_swaps, params_it, iter](auto& eq_node) mutable {
+            auto add_to_storage = [=, &n_swaps](auto& eq_node) mutable {
                 auto& var = eq_node.get_variable();
                 using var_t = std::decay_t<decltype(var)>;
                 using value_t = typename util::var_traits<var_t>::value_t;
@@ -129,8 +130,10 @@ inline void mh_posterior__(ModelType& model,
                         ++params_it;
                         --n_swaps;
                     }
-                    auto storage = var.get_storage();
-                    storage[iter] = var.get_value(0);
+                    if (iter >= warmup) {
+                        auto storage = var.get_storage();
+                        storage[iter - warmup] = var.get_value(0);
+                    }
                 } 
             };
             model.traverse(add_to_storage);
@@ -146,7 +149,7 @@ inline void mh_posterior__(ModelType& model,
         // so simply append to storage.
         // Otherwise, "current" sample for next iteration must be moved back from 
         // params vector into variables.
-        auto add_to_storage = [params_it, iter, accept](auto& eq_node) mutable {
+        auto add_to_storage = [=](auto& eq_node) mutable {
             auto& var = eq_node.get_variable();
             using var_t = std::decay_t<decltype(var)>;
             using value_t = typename util::var_traits<var_t>::value_t;
@@ -156,8 +159,10 @@ inline void mh_posterior__(ModelType& model,
                     var.set_value(*std::get_if<converted_value_t>(&params_it->next));
                     ++params_it;
                 }
-                auto storage = var.get_storage();
-                storage[iter] = var.get_value(0);
+                if (iter >= warmup) {
+                    auto storage = var.get_storage();
+                    storage[iter - warmup] = var.get_value(0);
+                }
             } 
         };
         model.traverse(add_to_storage);
@@ -180,15 +185,16 @@ inline void mh_posterior__(ModelType& model,
  * in the storage associated with every parameter referenced in model.
  */
 template <class ModelType>
-inline void mh_posterior(ModelType& model,
-                         double n_sample,
-                         double stddev = 1.0,
-                         double alpha = 0.25,
-                         double seed = std::chrono::duration_cast<
-                                        std::chrono::milliseconds>(
-                                            std::chrono::system_clock::now().time_since_epoch()
-                                            ).count()
-                        )
+inline void mh(ModelType& model,
+               double n_sample,
+               size_t warmup = 1000,
+               double stddev = 1.0,
+               double alpha = 0.25,
+               size_t seed = std::chrono::duration_cast<
+                              std::chrono::milliseconds>(
+                                  std::chrono::system_clock::now().time_since_epoch()
+                                  ).count()
+               )
 {
     using data_t = alg::MHData;
     
@@ -233,13 +239,14 @@ inline void mh_posterior(ModelType& model,
     model.traverse(init_params);
 
     std::vector<data_t> params(n_params);   // vector of parameter-related data with candidate
-    alg::mh_posterior__(model,
-                        params.begin(),
-                        gen,
-                        n_sample,
-                        curr_log_pdf,
-                        alpha,
-                        stddev);
+    alg::mh__(model,
+              params.begin(),
+              gen,
+              n_sample,
+              warmup,
+              curr_log_pdf,
+              alpha,
+              stddev);
 }
 
 } // namespace ppl
