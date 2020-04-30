@@ -25,7 +25,7 @@
 
 AutoPPL is a C++ template library providing high-level support for probabilistic programming.
 Using operator overloading and expression templates, AutoPPL provides a 
-generic framework to specify probabilistic models and apply inference algorithms on them.
+generic framework for specifying probabilistic models and applying inference algorithms.
 
 ## Features
 
@@ -44,16 +44,16 @@ See [examples](#examples) for more detail on how to use these sampling algorithm
 
 ### Intuitive Model Specification 
 
-In hierarchical Bayesian statistics, the first step before doing any inference
-is to specify a probabilistic model for the data of interest.
-For example, in mathematical notation, a Gaussian model could look like the following:
+In Bayesian statistics, the first step in performing probabilistic inference is to 
+specify a generative model for the data of interest. For example, in mathematical notation, 
+a Gaussian model could look like the following:
 ```
 X ~ N(mu, I)
 mu ~ U(-1, 1)
 ```
 
-Given its simplicity and expressiveness,
-we wanted to mimic this compact notation as much as possible for the users.
+Given its simplicity and expressiveness, we wanted to mimic this compact notation as much 
+as possible for users of ou library.
 
 For the model specified above, the code in AutoPPL could look like the following:
 ```cpp
@@ -65,11 +65,16 @@ auto model = (
 );
 ```
 
+A `ppl::Param<T>` stores a univariate parameter of our model, while `ppl::Data` holds samples
+that have been observed from out distribution. The goal of Bayesian statistics is to sample from
+the posterior distribution given observed data, or maximize the likelihood of our data over a set
+of possible parameters. We support these methods using advanced modeling and sampling algorithms.
+
 ### Efficient Memory Usage
 
 We make the assumption that users are able to specify the probabilistic model at compile-time.
 As a result, AutoPPL can construct all model expressions at compile-time
-simply from the type information and using expression templates.
+simply from the type information using expression templates.
 A model expression is simply a binary tree that relates variables with 
 distributions, which can potentially depend on other variables.
 
@@ -108,7 +113,7 @@ The model does not store any data, but rather only serves to relate variables.
 
 Users interface with the inference methods via model expressions and other
 configuration parameters for that particular method.
-Hence, the inference algorithms are completely generalized to work for any model,
+Hence, the inference algorithms are completely general and work with any model
 so long as the model expression is properly constructed.
 Moreover, due to the statically-known model specification, algorithms
 have opportunities to make compile-time optimizations.
@@ -137,7 +142,7 @@ ctest
 ### Sampling from Joint Distribution
 
 Although `AutoPPL` was designed to perform inference on posterior distributions,
-one can certainly use it to simply sample from any joint distribution.
+one can certainly use it to sample from any the joint prior distribution instead.
 As an example, we can sample `1000` points from a 
 standard normal distribution using Metropolis-Hastings in the following way:
 
