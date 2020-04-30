@@ -190,7 +190,7 @@ inline void mh(ModelType& model,
                size_t warmup = 1000,
                double stddev = 1.0,
                double alpha = 0.25,
-               double seed = std::chrono::duration_cast<
+               size_t seed = std::chrono::duration_cast<
                               std::chrono::milliseconds>(
                                   std::chrono::system_clock::now().time_since_epoch()
                                   ).count()

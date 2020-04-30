@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <cassert>
 #include <cmath>
 #include <stack>
@@ -330,7 +331,10 @@ void nuts(ModelType& model,
           size_t warmup,
           size_t n_samples,
           size_t n_adapt,
-          size_t seed = 0,
+          size_t seed = std::chrono::duration_cast<
+                         std::chrono::milliseconds>(
+                             std::chrono::system_clock::now().time_since_epoch()
+                             ).count(),
           size_t max_depth = 10,
           double delta = 0.6
           )
