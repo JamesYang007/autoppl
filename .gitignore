@@ -3,3 +3,4 @@ build
 .*
 !.travis.yml
 lib
+!lib/CMakeLists.txt

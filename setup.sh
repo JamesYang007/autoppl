@@ -1,7 +1,5 @@
 #!/bin/bash
 
-projectdir=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
-
 gbenchpath="lib/benchmark"
 gtestpath="$gbenchpath/googletest"
 armapath="lib/armadillo"
@@ -26,34 +24,29 @@ fi
 # setup Armadillo
 if [ ! -d "$armapath" ]; then
     if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "darwin"* ]]; then
-        cd /tmp
+        cd lib 2>&1 /dev/null
         if [[ "$OSTYPE" == "linux-gnu" ]]; then
             sudo apt install libopenblas-dev liblapack-dev
         fi
         wget http://sourceforge.net/projects/arma/files/armadillo-9.870.2.tar.xz
-        if [ -d "armadillo-9.870.2" ]; then
-            rm -rf armadillo-9.870.2
-        fi
         tar -xvf armadillo-9.870.2.tar.xz
         cd armadillo-9.870.2
-        cmake . -DCMAKE_INSTALL_PREFIX="$projectdir/lib/armadillo"
+        cmake . -DCMAKE_INSTALL_PREFIX="../armadillo"
         make
         make install
-        cd $projectdir
+        cd ../../ 2>&1 /dev/null
     fi
 fi
 
 # setup FastAD
 if [ ! -d "$fastadpath" ]; then
-    cd /tmp
-    if [ ! -d "FastAD" ]; then
-        git clone https://github.com/JamesYang007/FastAD.git
-    fi
-    cd FastAD && git pull
+    git clone https://github.com/JamesYang007/FastAD.git $fastadpath
+    cd $fastadpath
     ./setup.sh
     ./clean-build.sh release -DFASTAD_ENABLE_TEST=OFF \
-        -DCMAKE_INSTALL_PREFIX="$projectdir/$fastadpath"
+        -DCMAKE_INSTALL_PREFIX=".." # installs into build
     cd build/release
     ninja install
-    cd $projectdir
+    cd ../../ # in lib/FastAD
+    cd ../../ # in working directory
 fi

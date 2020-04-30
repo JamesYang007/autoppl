@@ -24,23 +24,31 @@ message(STATUS "Compiling in ${CMAKE_BUILD_TYPE} mode")
 
 # Add this library as interface (header-only)
 add_library(${PROJECT_NAME} INTERFACE)
-
 target_include_directories(${PROJECT_NAME}
     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-
-# Set C++17 standard for project target
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
+
+# Add AutoPPL header-only library to variable
+set(AUTOPPL_LIBS ${PROJECT_NAME})
 
 # Find Armadillo C++
 find_package(Armadillo CONFIG REQUIRED
     HINTS ${CMAKE_CURRENT_SOURCE_DIR}/lib/armadillo)
-message(STATUS "Found Armadillo config at: ${Armadillo_DIR}")
+if (Armadillo_FOUND)
+    message(STATUS "Found Armadillo config at: ${Armadillo_DIR}")
+    add_compile_options(-DARMA_DONT_USE_WRAPPER)
+    set(AUTOPPL_INCLUDE_DIRS ${AUTOPPL_INCLUDE_DIRS} ${ARMADILLO_INCLUDE_DIRS})
+    set(AUTOPPL_LIBS ${AUTOPPL_LIBS} ${ARMADILLO_LIBRARIES})
+endif()
 
 # Find FastAD
 find_package(FastAD CONFIG REQUIRED
-    HINTS ${CMAKE_CURRENT_SOURCE_DIR}/lib/FastAD)
-message(STATUS "Found FastAD config at: ${FastAD_DIR}")
+    HINTS ${CMAKE_CURRENT_SOURCE_DIR}/lib/FastAD/build)
+if (FastAD_FOUND)
+    message(STATUS "Found FastAD config at: ${FastAD_DIR}")
+    set(AUTOPPL_LIBS ${AUTOPPL_LIBS} FastAD::FastAD)
+endif()
 
 # Configure tests
 if (AUTOPPL_ENABLE_TEST)

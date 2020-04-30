@@ -19,12 +19,13 @@ target_compile_options(util_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(util_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${AUTOPPL_INCLUDE_DIRS}
     )
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(util_unittest gcov)
 endif()
 target_link_libraries(util_unittest
-    gtest_main pthread ${PROJECT_NAME} FastAD::FastAD)
+    gtest_main pthread ${AUTOPPL_LIBS})
 add_test(util_unittest util_unittest)
 
 ######################################################
@@ -39,12 +40,13 @@ target_compile_options(sample_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(sample_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${AUTOPPL_INCLUDE_DIRS}
     )
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(sample_unittest gcov)
 endif()
 target_link_libraries(sample_unittest
-    gtest_main pthread ${PROJECT_NAME} FastAD::FastAD)
+    gtest_main pthread ${AUTOPPL_LIBS})
 add_test(sample_unittest sample_unittest)
 
 ######################################################
@@ -62,12 +64,13 @@ target_compile_options(var_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(var_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${AUTOPPL_INCLUDE_DIRS}
     )
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(var_unittest gcov)
 endif()
 target_link_libraries(var_unittest
-    gtest_main pthread ${PROJECT_NAME} FastAD::FastAD)
+    gtest_main pthread ${AUTOPPL_LIBS})
 add_test(var_unittest var_unittest)
 
 ######################################################
@@ -83,12 +86,13 @@ target_compile_options(dist_expr_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(dist_expr_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${AUTOPPL_INCLUDE_DIRS}
     )
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(dist_expr_unittest gcov)
 endif()
 target_link_libraries(dist_expr_unittest
-    gtest_main pthread ${PROJECT_NAME} FastAD::FastAD)
+    gtest_main pthread ${AUTOPPL_LIBS})
 add_test(dist_expr_unittest dist_expr_unittest)
 
 ######################################################
@@ -102,12 +106,13 @@ target_compile_options(model_expr_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(model_expr_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${AUTOPPL_INCLUDE_DIRS}
     )
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(model_expr_unittest gcov)
 endif()
 target_link_libraries(model_expr_unittest
-    gtest_main pthread ${PROJECT_NAME} FastAD::FastAD)
+    gtest_main pthread ${AUTOPPL_LIBS})
 add_test(model_expr_unittest model_expr_unittest)
 
 ######################################################
@@ -122,23 +127,17 @@ add_executable(algorithm_unittest
     )
 target_compile_options(algorithm_unittest
     PRIVATE -g -Wall -Werror -Wextra
-    -DARMA_DONT_USE_WRAPPER
     )
 target_include_directories(algorithm_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${ARMADILLO_INCLUDE_DIRS}
+    ${AUTOPPL_INCLUDE_DIRS}
     )
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(algorithm_unittest gcov)
 endif()
 target_link_libraries(algorithm_unittest
-    gtest_main
-    pthread
-    ${PROJECT_NAME}
-    ${ARMADILLO_LIBRARIES}
-    FastAD::FastAD
-    )
+    gtest_main pthread ${AUTOPPL_LIBS})
 
 # Only on Linux: link with openblas and lapack
 if (UNIX AND NOT APPLE)
@@ -159,10 +158,11 @@ target_compile_options(expr_builder_unittest PRIVATE -g -Wall -Werror -Wextra)
 target_include_directories(expr_builder_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${AUTOPPL_INCLUDE_DIRS}
     )
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(expr_builder_unittest gcov)
 endif()
 target_link_libraries(expr_builder_unittest
-    gtest_main pthread ${PROJECT_NAME} FastAD::FastAD)
+    gtest_main pthread ${AUTOPPL_LIBS})
 add_test(expr_builder_unittest expr_builder_unittest)
