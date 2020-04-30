@@ -8,6 +8,7 @@ option(AUTOPPL_ENABLE_TEST "Enable unit tests to be built." ON)
 # TODO: later when we make benchmarks, this should be ON
 option(AUTOPPL_ENABLE_BENCHMARK "Enable benchmarks to be built." OFF)
 option(AUTOPPL_ENABLE_TEST_COVERAGE "Build with test coverage (AUTOPPL_ENABLE_TEST must be ON)" OFF)
+option(AUTOPPL_ENABLE_EXAMPLE "Enable compilation of examples." OFF)
 
 # Automate the choosing of config
 if (NOT CMAKE_BUILD_TYPE)
@@ -41,6 +42,9 @@ find_package(FastAD CONFIG REQUIRED
     HINTS ${CMAKE_CURRENT_SOURCE_DIR}/lib/FastAD)
 message(STATUS "Found FastAD config at: ${FastAD_DIR}")
 
+# Add lib subdirectory
+add_subdirectory(${PROJECT_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
+
 # Configure tests
 if (AUTOPPL_ENABLE_TEST)
     include(CTest) # enable memcheck
@@ -54,11 +58,7 @@ if (AUTOPPL_ENABLE_TEST)
     add_subdirectory(${PROJECT_SOURCE_DIR}/test ${PROJECT_BINARY_DIR}/test)
 endif()
 
-# TODO: add src dir if needed
-#set(AUTOPPL_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
-#file(GLOB_RECURSE AUTOPPL_SOURCE_FILES RELATIVE src LIST_DIRECTORIES false *.cpp)
-#set(AUTOPPL_SOURCE_FILES ${AUTOPPL_SOURCE_DIR}/autoppl.cpp)
-#set(AUTOPPL_HEADER_FILES ${AUTOPPL_INCLUDE_DIR}/autoppl.h)
-
-# Add subdirectories
-add_subdirectory(${PROJECT_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
+# Compile examples if enabled
+if (AUTOPPL_ENABLE_EXAMPLE)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/doc/example ${PROJECT_BINARY_DIR}/example)
+endif()
