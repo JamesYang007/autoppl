@@ -42,9 +42,6 @@ find_package(FastAD CONFIG REQUIRED
     HINTS ${CMAKE_CURRENT_SOURCE_DIR}/lib/FastAD)
 message(STATUS "Found FastAD config at: ${FastAD_DIR}")
 
-# Add lib subdirectory
-add_subdirectory(${PROJECT_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
-
 # Configure tests
 if (AUTOPPL_ENABLE_TEST)
     include(CTest) # enable memcheck
@@ -57,6 +54,9 @@ if (AUTOPPL_ENABLE_TEST)
 
     add_subdirectory(${PROJECT_SOURCE_DIR}/test ${PROJECT_BINARY_DIR}/test)
 endif()
+
+# Add lib subdirectory
+add_subdirectory(${PROJECT_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
 
 # Compile examples if enabled
 if (AUTOPPL_ENABLE_EXAMPLE)
