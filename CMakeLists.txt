@@ -39,7 +39,7 @@ message(STATUS "Found Armadillo config at: ${Armadillo_DIR}")
 
 # Find FastAD
 find_package(FastAD CONFIG REQUIRED
-    HINTS ${CMAKE_CURRENT_SOURCE_DIR}/lib/FastAD)
+    HINTS ${CMAKE_CURRENT_SOURCE_DIR}/lib/FastAD/build)
 message(STATUS "Found FastAD config at: ${FastAD_DIR}")
 
 # Configure tests
