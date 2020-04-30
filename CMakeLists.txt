@@ -60,5 +60,5 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
 
 # Compile examples if enabled
 if (AUTOPPL_ENABLE_EXAMPLE)
-    add_subdirectory(${PROJECT_SOURCE_DIR}/doc/example ${PROJECT_BINARY_DIR}/example)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/docs/example ${PROJECT_BINARY_DIR}/example)
 endif()
