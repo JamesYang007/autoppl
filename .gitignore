@@ -2,5 +2,4 @@ build
 .vscode
 .*
 !.travis.yml
-lib/armadillo
-lib/FastAD
+lib

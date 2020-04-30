@@ -4,9 +4,16 @@ projectdir=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 
 gbenchpath="lib/benchmark"
 gtestpath="$gbenchpath/googletest"
+armapath="lib/armadillo"
+fastadpath="lib/FastAD"
 
 # setup google benchmark
-git submodule update --init
+if [ ! -d "$gbenchpath" ]; then
+    git clone https://github.com/google/benchmark.git $gbenchpath
+    cd $gbenchpath 2>&1 /dev/null
+    git checkout -q v1.5.0
+    cd ~- # change back to previous dir and no output to terminal
+fi
 
 # setup googletest
 if [ ! -d "$gtestpath" ]; then
@@ -17,32 +24,36 @@ if [ ! -d "$gtestpath" ]; then
 fi
 
 # setup Armadillo
-if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "darwin"* ]]; then
-    cd /tmp
-    if [[ "$OSTYPE" == "linux-gnu" ]]; then
-        sudo apt install libopenblas-dev liblapack-dev
+if [ ! -d "$armapath" ]; then
+    if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "darwin"* ]]; then
+        cd /tmp
+        if [[ "$OSTYPE" == "linux-gnu" ]]; then
+            sudo apt install libopenblas-dev liblapack-dev
+        fi
+        wget http://sourceforge.net/projects/arma/files/armadillo-9.870.2.tar.xz
+        if [ -d "armadillo-9.870.2" ]; then
+            rm -rf armadillo-9.870.2
+        fi
+        tar -xvf armadillo-9.870.2.tar.xz
+        cd armadillo-9.870.2
+        cmake . -DCMAKE_INSTALL_PREFIX="$projectdir/lib/armadillo"
+        make
+        make install
+        cd $projectdir
     fi
-    wget http://sourceforge.net/projects/arma/files/armadillo-9.870.2.tar.xz
-    if [ -d "armadillo-9.870.2" ]; then
-        rm -rf armadillo-9.870.2
-    fi
-    tar -xvf armadillo-9.870.2.tar.xz
-    cd armadillo-9.870.2
-    cmake . -DCMAKE_INSTALL_PREFIX="$projectdir/lib/armadillo"
-    make
-    make install
-    cd $projectdir
 fi
 
 # setup FastAD
-cd /tmp
-if [ ! -d "FastAD" ]; then
-    git clone https://github.com/JamesYang007/FastAD.git
+if [ ! -d "$fastadpath" ]; then
+    cd /tmp
+    if [ ! -d "FastAD" ]; then
+        git clone https://github.com/JamesYang007/FastAD.git
+    fi
+    cd FastAD && git pull
+    ./setup.sh
+    ./clean-build.sh release -DFASTAD_ENABLE_TEST=OFF \
+        -DCMAKE_INSTALL_PREFIX="$projectdir/$fastadpath"
+    cd build/release
+    ninja install
+    cd $projectdir
 fi
-cd FastAD && git pull
-./setup.sh
-./clean-build.sh release -DFASTAD_ENABLE_TEST=OFF \
-    -DCMAKE_INSTALL_PREFIX="$projectdir/lib/FastAD"
-cd build/release
-ninja install
-cd $projectdir
