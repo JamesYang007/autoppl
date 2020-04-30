@@ -53,7 +53,7 @@ mu ~ U(-1, 1)
 ```
 
 Given its simplicity and expressiveness, we wanted to mimic this compact notation as much 
-as possible for users of ou library.
+as possible for users of our library.
 
 For the model specified above, the code in AutoPPL could look like the following:
 ```cpp
@@ -66,7 +66,7 @@ auto model = (
 ```
 
 A `ppl::Param<T>` stores a univariate parameter of our model, while `ppl::Data` holds samples
-that have been observed from out distribution. The goal of Bayesian statistics is to sample from
+that have been observed from our distribution. The goal of Bayesian statistics is to sample from
 the posterior distribution given observed data, or maximize the likelihood of our data over a set
 of possible parameters. We support these methods using advanced modeling and sampling algorithms.
 
@@ -142,7 +142,7 @@ ctest
 ### Sampling from Joint Distribution
 
 Although `AutoPPL` was designed to perform inference on posterior distributions,
-one can certainly use it to sample from any the joint prior distribution instead.
+one can certainly use it to sample from any joint distribution defined by the priors and conditional distributions.
 As an example, we can sample `1000` points from a 
 standard normal distribution using Metropolis-Hastings in the following way:
 
@@ -159,10 +159,10 @@ Note that the parameter `theta` is bound to the storage `samples` at constructio
 After calling `mh`, the `1000` samples are placed into `samples.`
 
 In general, so long as the joint PDF is known, 
-or equivalently and more commonly if the conditional PDFs are known,
+or equivalently and more commonly if the conditional and prior PDFs are known,
 one can sample from the distribution.
 
-As another example, we may sample from such joint distribution:
+As another example, we may sample from a more complicated joint distribution:
 ```cpp
 std::array<double, 1000> theta1_samples;
 std::array<double, 1000> theta2_samples;
