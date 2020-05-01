@@ -1,6 +1,7 @@
 #pragma once
 #include "gtest/gtest.h"
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <cmath>
 #include <cstddef>
@@ -50,5 +51,24 @@ inline void plot_hist(const ArrayType& arr,
         std::cout << std::string(counter[i] * nstars/arr.size(), '*') << std::endl;
     }
 }
+
+inline void print_vector_stats(const std::vector<double>& arr, std::string name = "", int precision = 6)
+{
+	const double sum = std::accumulate(arr.cbegin(), arr.cend(), 0);
+	double mean = sum / arr.size();
+
+	auto stddev_fold = [mean](double base, double newItem) {
+		return base + std::pow((newItem - mean), 2);
+	};
+
+	double sum_squares = std::accumulate(arr.begin(), arr.end(), 0.0, stddev_fold);
+	double stddev = std::sqrt(sum_squares / arr.size() - 1);
+
+	std::cout << name;
+	std::cout << std::scientific << std::setprecision(precision);
+	std::cout << mean << std::endl;
+	std::cout << stddev << std::endl;
+}
+
 
 } // namespace ppl
