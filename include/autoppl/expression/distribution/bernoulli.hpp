@@ -30,7 +30,7 @@ struct Bernoulli : util::DistExpr<Bernoulli<p_type>>
     }
 
     dist_value_t pdf(value_t x, size_t index=0) const
-    { 
+    {
         if (x == 1) return p(index);
         else if (x == 0) return 1. - p();
         else return 0.0;
@@ -43,7 +43,7 @@ struct Bernoulli : util::DistExpr<Bernoulli<p_type>>
         else return std::numeric_limits<dist_value_t>::lowest();
     }
 
-    param_value_t p(size_t index=0) const { return p_.get_value(index); }
+    param_value_t p(size_t index=0) const { return std::max(std::min(p_.get_value(index), static_cast<param_value_t>(max())), static_cast<param_value_t>(min())); }
     value_t min() const { return 0; }
     value_t max() const { return 1; }
 
