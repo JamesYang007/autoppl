@@ -64,9 +64,9 @@ inline void print_vector_stats(const std::vector<double>& arr, std::string name 
 	double sum_squares = std::accumulate(arr.begin(), arr.end(), 0.0, stddev_fold);
 	double stddev = std::sqrt(sum_squares / arr.size() - 1);
 
-	std::cout << name;
+	std::cout << name < " ";
 	std::cout << std::scientific << std::setprecision(precision);
-	std::cout << mean << std::endl;
+	std::cout << mean << " " << std::endl;
 	std::cout << stddev << std::endl;
 }
 
