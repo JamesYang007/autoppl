@@ -117,9 +117,36 @@ Hence, the inference algorithms are completely general and work with any model
 so long as the model expression is properly constructed.
 Moreover, due to the statically-known model specification, algorithms
 have opportunities to make compile-time optimizations.
-See [Examples](#examples) for more detail.
+See [Examples](#examples) for more detail. Drawing 100 samples from the posterior
+of a hierarchical Gaussian model using a NUTS sampler, we see significant
+gains over STAN and PyMC3 in both compilation and runtime.
 
-(TODO: include benchmark results)
+```
+Y ~ N(l1 + l2, sigma) 
+l1 ~ N(0, 10)
+l2 ~ N(0, 10)
+sigma ~ Uniform(0, 20)
+```
+
+### AutoPPL
+
+```
+Compilation time: 3.39s
+Run time: 0.987008s
+```
+
+### STAN
+```
+Compilation time: 40.48s
+Run time: 0.613672s (Warm-up)
+          0.704271s (Sampling)
+          1.31794s (Total)
+```
+
+### PyMC3
+```
+Run time: 38s
+```
 
 ## Installation (dev)
 
