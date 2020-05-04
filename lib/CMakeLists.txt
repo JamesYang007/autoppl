@@ -4,9 +4,9 @@ if (AUTOPPL_ENABLE_BENCHMARK)
     # Taken from https://github.com/google/benchmark
     # Recommended way to build google benchmark
     # Disable all tests within google benchmark.
-    set(BENCHMARK_ENABLE_TESTING OFF)
-    set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
-    set(BENCHMARK_ENABLE_ASSEMBLY_TESTS OFF)
+    set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Disable GoogleBenchmark tests.")
+    set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "Disable GoogleBenchmark googletest tests.")
+    set(BENCHMARK_ENABLE_ASSEMBLY_TESTS OFF CACHE BOOL "Disable GoogleBenchmark assembly tests.")
     add_subdirectory(benchmark)
 endif()
 
