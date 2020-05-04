@@ -1,9 +1,15 @@
 #pragma once
+#include <cmath>
 #include <cassert>
 #include <random>
 #include <autoppl/util/var_expr_traits.hpp>
 #include <autoppl/util/dist_expr_traits.hpp>
 #include <fastad>
+
+// MSVC does not seem to support M_PI
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 namespace ppl {
 namespace expr {

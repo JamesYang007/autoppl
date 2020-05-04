@@ -58,9 +58,14 @@ if (AUTOPPL_ENABLE_TEST)
     # Set directories for third-party libraries
     # tests in other subdirectories require access to these as well
     set(GTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/benchmark/googletest/googletest)
-    set(GBENCH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/benchmark)
 
     add_subdirectory(${PROJECT_SOURCE_DIR}/test ${PROJECT_BINARY_DIR}/test)
+endif()
+
+# Configure benchmarking
+if (AUTOPPL_ENABLE_BENCHMARK)
+	add_subdirectory(${PROJECT_SOURCE_DIR}/benchmark ${PROJECT_BINARY_DIR}/benchmark)
+    set(GBENCH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/benchmark)
 endif()
 
 # Add lib subdirectory

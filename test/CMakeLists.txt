@@ -15,7 +15,13 @@ add_executable(util_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/util/var_expr_traits_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/util/var_traits_unittest.cpp
     )
-target_compile_options(util_unittest PRIVATE -g -Wall -Werror -Wextra)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_compile_options(util_unittest PRIVATE -g -Wall)
+else()
+	target_compile_options(util_unittest PRIVATE -g -Wall -Werror -Wextra)
+endif()
+
 target_include_directories(util_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -24,8 +30,12 @@ target_include_directories(util_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(util_unittest gcov)
 endif()
-target_link_libraries(util_unittest
-    gtest_main pthread ${AUTOPPL_LIBS})
+
+target_link_libraries(util_unittest autoppl_gtest_main ${AUTOPPL_LIBS})
+if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_link_libraries(util_unittest pthread)
+endif()
+
 add_test(util_unittest util_unittest)
 
 ######################################################
@@ -36,7 +46,13 @@ add_executable(sample_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/samples/dist_sample_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/samples/model_sample_unittest.cpp
     )
-target_compile_options(sample_unittest PRIVATE -g -Wall -Werror -Wextra)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_compile_options(sample_unittest PRIVATE -g -Wall)
+else()
+	target_compile_options(sample_unittest PRIVATE -g -Wall -Werror -Wextra)
+endif()
+
 target_include_directories(sample_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -45,8 +61,12 @@ target_include_directories(sample_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(sample_unittest gcov)
 endif()
-target_link_libraries(sample_unittest
-    gtest_main pthread ${AUTOPPL_LIBS})
+
+target_link_libraries(sample_unittest autoppl_gtest_main ${AUTOPPL_LIBS})
+if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_link_libraries(sample_unittest pthread)
+endif()
+
 add_test(sample_unittest sample_unittest)
 
 ######################################################
@@ -60,7 +80,13 @@ add_executable(var_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/constant_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/binop_unittest.cpp
     )
-target_compile_options(var_unittest PRIVATE -g -Wall -Werror -Wextra)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_compile_options(var_unittest PRIVATE -g -Wall)
+else()
+	target_compile_options(var_unittest PRIVATE -g -Wall -Werror -Wextra)
+endif()
+
 target_include_directories(var_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -69,8 +95,12 @@ target_include_directories(var_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(var_unittest gcov)
 endif()
-target_link_libraries(var_unittest
-    gtest_main pthread ${AUTOPPL_LIBS})
+
+target_link_libraries(var_unittest autoppl_gtest_main ${AUTOPPL_LIBS})
+if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_link_libraries(var_unittest pthread)
+endif()
+
 add_test(var_unittest var_unittest)
 
 ######################################################
@@ -82,7 +112,13 @@ add_executable(dist_expr_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/normal_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/uniform_unittest.cpp
     )
-target_compile_options(dist_expr_unittest PRIVATE -g -Wall -Werror -Wextra)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_compile_options(dist_expr_unittest PRIVATE -g -Wall)
+else()
+	target_compile_options(dist_expr_unittest PRIVATE -g -Wall -Werror -Wextra)
+endif()
+
 target_include_directories(dist_expr_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -91,8 +127,12 @@ target_include_directories(dist_expr_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(dist_expr_unittest gcov)
 endif()
-target_link_libraries(dist_expr_unittest
-    gtest_main pthread ${AUTOPPL_LIBS})
+
+target_link_libraries(dist_expr_unittest autoppl_gtest_main ${AUTOPPL_LIBS})
+if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_link_libraries(dist_expr_unittest pthread)
+endif()
+
 add_test(dist_expr_unittest dist_expr_unittest)
 
 ######################################################
@@ -102,7 +142,13 @@ add_test(dist_expr_unittest dist_expr_unittest)
 add_executable(model_expr_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/model/model_unittest.cpp
     )
-target_compile_options(model_expr_unittest PRIVATE -g -Wall -Werror -Wextra)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_compile_options(model_expr_unittest PRIVATE -g -Wall)
+else()
+	target_compile_options(model_expr_unittest PRIVATE -g -Wall -Werror -Wextra)
+endif()
+
 target_include_directories(model_expr_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -111,8 +157,12 @@ target_include_directories(model_expr_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(model_expr_unittest gcov)
 endif()
-target_link_libraries(model_expr_unittest
-    gtest_main pthread ${AUTOPPL_LIBS})
+
+target_link_libraries(model_expr_unittest autoppl_gtest_main ${AUTOPPL_LIBS})
+if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_link_libraries(model_expr_unittest pthread)
+endif()
+
 add_test(model_expr_unittest model_expr_unittest)
 
 ######################################################
@@ -125,9 +175,13 @@ add_executable(algorithm_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/nuts_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/sampler_tools_unittest.cpp
     )
-target_compile_options(algorithm_unittest
-    PRIVATE -g -Wall -Werror -Wextra
-    )
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_compile_options(algorithm_unittest PRIVATE -g -Wall)
+else()
+	target_compile_options(algorithm_unittest PRIVATE -g -Wall -Werror -Wextra)
+endif()
+
 target_include_directories(algorithm_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -136,8 +190,11 @@ target_include_directories(algorithm_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(algorithm_unittest gcov)
 endif()
-target_link_libraries(algorithm_unittest
-    gtest_main pthread ${AUTOPPL_LIBS})
+
+target_link_libraries(algorithm_unittest autoppl_gtest_main ${AUTOPPL_LIBS})
+if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_link_libraries(algorithm_unittest pthread)
+endif()
 
 # Only on Linux: link with openblas and lapack
 if (UNIX AND NOT APPLE)
@@ -154,7 +211,13 @@ add_executable(expr_builder_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expr_builder_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ad_integration_unittest.cpp
     )
-target_compile_options(expr_builder_unittest PRIVATE -g -Wall -Werror -Wextra)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_compile_options(expr_builder_unittest PRIVATE -g -Wall)
+else()
+	target_compile_options(expr_builder_unittest PRIVATE -g -Wall -Werror -Wextra)
+endif()
+
 target_include_directories(expr_builder_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -163,6 +226,10 @@ target_include_directories(expr_builder_unittest PRIVATE
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
     target_link_libraries(expr_builder_unittest gcov)
 endif()
-target_link_libraries(expr_builder_unittest
-    gtest_main pthread ${AUTOPPL_LIBS})
+
+target_link_libraries(expr_builder_unittest autoppl_gtest_main ${AUTOPPL_LIBS})
+if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_link_libraries(expr_builder_unittest pthread)
+endif()
+
 add_test(expr_builder_unittest expr_builder_unittest)

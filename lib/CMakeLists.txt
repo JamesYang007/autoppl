@@ -12,7 +12,7 @@ endif()
 
 # Build googletest
 if (AUTOPPL_ENABLE_TEST)
-    add_library(gtest_main STATIC ${GTEST_DIR}/src/gtest-all.cc ${GTEST_DIR}/src/gtest_main.cc)
-    target_compile_features(gtest_main PRIVATE cxx_std_11)
-    target_include_directories(gtest_main PRIVATE ${GTEST_DIR}/include ${GTEST_DIR})
+    add_library(autoppl_gtest_main STATIC ${GTEST_DIR}/src/gtest-all.cc ${GTEST_DIR}/src/gtest_main.cc)
+    target_compile_features(autoppl_gtest_main PRIVATE cxx_std_11)
+    target_include_directories(autoppl_gtest_main PRIVATE ${GTEST_DIR}/include ${GTEST_DIR})
 endif()

@@ -2,5 +2,6 @@ build
 .vscode
 .*
 !.travis.yml
-lib
+lib/*
 !lib/CMakeLists.txt
+CMakeSettings.json
