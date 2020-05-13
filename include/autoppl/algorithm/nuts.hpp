@@ -5,9 +5,11 @@
 #include <stack>
 #include <optional>
 #include <type_traits>
+#include <iostream>
 #include <armadillo>
 #include <fastad>
 #include <autoppl/util/var_traits.hpp>
+#include <autoppl/util/logging.hpp>
 #include <autoppl/expression/model/glue_node.hpp>
 #include <autoppl/expression/model/eq_node.hpp>
 #include <autoppl/algorithm/sampler_tools.hpp>
@@ -423,7 +425,10 @@ void nuts(ModelType& model,
     using subview_t = std::decay_t<decltype(rho_minus)>;
     using tree_output_t = alg::TreeOutput<subview_t>;
 
+    auto logger = util::ProgressLogger(n_samples + warmup, "NUTS");
+
     for (size_t i = 0; i < n_samples + warmup; ++i) {
+        logger.printProgress(i);
 
         // re-initialize vectors
         theta_plus = theta_minus = theta_curr;
@@ -506,7 +511,9 @@ void nuts(ModelType& model,
             model.traverse(store_sample);
         }
 
-    } // end for
+    }  // end for
+
+    std::cout << std::endl;
 }
 
 } // namespace ppl

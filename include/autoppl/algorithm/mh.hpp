@@ -1,13 +1,15 @@
 #pragma once
-#include <chrono>
-#include <random>
 #include <algorithm>
-#include <vector>
 #include <array>
-#include <variant>
+#include <autoppl/algorithm/sampler_tools.hpp>
+#include <autoppl/util/logging.hpp>
 #include <autoppl/util/traits.hpp>
 #include <autoppl/variable.hpp>
-#include <autoppl/algorithm/sampler_tools.hpp>
+#include <chrono>
+#include <iostream>
+#include <random>
+#include <variant>
+#include <vector>
 
 /*
  * Assumptions:
@@ -63,8 +65,11 @@ inline void mh__(ModelType& model,
 {
     std::uniform_real_distribution unif_sampler(0., 1.);
 
+    auto logger = util::ProgressLogger(n_sample + warmup, "MetropolisHastings");
+
     for (size_t iter = 0; iter < n_sample + warmup; ++iter) {
-        
+        logger.printProgress(iter);
+
         size_t n_swaps = 0;                     // during candidate sampling, if sample out-of-bounds,
                                                 // traversal will prematurely return and n_swaps < n_params
         bool early_reject = false;              // indicate early sample reject
@@ -170,6 +175,8 @@ inline void mh__(ModelType& model,
         // update current log pdf for next iteration
         if (accept) curr_log_pdf = cand_log_pdf;
     }
+
+    std::cout << std::endl;
 }
 
 } // namespace alg
