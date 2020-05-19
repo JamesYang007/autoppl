@@ -8,11 +8,17 @@ sudo: required
 
 # Build Job Matrix
 
+stages:
+  - test
+  - name: deploy
+    if: branch = master
+
 jobs:
     include:
 
         # Valgrind
-        - os: linux
+        - stage: test
+          os: linux
           compiler: gcc
           addons:
               apt:
@@ -27,7 +33,8 @@ jobs:
               - VALGRIND="ON"
 
         # Coveralls
-        - os: linux
+        - stage: test
+          os: linux
           compiler: gcc
           addons:
               apt:
@@ -55,7 +62,8 @@ jobs:
 
         # Linux/GCC>=5
 
-        - os: linux
+        - stage: test
+          os: linux
           compiler: gcc
           env:
               - CXX_COMPILER="g++-7"
@@ -79,7 +87,8 @@ jobs:
                          'libopenblas-dev', 'liblapack-dev',
                          'libarpack2-dev']
 
-        - os: linux
+        - stage: test
+          os: linux
           compiler: gcc
           env: 
               - CXX_COMPILER="g++-9"
@@ -91,8 +100,32 @@ jobs:
                          'libopenblas-dev', 'liblapack-dev',
                          'libarpack2-dev']
 
-# Build Script
+        - stage: deploy
+          dist: bionic
+          os: linux
+          compiler: gcc
+          addons:
+            apt:
+              sources: ['ubuntu-toolchain-r-test']
+              packages: ['g++-9', 'libstdc++6', 'build-essential']
 
+          script: 
+            - wget http://doxygen.nl/files/doxygen-1.8.18.linux.bin.tar.gz
+            - tar -xvf doxygen-1.8.18.linux.bin.tar.gz
+            - doxygen-1.8.18/bin/doxygen -v
+            - doxygen-1.8.18/bin/doxygen docs/doxygen/Doxyfile
+            - rm -r doxygen-1.8.18 doxygen-1.8.18.linux.bin.tar.gz
+
+          deploy:
+            provider: pages
+            skip_cleanup: true
+            local_dir: docs/doxygen/html
+            github_token: $GH_PAGES_TOKEN
+            target_branch: gh-pages
+            on:
+              branch: master
+
+# Build Script
 script:
 
     # set CXX to correct compiler
