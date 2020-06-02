@@ -3,30 +3,22 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <array>
 #include <sstream>
 #include <unordered_map>
-#include <numeric>
 
 #include <autoppl/variable.hpp>
 #include <autoppl/expr_builder.hpp>
-#include <autoppl/algorithm/mh.hpp>
-#include <autoppl/algorithm/nuts.hpp>
+#include <autoppl/mcmc/hmc/nuts/nuts.hpp>
+
+#include "benchmark_utils.hpp"
 
 #include <benchmark/benchmark.h>
 
 namespace ppl {
 
-template <class ArrayType>
-double sample_average(const ArrayType& storage) {
-    double sum = std::accumulate(
-        storage.begin(),
-        storage.end(),
-        0.);
-    return sum / (storage.size());
-}
-
 static void BM_Regression(benchmark::State& state) {
-    constexpr size_t num_samples = 1000;
+    size_t num_samples = state.range(0);
 
     std::array<std::string, 4> headers = {"Life expectancy", "Alcohol", "HIV/AIDS", "GDP"};
 
@@ -38,7 +30,6 @@ static void BM_Regression(benchmark::State& state) {
     std::fstream fin;
     fin.open("life-clean.csv", std::ios::in);
     std::string line;
-    char temp;
     double value;
     while (std::getline(fin, line, '\n')) { 
         auto it = headers.begin();
@@ -65,9 +56,13 @@ static void BM_Regression(benchmark::State& state) {
                     params["Alcohol"] * data["Alcohol"] +
                     params["HIV/AIDS"] * data["HIV/AIDS"] +
                     params["GDP"] * data["GDP"] + params["Life expectancy"], 5.0));
-
+    
+    NUTSConfig<> config = {
+        .warmup = num_samples,
+        .n_samples = num_samples
+    };
     for (auto _ : state) {
-		ppl::nuts(model, 1000, num_samples, 1000, 1, 10, 0.95);
+		ppl::nuts(model, config);
     }
 
 	std::cout << "Alcohol w: " << sample_average(storage[1]) << std::endl;
@@ -76,6 +71,6 @@ static void BM_Regression(benchmark::State& state) {
 	std::cout << "Bias: " << sample_average(storage[0]) << std::endl;
 }
 
-BENCHMARK(BM_Regression);
+BENCHMARK(BM_Regression)->Arg(100)->Arg(500)->Arg(1000)->Arg(5000)->Arg(10000)->Arg(50000)->Arg(100000);
 
 } // namespace ppl

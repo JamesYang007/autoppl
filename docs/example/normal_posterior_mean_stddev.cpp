@@ -15,10 +15,7 @@ int main()
         x |= ppl::normal(mu, sigma)
     );
 
-    size_t warmup = 1000;
-    size_t n_samples = 1000;
-    size_t n_adapt = 1000;
-    ppl::nuts(model, warmup, n_samples, n_adapt);
+    ppl::nuts(model);
 
     double mu_mean = std::accumulate(
             mu_samples.begin(), mu_samples.end(), 0.) 
@@ -33,6 +30,4 @@ int main()
     std::cout << "sigma average: " 
               << sigma_mean
               << std::endl;
-
-    ppl::mh(model, 1000);
 }

@@ -1,7 +1,6 @@
 #pragma once
 #include <algorithm>
 #include <array>
-#include <autoppl/algorithm/sampler_tools.hpp>
 #include <autoppl/util/logging.hpp>
 #include <autoppl/util/traits.hpp>
 #include <autoppl/variable.hpp>
@@ -10,6 +9,7 @@
 #include <random>
 #include <variant>
 #include <vector>
+#include <autoppl/mcmc/sampler_tools.hpp>
 
 /*
  * Assumptions:
@@ -17,7 +17,7 @@
  */
 
 namespace ppl {
-namespace alg {
+namespace mcmc {
 
 /*
  * Convert ValueType to either util::cont_param_t if floating point
@@ -179,7 +179,7 @@ inline void mh__(ModelType& model,
     std::cout << std::endl;
 }
 
-} // namespace alg
+} // namespace mcmc
 
 /*
  * Metropolis-Hastings algorithm to sample from posterior distribution.
@@ -197,13 +197,10 @@ inline void mh(ModelType& model,
                size_t warmup = 1000,
                double stddev = 1.0,
                double alpha = 0.25,
-               size_t seed = std::chrono::duration_cast<
-                              std::chrono::milliseconds>(
-                                  std::chrono::system_clock::now().time_since_epoch()
-                                  ).count()
+               size_t seed = mcmc::random_seed()
                )
 {
-    using data_t = alg::MHData;
+    using data_t = mcmc::MHData;
     
     // set-up auxiliary tools
     constexpr double initial_radius = 5.;    
@@ -246,14 +243,14 @@ inline void mh(ModelType& model,
     model.traverse(init_params);
 
     std::vector<data_t> params(n_params);   // vector of parameter-related data with candidate
-    alg::mh__(model,
-              params.begin(),
-              gen,
-              n_sample,
-              warmup,
-              curr_log_pdf,
-              alpha,
-              stddev);
+    mcmc::mh__(model,
+               params.begin(),
+               gen,
+               n_sample,
+               warmup,
+               curr_log_pdf,
+               alpha,
+               stddev);
 }
 
 } // namespace ppl

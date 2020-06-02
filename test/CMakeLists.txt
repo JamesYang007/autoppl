@@ -166,42 +166,75 @@ endif()
 add_test(model_expr_unittest model_expr_unittest)
 
 ######################################################
-# Algorithm Test
+# Math Test
 ######################################################
 
-add_executable(algorithm_unittest
-    ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/mh_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/mh_regression_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/nuts_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/algorithm/sampler_tools_unittest.cpp
+add_executable(math_unittest
+    ${CMAKE_CURRENT_SOURCE_DIR}/math/welford_unittest.cpp
     )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-	target_compile_options(algorithm_unittest PRIVATE -g -Wall)
+	target_compile_options(math_unittest PRIVATE -g -Wall)
 else()
-	target_compile_options(algorithm_unittest PRIVATE -g -Wall -Werror -Wextra)
+	target_compile_options(math_unittest PRIVATE -g -Wall -Werror -Wextra)
 endif()
 
-target_include_directories(algorithm_unittest PRIVATE
+target_include_directories(math_unittest PRIVATE
     ${GTEST_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${AUTOPPL_INCLUDE_DIRS}
     )
 if (AUTOPPL_ENABLE_TEST_COVERAGE)
-    target_link_libraries(algorithm_unittest gcov)
+    target_link_libraries(math_unittest gcov)
 endif()
 
-target_link_libraries(algorithm_unittest autoppl_gtest_main ${AUTOPPL_LIBS})
+target_link_libraries(math_unittest autoppl_gtest_main ${AUTOPPL_LIBS})
 if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-	target_link_libraries(algorithm_unittest pthread)
+	target_link_libraries(math_unittest pthread)
+endif()
+
+add_test(math_unittest math_unittest)
+
+######################################################
+# MCMC Test
+######################################################
+
+add_executable(mcmc_unittest
+    ${CMAKE_CURRENT_SOURCE_DIR}/mcmc/mh_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mcmc/mh_regression_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mcmc/sampler_tools_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mcmc/hmc/var_adapter_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mcmc/hmc/nuts/nuts_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mcmc/hmc/hamiltonian_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mcmc/hmc/leapfrog_unittest.cpp
+    )
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_compile_options(mcmc_unittest PRIVATE -g -Wall)
+else()
+	target_compile_options(mcmc_unittest PRIVATE -g -Wall -Werror -Wextra)
+endif()
+
+target_include_directories(mcmc_unittest PRIVATE
+    ${GTEST_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${AUTOPPL_INCLUDE_DIRS}
+    )
+if (AUTOPPL_ENABLE_TEST_COVERAGE)
+    target_link_libraries(mcmc_unittest gcov)
+endif()
+
+target_link_libraries(mcmc_unittest autoppl_gtest_main ${AUTOPPL_LIBS})
+if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	target_link_libraries(mcmc_unittest pthread)
 endif()
 
 # Only on Linux: link with openblas and lapack
 if (UNIX AND NOT APPLE)
-    target_link_libraries(algorithm_unittest
+    target_link_libraries(mcmc_unittest
         openblas lapack)
 endif()
-add_test(algorithm_unittest algorithm_unittest)
+add_test(mcmc_unittest mcmc_unittest)
 
 ######################################################
 # Expression Builder Test

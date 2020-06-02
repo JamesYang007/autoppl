@@ -15,6 +15,7 @@ if (NOT CMAKE_BUILD_TYPE)
     # if binary directory ends with "release", use release mode
     if (${PROJECT_BINARY_DIR} MATCHES "release$")
         set(CMAKE_BUILD_TYPE RELEASE)
+        add_compile_options(-O3)
     # otherwise, use debug mode
     else()
         set(CMAKE_BUILD_TYPE DEBUG)

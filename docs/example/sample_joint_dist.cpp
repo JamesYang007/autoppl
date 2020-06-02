@@ -11,7 +11,8 @@ int main()
         theta1 |= ppl::uniform(-1., 1.),
         theta2 |= ppl::normal(theta1, 1.)
     );
-    ppl::mh(model, 1000);
+
+    ppl::nuts(model);
 
     double theta1_mean = std::accumulate(
             theta1_samples.begin(), theta1_samples.end(), 0.) 

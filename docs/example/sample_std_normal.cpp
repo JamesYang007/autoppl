@@ -8,7 +8,8 @@ int main()
     auto model = (
         theta |= ppl::normal(0., 1.)
     );
-    ppl::mh(model, 1000);
+
+    ppl::nuts(model);
 
     double mean = std::accumulate(
             samples.begin(), samples.end(), 0.) 

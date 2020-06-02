@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include <array>
 #include <limits>
-#include <autoppl/algorithm/mh.hpp>
+#include <autoppl/mcmc/mh.hpp>
 #include <autoppl/expr_builder.hpp>
 #include <testutil/sample_tools.hpp>
 #include <vector>
