@@ -16,7 +16,6 @@ namespace ppl {
  * supports an integer argument for compatibility with the get_value Data API, but this is never
  * used.
  */
-
 template <class ValueType>
 struct Param : util::ParamLike<Param<ValueType>> {
     using value_t = ValueType;
