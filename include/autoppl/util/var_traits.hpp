@@ -5,7 +5,7 @@
 namespace ppl {
 namespace util {
 
-/*
+/**
  * Base class for all variables.
  * It is necessary for all variables to
  * derive from this class.
@@ -14,7 +14,7 @@ template <class T>
 struct Var : BaseCRTP<T> 
 { using BaseCRTP<T>::self; };
 
-/*
+/**
  * Base class for all Data-like variables.
  * It is necessary for all Data-like variables to
  * derive from this class.
@@ -23,7 +23,7 @@ template <class T>
 struct DataLike : Var<T>
 { using Var<T>::self; };
 
-/*
+/**
  * Base class for all Param-like variables.
  * It is necessary for all Param-like variables to
  * derive from this class.
@@ -33,7 +33,7 @@ struct ParamLike : Var<T>
 { using Var<T>::self; };
 
 
-/*
+/**
  * Checks if DataLike<T>, ParamLike<T> or Var<T> 
  * is base of type T 
  */
@@ -54,7 +54,7 @@ DEFINE_ASSERT_ONE_PARAM(var_is_base_of_v);
 DEFINE_ASSERT_ONE_PARAM(param_is_base_of_v);
 DEFINE_ASSERT_ONE_PARAM(data_is_base_of_v);
 
-/*
+/**
  * Traits for Variable-like classes.
  * value_t      type of value Variable represents during computation
  * pointer_t    storage pointer type 
@@ -66,7 +66,7 @@ struct var_traits
     using pointer_t = typename VarType::pointer_t;
 };
 
-/*
+/**
  * C++17 version of concepts to check var properties.
  * - var_traits must be well-defined under type T
  * - T must be explicitly convertible to its value_t

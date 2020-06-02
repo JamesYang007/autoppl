@@ -23,7 +23,7 @@
 namespace ppl {
 namespace mcmc {
 
-/*
+/**
  * Checks if state is entroping based on integrated momentum vector
  * across the path and the scaled momentum at the ends of the path.
  *
@@ -42,7 +42,7 @@ bool check_entropy(const MatType1& rho,
            arma::dot(rho, p_end_scaled) > 0;
 }
 
-/* 
+/**
  * Building binary tree for sampling candidates.
  * Helper function to obtain the forward/backward-most position and momentum.
  * Accept/reject policy is based on UniformDistType parameter and GenType
@@ -207,7 +207,7 @@ TreeOutput build_tree(InputType& input,
     return output;
 }
 
-/*
+/**
  * Finds a reasonable epsilon for NUTS algorithm.
  * @param   ad_expr     AD expression bound to theta and theta_adj
  */
@@ -290,7 +290,7 @@ double find_reasonable_epsilon(double eps,
 
 } // namespace mcmc
 
-/*
+/**
  * No-U-Turn Sampler (NUTS)
  */
 template <class ModelType

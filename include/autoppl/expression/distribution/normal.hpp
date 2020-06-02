@@ -48,7 +48,7 @@ struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
         return -0.5 * ((z_score * z_score) + std::log(stddev(index) * stddev(index) * 2 * M_PI));
     }
     
-    /* 
+    /** 
      * Up to constant addition, returns ad expression of log pdf
      */
     template <class ADVarType, class VecRefType, class VecADVarType>

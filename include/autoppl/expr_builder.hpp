@@ -12,7 +12,7 @@
 
 namespace ppl {
 
-/*
+/**
  * The purpose for these expression builders is to
  * add extra type-safety and ease the user API.
  */
@@ -23,7 +23,7 @@ namespace ppl {
 
 namespace details {
 
-/*
+/**
  * Converter from arbitrary (decayed) type to valid continuous parameter type 
  * by the following mapping:
  * - is_var_v<T> true => VariableViewer<T>
@@ -69,7 +69,7 @@ template <class T>
 using convert_to_param_t = 
     typename convert_to_param<T>::type;
 
-/*
+/**
  * Checks if valid distribution parameter:
  * - can be arithmetic
  * - if not arithmetic, must be variable or variable expression
@@ -84,7 +84,7 @@ inline constexpr bool is_valid_dist_param_v =
     (util::is_var_expr_v<std::decay_t<T>>)
     ;
 
-/*
+/**
  * Checks if the decayed types of T1 and T2 
  * are not both arithmetic types.
  */
@@ -96,7 +96,7 @@ inline constexpr bool is_not_both_arithmetic_v =
 
 } // namespace details
 
-/*
+/**
  * Builds a Uniform expression only when the parameters
  * are both valid continuous distribution parameter types.
  * See var_expr.hpp for more information.
@@ -118,7 +118,7 @@ inline constexpr auto uniform(MinType&& min_expr,
     return expr::Uniform(wrap_min_expr, wrap_max_expr);
 }
 
-/*
+/**
  * Builds a Normal expression only when the parameters
  * are both valid continuous distribution parameter types.
  * See var_expr.hpp for more information.
@@ -140,7 +140,7 @@ inline constexpr auto normal(MeanType&& mean_expr,
     return expr::Normal(wrap_mean_expr, wrap_stddev_expr);
 }
 
-/*
+/**
  * Builds a Bernoulli expression only when the parameter
  * is a valid discrete distribution parameter type.
  * See var_expr.hpp for more information.
@@ -160,7 +160,7 @@ inline constexpr auto bernoulli(ProbType&& p_expr)
 // Model Expression Builder
 ////////////////////////////////////////////////////////
 
-/*
+/**
  * Builds an EqNode to associate var with dist
  * only when var is a Variable and dist is a valid distribution expression.
  * Ex. x |= uniform(0,1)
@@ -169,7 +169,7 @@ template <class VarType, class DistType>
 inline constexpr auto operator|=(util::Var<VarType>& var,
            const util::DistExpr<DistType>& dist) { return expr::EqNode(var.self(), dist.self()); }
 
-/*
+/**
  * Builds a GlueNode to "glue" the left expression with the right
  * only when both parameters are valid model expressions.
  * Ex. (x |= uniform(0,1), y |= uniform(0, 2))
@@ -185,7 +185,7 @@ inline constexpr auto operator,(const util::ModelExpr<LHSNodeType>& lhs,
 
 namespace details {
 
-/*
+/**
  * Concept of valid variable expression parameter
  * for the operator overloads:
  * - can be arithmetic type
@@ -219,7 +219,7 @@ inline constexpr auto operator_helper(LHSType&& lhs, RHSType&& rhs)
 
 } // namespace details
 
-/*
+/**
  * Operator overloads, which only check for type-safety.
  * SFINAE to ensure concepts are placed.
  */

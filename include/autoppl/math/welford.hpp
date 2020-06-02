@@ -5,7 +5,7 @@
 namespace ppl {
 namespace math {
 
-/*
+/**
  * Estimates sample variance for n-dimensional data using
  * Welford's online algorithm
  */
@@ -29,7 +29,7 @@ struct WelfordVar
         m2n_ += delta % (x - mean_);
     }
 
-    /*
+    /**
      * Populate v with sample variance vector.
      * If sample size is not greater than 1, v is zeroed out.
      */
@@ -45,7 +45,7 @@ struct WelfordVar
 
     size_t get_n_samples() const { return n_; }
 
-    /*
+    /**
      * Resets sample mean, sample variance, and number of samples to 0
      * Equivalent to constructing a new object of this type.
      */

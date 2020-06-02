@@ -4,13 +4,13 @@
 namespace ppl {
 namespace mcmc {
 
-/*
+/**
  * Adapts momentum variance and handles everything related to momentum.
  */
 template <class AdapterPolicy>
 struct MomentumHandler;
 
-/*
+/**
  * Unit variance with no adaptation.
  */
 template <>
@@ -28,7 +28,7 @@ struct MomentumHandler<unit_var>
     void sample(MatType& rho) const
     { rho.randn(); }
 
-    /*
+    /**
      * Compute corresponding kinetic energy
      */
     template <class MatType>
@@ -41,7 +41,7 @@ struct MomentumHandler<unit_var>
 
 };
 
-/*
+/**
  * Diagonal variance with adaptation.
  */
 template <>
@@ -55,7 +55,7 @@ struct MomentumHandler<diag_var>
         : m_inverse_(n_params, arma::fill::ones)
     {}
 
-    /*
+    /**
      * Sample from N(0, M) where M inverse ~ sample variance matrix
      */
     template <class MatType>
@@ -65,7 +65,7 @@ struct MomentumHandler<diag_var>
         rho /= arma::sqrt(m_inverse_);
     }
 
-    /*
+    /**
      * Compute corresponding kinetic energy
      */
     template <class MatType>

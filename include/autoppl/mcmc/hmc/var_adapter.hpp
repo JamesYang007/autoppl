@@ -4,14 +4,14 @@
 
 namespace ppl {
 
-/*
+/**
  * Type tags to indicate what kind of variance adapter.
  */
 struct unit_var {};
 struct diag_var {};
 struct dense_var {};
 
-/*
+/**
  * Configuration for variance adapter.
  * They will only be meaningful when policy is either diag_var or dense_var.
  */
@@ -24,14 +24,14 @@ struct VarConfig
 
 namespace mcmc {
 
-/*
+/**
  * Variance adapter.
  * @tparam  VarPolicy   one of unit_var, diag_var, dense_var
  */
 template <class VarPolicy>
 struct VarAdapter {};
 
-/*
+/**
  * Unit variance with no adaptation.
  */
 template <>
@@ -46,7 +46,7 @@ struct VarAdapter<unit_var>
     {}
 };
 
-/*
+/**
  * Diagonal variance matrix M is estimated for momentum covariance matrix.
  * M inverse is estimated as sample variance and is regularized towards identity.
  */

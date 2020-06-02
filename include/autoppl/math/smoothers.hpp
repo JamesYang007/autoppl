@@ -4,7 +4,7 @@
 namespace ppl {
 namespace math {
 
-/*
+/**
  * LogSumExp taken from wikipedia:
  * log(e^x + e^y)
  */

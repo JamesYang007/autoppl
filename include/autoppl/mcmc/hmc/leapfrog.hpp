@@ -5,7 +5,7 @@
 namespace ppl {
 namespace mcmc {
 
-/*
+/**
  * Helper function for leapfrog algorithm.
  * Resets adjoints and then differentiates AD expression.
  * @param ad_expr   AD expression to differentiate.
@@ -21,7 +21,7 @@ double reset_autodiff(ADExprType& ad_expr, MatType& adjoints)
     return ad::autodiff(ad_expr);
 }
 
-/*
+/**
  * Leapfrog algorithm.
  * Expects theta, theta_adj, r to be submatrix views of Armadillo matrix.
  * However, any matrix library supporting arithmetic

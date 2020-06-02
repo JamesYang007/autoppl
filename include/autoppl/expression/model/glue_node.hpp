@@ -6,7 +6,7 @@
 namespace ppl {
 namespace expr {
 
-/*
+/**
  * This class represents a "node" in a model expression that
  * "glues" two sub-model expressions.
  */
@@ -29,7 +29,7 @@ struct GlueNode : util::ModelExpr<GlueNode<LHSNodeType, RHSNodeType>>
         , right_node_{rhs}
     {}
 
-    /* 
+    /**
      * Generic traversal function.
      * Recursively traverses left then right.
      */
@@ -47,21 +47,21 @@ struct GlueNode : util::ModelExpr<GlueNode<LHSNodeType, RHSNodeType>>
         right_node_.traverse(eq_f);
     }
 
-    /*
+    /**
      * Computes left node joint pdf then right node joint pdf
      * and returns the product of the two.
      */
     dist_value_t pdf() const
     { return left_node_.pdf() * right_node_.pdf(); }
 
-    /*
+    /**
      * Computes left node joint log-pdf then right node joint log-pdf
      * and returns the sum of the two.
      */
     dist_value_t log_pdf() const
     { return left_node_.log_pdf() + right_node_.log_pdf(); }
 
-    /* 
+    /**
      * Up to constant addition, returns ad expression of log pdf
      * of both sides added together.
      */

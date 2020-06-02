@@ -11,7 +11,7 @@
 #include <vector>
 #include <autoppl/mcmc/sampler_tools.hpp>
 
-/*
+/**
  * Assumptions:
  * - every variable referenced in model is of type Variable<double>
  */
@@ -19,7 +19,7 @@
 namespace ppl {
 namespace mcmc {
 
-/*
+/**
  * Convert ValueType to either util::cont_param_t if floating point
  * or util::disc_param_t if integral type.
  * If not either, raises compile-time error.
@@ -44,7 +44,7 @@ struct value_to_param<ValueType, std::enable_if_t<std::is_floating_point_v<Value
 template <class ValueType>
 using value_to_param_t = typename value_to_param<ValueType>::type;
 
-/*
+/**
  * Data structure to keep track of candidates in metropolis-hastings.
  */
 struct MHData
@@ -181,7 +181,7 @@ inline void mh__(ModelType& model,
 
 } // namespace mcmc
 
-/*
+/**
  * Metropolis-Hastings algorithm to sample from posterior distribution.
  * The posterior distribution is a constant multiple of model.pdf().
  * Any variables that model references which are Params

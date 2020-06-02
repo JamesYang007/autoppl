@@ -1,7 +1,7 @@
 #pragma once
 #include <type_traits>
 
-/*
+/**
  * Metaprogramming tools to check if name is a (public) 
  * member alias of a given type T.
  * All instances of this macro must be placed in this file for ease of maintenance.
@@ -107,7 +107,7 @@
         typename details::get_type_##name<T, has_type_##name##_v<T>>::type;
 
 
-/*
+/**
  * Metaprogramming tool to check if name is a (public) member function of a given type T.
  * All instances of this macro must be placed in this file for ease of maintenance.
  * Macro definition is undefined at the end of the file.
@@ -191,7 +191,7 @@
 namespace ppl {
 namespace util {
 
-/*
+/**
  * The type invalid_tag is used as a "black hole" 
  * for when a condition is not met, but cannot set compiler error.
  */

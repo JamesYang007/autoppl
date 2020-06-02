@@ -4,7 +4,7 @@
 
 namespace ppl {
 
-/*
+/**
  * Returns number of parameters in model.
  */
 namespace details {

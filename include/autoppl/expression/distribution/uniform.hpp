@@ -44,7 +44,7 @@ struct Uniform : util::DistExpr<Uniform<min_type, max_type>>
             std::numeric_limits<dist_value_t>::lowest();
     }
 
-    /* 
+    /**
      * Up to constant addition, returns ad expression of log pdf
      */
     template <class ADVarType, class VecRefType, class VecADVarType>

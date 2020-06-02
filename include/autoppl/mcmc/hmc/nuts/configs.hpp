@@ -6,7 +6,7 @@
 
 namespace ppl {
 
-/*
+/**
  * User configuration for NUTS algorithm.
  */
 template <class VarAdapterPolicy=diag_var>
@@ -27,7 +27,7 @@ struct NUTSConfig
     VarConfig var_config;
 };
 
-/*
+/**
  * Traits to get member aliases of any NUTS config object.
  */
 template <class NUTSConfigType>

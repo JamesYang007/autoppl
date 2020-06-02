@@ -13,7 +13,7 @@
 namespace ppl {
 namespace mcmc {
 
-/*
+/**
  * Get current time in milliseconds for random seeding.
  */
 inline size_t random_seed()
@@ -22,7 +22,7 @@ inline size_t random_seed()
         (std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-/*
+/**
  * Initializes parameters with the given priors and
  * conditional distributions based on the model.
  * Random numbers are generated with gen.
@@ -83,7 +83,7 @@ void init_params(ModelType& model, GenType& gen)
     model.traverse(init_params__);
 }
 
-/*
+/**
  * Initializes first sample of parameters using mcmc::init_params.
  * Helper function to copy the samples into theta_curr.
  */
@@ -107,7 +107,7 @@ void init_sample(ModelType& model,
     model.traverse(copy_params_potential);
 }
 
-/*
+/**
  * Get unique raw addresses of the referenced variables in the model.
  * Can be used to bind algorithm specific storage associated with each variable.
  */
@@ -129,7 +129,7 @@ void get_keys(const ModelType& model,
     model.traverse(get_keys);
 }
 
-/*
+/**
  * Store ith sample currently in theta_curr into 
  * storage by traversing model.
  */
@@ -151,7 +151,7 @@ void store_sample(ModelType& model,
     model.traverse(store_sample);
 }
 
-/*
+/**
  * Accepts or rejects with given probability using UniformDistType
  * object that works with GenType.
  * The uniform sampler must sample from [0,1].

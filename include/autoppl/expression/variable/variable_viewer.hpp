@@ -7,7 +7,7 @@
 namespace ppl {
 namespace expr {
 
-/*
+/**
  * VariableViewer is a viewer of some variable type. 
  * It will mainly be used to view Variable class defined in autoppl/variable.hpp.
  */
@@ -26,7 +26,7 @@ struct VariableViewer : util::VarExpr<VariableViewer<VariableType>>
     value_t get_value(size_t i = 0) const { return var_ref_.get().get_value(i); }
     size_t size() const { return var_ref_.get().size(); }
 
-    /* 
+    /**
      * Returns ad expression of the variable.
      * If variable is parameter, find from vars and return.
      * Otherwise if data, return idx'th ad::constant of that value.

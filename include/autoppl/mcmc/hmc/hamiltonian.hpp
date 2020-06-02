@@ -3,7 +3,7 @@
 namespace ppl {
 namespace mcmc{
     
-/*
+/**
  * Compute Hamiltonian given potential and kinetic energy.
  * Returns simply the sum of the two.
  */

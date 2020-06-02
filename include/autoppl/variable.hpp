@@ -7,7 +7,7 @@
 
 namespace ppl {
 
-/*
+/**
  * Param is a light-weight structure that represents a univariate hidden random variable.
  * That means the parameter does not hold samples, but it does contain a value that is used
  * by model.pdf and get_value. Param requires user-provided external storage for samples and
@@ -52,7 +52,7 @@ struct Param : util::ParamLike<Param<ValueType>> {
                                    // storage is assumed to be contiguous
 };
 
-/* 
+/**
  * Data is a light-weight structure that represents a set of samples from an observed random variable.
  * It acts as an intermediate layer of communication between a model expression and the users.
  * A Data object is different from a Param object in that it can hold multiple values but cannot

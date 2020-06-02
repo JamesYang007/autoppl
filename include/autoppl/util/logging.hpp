@@ -7,7 +7,7 @@ namespace ppl {
 
 namespace util {
 
-/* 
+/**
  * ProgressLogger prints a visual progress bar counting towards 100% completion
  * of an algorithm or task (really, any for loop). max is the value being counted
  * towards, e.g. the upper-bound of the for-loop, and name is a string to print

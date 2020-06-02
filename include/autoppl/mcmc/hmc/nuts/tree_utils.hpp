@@ -6,7 +6,7 @@
 namespace ppl {
 namespace mcmc {
 
-/* 
+/**
  * Struct to pack input to calling build_tree.
  */
 template <class ADExprType
@@ -73,10 +73,9 @@ struct TreeInput
     const double ham;
 };
 
-/* 
+/**
  * Struct to pack output from calling build_tree.
  */
-
 struct TreeOutput
 {
     TreeOutput(bool _valid=true, double _potential=0.)

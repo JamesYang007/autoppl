@@ -7,7 +7,7 @@
 namespace ppl {
 namespace util {
 
-/*
+/**
  * Base class for all distribution expressions.
  * It is necessary for all distribution expressions to
  * derive from this class.
@@ -41,7 +41,7 @@ struct DistExpr : BaseCRTP<T>
     }
 };
 
-/*
+/**
  * Checks if DistExpr<T> is base of type T 
  */
 template <class T>
@@ -58,17 +58,17 @@ DEFINE_ASSERT_ONE_PARAM(dist_expr_is_base_of_v);
  * TODO: continuous/discrete distribution expression concept?
  */
 
-/*
+/**
  * Continuous distribution expressions can be constructed with this type.
  */
 using cont_param_t = double;
 
-/*
+/**
  * Discrete distribution expressions can be constructed with this type.
  */
 using disc_param_t = int64_t;
 
-/*
+/**
  * Traits for Distribution Expression classes.
  * value_t      type of value Variable represents during computation
  * dist_value_t type of pdf/log_pdf value
@@ -80,7 +80,7 @@ struct dist_expr_traits
     using dist_value_t = typename DistExprType::dist_value_t;
 };
 
-/*
+/**
  * A distribution expression is any class that satisfies the following concept:
  */
 template <class T>

@@ -29,7 +29,7 @@ struct BinaryOpNode :
 
     size_t size() const { return std::max(lhs_.size(), rhs_.size()); }
 
-    /* 
+    /**
      * Returns ad expression of the binary operation.
      */
     template <class VecRefType, class VecADVarType>

@@ -4,7 +4,7 @@
 namespace ppl {
 namespace mcmc {
 
-/*
+/**
  * Helper function to set storage for values and adjoints for AD variables
  * in "vars" as respective elements in "values" and "adjoints".
  */

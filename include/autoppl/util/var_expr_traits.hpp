@@ -6,7 +6,7 @@
 namespace ppl {
 namespace util {
 
-/*
+/**
  * Base class for all variable expressions.
  * It is necessary for all variable expressions to
  * derive from this class.
@@ -15,7 +15,7 @@ template <class T>
 struct VarExpr : BaseCRTP<T>
 { using BaseCRTP<T>::self; };
 
-/*
+/**
  * Checks if VarExpr<T> is base of type T 
  */
 template <class T>
@@ -24,7 +24,7 @@ inline constexpr bool var_expr_is_base_of_v =
 
 DEFINE_ASSERT_ONE_PARAM(var_expr_is_base_of_v);
 
-/*
+/**
  * Traits for Variable Expression classes.
  * value_t      type of value Variable represents during computation
  */
@@ -34,7 +34,7 @@ struct var_expr_traits
     using value_t = typename VarExprType::value_t;
 };
 
-/*
+/**
  * A variable expression is any class that satisfies the following concept.
  */
 template <class T>

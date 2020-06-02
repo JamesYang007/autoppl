@@ -10,7 +10,7 @@
 namespace ppl {
 namespace expr {
 
-/*
+/**
  * This class represents a "node" in the model expression
  * that relates a var with a distribution.
  */
@@ -30,7 +30,7 @@ struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
         , dist_{dist}
     {}
 
-    /* 
+    /**
      * Generic traversal function.
      * Assumes that eq_f is a function that takes in 1 parameter,
      * which is simply the current object.
@@ -49,7 +49,7 @@ struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
         eq_f(static_cast<const this_t&>(*this));
     }
 
-    /*
+    /**
      * Compute pdf of underlying distribution with underlying value.
      * Assumes that underlying value has been assigned properly.
      */
@@ -57,7 +57,7 @@ struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
         return dist_.pdf(get_variable());
     }
 
-    /*
+    /**
      * Compute log-pdf of underlying distribution with underlying value.
      * Assumes that underlying value has been assigned properly.
      */

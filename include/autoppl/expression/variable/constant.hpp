@@ -18,7 +18,7 @@ struct Constant : util::VarExpr<Constant<ValueType>>
 
     constexpr size_t size() const { return 1; }
 
-    /* 
+    /**
      * Returns ad expression of the constant.
      */
     template <class VecRefType, class VecADVarType>

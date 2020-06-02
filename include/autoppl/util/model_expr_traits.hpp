@@ -5,7 +5,7 @@
 namespace ppl {
 namespace util {
 
-/*
+/**
  * Base class for all model expressions.
  * It is necessary for all model expressions to
  * derive from this class.
@@ -14,7 +14,7 @@ template <class T>
 struct ModelExpr : BaseCRTP<T>
 { using BaseCRTP<T>::self; };
 
-/*
+/**
  * Checks if DistExpr<T> is base of type T 
  */
 template <class T>
@@ -23,7 +23,7 @@ inline constexpr bool model_expr_is_base_of_v =
 
 DEFINE_ASSERT_ONE_PARAM(model_expr_is_base_of_v);
 
-/*
+/**
  * Traits for Model Expression classes.
  * dist_value_t      type of value Variable represents during computation
  */

@@ -4,7 +4,7 @@
 
 namespace ppl {
 
-/*
+/**
  * Constants that can be set by user and used by NUTSAdapter.
  */
 struct StepConfig
@@ -17,13 +17,13 @@ struct StepConfig
 
 namespace mcmc {
 
-/*
+/**
  * Adaptive values in NUTS algorithm using dual-averaging.
  * Currently, only log_eps, log_eps_bar, and H_bar are adaptive.
  */
 struct StepAdapter
 {
-    /*
+    /**
      * Constructs a step adapter with the given log epsilon.
      * Initializes mu to log(10*_log_eps).
      */
@@ -32,7 +32,7 @@ struct StepAdapter
         init(_log_eps);
     }
 
-    /*
+    /**
      * Must be called before beginning to adapt.
      */
     void init(double _log_eps) 
@@ -41,7 +41,7 @@ struct StepAdapter
         mu = mu_constant + log_eps;
     }
 
-    /*
+    /**
      * Adapts log_eps, log_eps_bar, and H_bar.
      */
     void adapt(double alpha_ratio)
@@ -57,7 +57,7 @@ struct StepAdapter
                       (1 - m_ratio) * log_eps_bar;
     }
 
-    /*
+    /**
      * Reset all variables that change per iteration
      */
     void reset() 

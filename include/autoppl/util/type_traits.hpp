@@ -39,7 +39,7 @@
     
 namespace ppl {
 
-/*
+/**
  * Checks if type From can be explicitly converted to type To.
  */
 template <class From, class To>
@@ -49,7 +49,7 @@ inline constexpr bool is_explicitly_convertible_v =
     ;
 DEFINE_ASSERT_TWO_PARAM(is_explicitly_convertible_v);
 
-/*
+/**
  * Used for CRTP to unify certain expression types under one name.
  * CRTP types should simply derive from this base class.
  */
