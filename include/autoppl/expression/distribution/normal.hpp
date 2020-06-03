@@ -14,11 +14,18 @@
 namespace ppl {
 namespace expr {
 
+#if __cplusplus <= 201703L
 template <typename mean_type, typename stddev_type>
+#else
+template <util::var_expr mean_type, util::var_expr stddev_type>
+#endif
 struct Normal : util::DistExpr<Normal<mean_type, stddev_type>>
 {
+
+#if __cplusplus <= 201703L
     static_assert(util::assert_is_var_expr_v<mean_type>);
     static_assert(util::assert_is_var_expr_v<stddev_type>);
+#endif
 
     using value_t = util::cont_param_t;
     using base_t = util::DistExpr<Normal<mean_type, stddev_type>>;

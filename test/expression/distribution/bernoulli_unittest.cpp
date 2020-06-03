@@ -21,7 +21,11 @@ protected:
 
 TEST_F(bernoulli_fixture, ctor)
 {
+#if __cplusplus <= 201703L
     static_assert(util::assert_is_dist_expr_v<Bernoulli<MockVarExpr>>);
+#else
+    static_assert(util::dist_expr<Bernoulli<MockVarExpr>>);
+#endif
 }
 
 TEST_F(bernoulli_fixture, bernoulli_check_params) {

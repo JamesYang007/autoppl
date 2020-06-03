@@ -28,7 +28,11 @@ protected:
 
 TEST_F(var_dist_fixture, ctor)
 {
+#if __cplusplus <= 201703L
     static_assert(util::assert_is_model_expr_v<model_t>);
+#else
+    static_assert(util::model_expr<model_t>);
+#endif
 }
 
 TEST_F(var_dist_fixture, pdf_valid)
@@ -106,8 +110,13 @@ protected:
 
 TEST_F(many_var_dist_fixture, ctor)
 {
+#if __cplusplus <= 201703L
     static_assert(util::assert_is_model_expr_v<model_two_t>);
     static_assert(util::assert_is_model_expr_v<model_four_t>);
+#else
+    static_assert(util::model_expr<model_two_t>);
+    static_assert(util::model_expr<model_four_t>);
+#endif
 }
 
 TEST_F(many_var_dist_fixture, two_vars_pdf)

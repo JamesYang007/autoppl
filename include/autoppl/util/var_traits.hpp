@@ -1,6 +1,11 @@
 #pragma once
 #include <autoppl/util/type_traits.hpp>
+#if __cplusplus <= 201703L
 #include <autoppl/util/concept.hpp>
+#else
+#include <concepts>
+#endif
+#include <cstddef>
 
 namespace ppl {
 namespace util {
@@ -50,9 +55,11 @@ template <class T>
 inline constexpr bool var_is_base_of_v =
     std::is_base_of_v<Var<T>, T>;
 
+#if __cplusplus <= 201703L
 DEFINE_ASSERT_ONE_PARAM(var_is_base_of_v);
 DEFINE_ASSERT_ONE_PARAM(param_is_base_of_v);
 DEFINE_ASSERT_ONE_PARAM(data_is_base_of_v);
+#endif
 
 /**
  * Traits for Variable-like classes.
@@ -64,6 +71,7 @@ struct var_traits
 {
     using value_t = typename VarType::value_t;
     using pointer_t = typename VarType::pointer_t;
+    using const_pointer_t = typename VarType::const_pointer_t;
 };
 
 /**
@@ -72,6 +80,9 @@ struct var_traits
  * - T must be explicitly convertible to its value_t
  * - not possible to get overloads
  */
+
+#if __cplusplus <= 201703L
+
 template <class T>
 inline constexpr bool is_data_v = 
     data_is_base_of_v<T> &&
@@ -118,6 +129,42 @@ inline constexpr bool is_var_v =
     ;
 
 DEFINE_ASSERT_ONE_PARAM(is_var_v);
+
+#else
+
+template <class T>
+concept data =
+    data_is_base_of_v<T> &&
+    requires (const T cx, size_t i) {
+        typename var_traits<T>::value_t;
+        typename var_traits<T>::pointer_t;
+        typename var_traits<T>::const_pointer_t;
+        {cx.get_value(i)} -> std::same_as<typename var_traits<T>::value_t>;
+    }
+    ;
+
+template <class T>
+concept param = 
+    param_is_base_of_v<T> &&
+    requires () {
+        typename var_traits<T>::value_t;
+        typename var_traits<T>::pointer_t;
+        typename var_traits<T>::const_pointer_t;
+    } &&
+    requires (T x, const T cx,
+              typename var_traits<T>::value_t val,
+              typename var_traits<T>::pointer_t p,
+              size_t i) {
+        {x.set_value(val)};
+        {x.set_storage(p)};
+        {cx.get_value(i)} -> std::same_as<typename var_traits<T>::value_t>;
+    }
+    ;
+
+template <class T>
+concept var = data<T> || param<T>;
+
+#endif
 
 } // namespace util
 } // namespace ppl

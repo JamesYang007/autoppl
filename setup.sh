@@ -8,7 +8,7 @@ fastadpath="lib/FastAD"
 # setup google benchmark
 if [ ! -d "$gbenchpath" ]; then
     git clone https://github.com/google/benchmark.git $gbenchpath
-    cd $gbenchpath 2>&1 /dev/null
+    cd $gbenchpath &>/dev/null
     git checkout -q v1.5.0
     cd ~- # change back to previous dir and no output to terminal
 fi
@@ -16,7 +16,7 @@ fi
 # setup googletest
 if [ ! -d "$gtestpath" ]; then
     git clone https://github.com/google/googletest.git $gtestpath
-    cd $gtestpath 2>&1 /dev/null
+    cd $gtestpath &> /dev/null
     git checkout -q release-1.10.0
     cd ~- # change back to previous dir and no output to terminal
 fi
@@ -24,7 +24,7 @@ fi
 # setup Armadillo
 if [ ! -d "$armapath" ]; then
     if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "darwin"* ]]; then
-        cd lib 2>&1 /dev/null
+        cd lib &> /dev/null
         if [[ "$OSTYPE" == "linux-gnu" ]]; then
             sudo apt install libopenblas-dev liblapack-dev
         fi
@@ -34,7 +34,7 @@ if [ ! -d "$armapath" ]; then
         cmake . -DCMAKE_INSTALL_PREFIX="../armadillo"
         make
         make install
-        cd ../../ 2>&1 /dev/null
+        cd ../../ &> /dev/null
     fi
 fi
 

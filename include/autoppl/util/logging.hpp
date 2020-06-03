@@ -1,7 +1,7 @@
 #pragma once
-
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 namespace ppl {
 
@@ -15,12 +15,22 @@ namespace util {
  * should be made in the intervening period between calls to printProgress.
 */
 struct ProgressLogger {
-    ProgressLogger(size_t max, const std::string & name) : _max(max), _name(name) {};
+    ProgressLogger(size_t max, const std::string & name) 
+        : _max(max), _name(name) 
+    {};
 
     void printProgress(size_t step) {
         if (step % (_max / 100) == 0) {
-            int percent = static_cast<int>(static_cast<double>(step) / (static_cast<double>(_max) / 100));
-            std::cout << '\r' << _name << " [" << std::string(percent, '=') << std::string(100 - percent, ' ') << "] (" << std::setw(2) << percent << "%)" << std::flush;
+            int percent = static_cast<int>(
+                    static_cast<double>(step) / 
+                    (static_cast<double>(_max) / 100.)
+                    );
+            std::cout << '\r' << _name << " [" 
+                      << std::string(percent, '=') 
+                      << std::string(100 - percent, ' ') 
+                      << "] (" << std::setw(2) 
+                      << percent 
+                      << "%)" << std::flush;
         }
     }
 

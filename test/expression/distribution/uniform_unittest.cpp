@@ -23,7 +23,11 @@ protected:
 
 TEST_F(uniform_fixture, ctor)
 {
+#if __cplusplus <= 201703L
     static_assert(util::assert_is_dist_expr_v<unif_t>);
+#else
+    static_assert(util::dist_expr<unif_t>);
+#endif
 }
 
 TEST_F(uniform_fixture, uniform_check_params) {

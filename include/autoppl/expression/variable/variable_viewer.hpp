@@ -11,10 +11,16 @@ namespace expr {
  * VariableViewer is a viewer of some variable type. 
  * It will mainly be used to view Variable class defined in autoppl/variable.hpp.
  */
+#if __cplusplus <= 201703L
 template <class VariableType>
+#else
+template <util::var VariableType>
+#endif
 struct VariableViewer : util::VarExpr<VariableViewer<VariableType>>
 {
+#if __cplusplus <= 201703L
     static_assert(util::assert_is_var_v<VariableType>);
+#endif
 
     using var_t = VariableType;
     using value_t = typename util::var_traits<var_t>::value_t;
@@ -36,14 +42,22 @@ struct VariableViewer : util::VarExpr<VariableViewer<VariableType>>
                 const VecADVarType& vars,
                 size_t idx = 0) const
     {
+#if __cplusplus <= 201703L
         if constexpr (util::is_param_v<var_t>) {
+#else
+        if constexpr (util::param<var_t>) {
+#endif
             static_cast<void>(idx);
             const void* addr = &var_ref_.get();
             auto it = std::find(keys.begin(), keys.end(), addr);
             assert(it != keys.end());
             size_t i = std::distance(keys.begin(), it);
             return vars[i];
+#if __cplusplus <= 201703L
         } else if constexpr (util::is_data_v<var_t>) {
+#else
+        } else if constexpr (util::data<var_t>) {
+#endif
             return ad::constant(this->get_value(idx));
         }
     }

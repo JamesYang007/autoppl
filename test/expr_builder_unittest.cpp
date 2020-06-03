@@ -18,9 +18,17 @@ TEST_F(expr_builder_fixture, convert_to_param_var)
 {
     using namespace details;
     static_assert(std::is_same_v<MockParam, std::decay_t<MockParam>>);
+#if __cplusplus <= 201703L
     static_assert(util::is_var_v<MockParam>);
+#else
+    static_assert(util::var<MockParam>);
+#endif
     static_assert(!std::is_same_v<MockParam, util::cont_param_t>);
+#if __cplusplus <= 201703L
     static_assert(!util::is_var_expr_v<MockParam>);
+#else
+    static_assert(!util::var_expr<MockParam>);
+#endif
     static_assert(std::is_same_v<
             convert_to_param_t<MockParam>,
             expr::VariableViewer<MockParam>
@@ -32,9 +40,17 @@ TEST_F(expr_builder_fixture, convert_to_param_raw)
     using namespace details;
     using data_t = util::cont_param_t;
     static_assert(std::is_same_v<data_t, std::decay_t<data_t>>);
+#if __cplusplus <= 201703L
     static_assert(!util::is_var_v<data_t>);
+#else
+    static_assert(!util::var<data_t>);
+#endif
     static_assert(std::is_same_v<data_t, util::cont_param_t>);
+#if __cplusplus <= 201703L
     static_assert(!util::is_var_expr_v<data_t>);
+#else
+    static_assert(!util::var_expr<data_t>);
+#endif
     static_assert(std::is_same_v<
             convert_to_param_t<data_t>,
             expr::Constant<data_t>
@@ -44,9 +60,17 @@ TEST_F(expr_builder_fixture, convert_to_param_raw)
 TEST_F(expr_builder_fixture, convert_to_param_var_expr)
 {
     using namespace details;
+#if __cplusplus <= 201703L
     static_assert(!util::is_var_v<MockVarExpr>);
+#else
+    static_assert(!util::var<MockVarExpr>);
+#endif
     static_assert(!std::is_same_v<MockVarExpr, util::cont_param_t>);
+#if __cplusplus <= 201703L
     static_assert(util::is_var_expr_v<MockVarExpr>);
+#else
+    static_assert(util::var_expr<MockVarExpr>);
+#endif
     static_assert(std::is_same_v<
             convert_to_param_t<MockVarExpr&>,
             MockVarExpr&

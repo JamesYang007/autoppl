@@ -16,7 +16,11 @@ template <class VarType, class DistType>
 struct get_n_params<expr::EqNode<VarType, DistType>>
 {
     static constexpr size_t value = 
+#if __cplusplus <= 201703L
         1 * util::is_param_v<VarType>;
+#else
+        1 * util::param<VarType>;
+#endif
 };
 
 template <class LHSNodeType, class RHSNodeType>

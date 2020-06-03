@@ -85,7 +85,11 @@ inline void mh__(ModelType& model,
             using var_t = std::decay_t<decltype(var)>;
             using value_t = typename util::var_traits<var_t>::value_t;
 
-            if constexpr (util::param_is_base_of_v<var_t>) {
+#if __cplusplus <= 201703L
+            if constexpr (util::is_param_v<var_t>) {
+#else
+            if constexpr (util::param<var_t>) {
+#endif
                 auto curr = var.get_value(0);
                 const auto& dist = eq_node.get_distribution();
 
@@ -128,7 +132,11 @@ inline void mh__(ModelType& model,
                 auto& var = eq_node.get_variable();
                 using var_t = std::decay_t<decltype(var)>;
                 using value_t = typename util::var_traits<var_t>::value_t;
-                if constexpr (util::param_is_base_of_v<var_t>) {
+#if __cplusplus <= 201703L
+                if constexpr (util::is_param_v<var_t>) {
+#else
+                if constexpr (util::param<var_t>) {
+#endif
                     if (n_swaps) {
                         using converted_value_t = value_to_param_t<value_t>;
                         var.set_value(*std::get_if<converted_value_t>(&params_it->next));
@@ -158,7 +166,11 @@ inline void mh__(ModelType& model,
             auto& var = eq_node.get_variable();
             using var_t = std::decay_t<decltype(var)>;
             using value_t = typename util::var_traits<var_t>::value_t;
-            if constexpr(util::param_is_base_of_v<var_t>) {
+#if __cplusplus <= 201703L
+            if constexpr(util::is_param_v<var_t>) {
+#else
+            if constexpr(util::param<var_t>) {
+#endif
                 if (!accept) {
                     using converted_value_t = value_to_param_t<value_t>;
                     var.set_value(*std::get_if<converted_value_t>(&params_it->next));
@@ -221,7 +233,11 @@ inline void mh(ModelType& model,
         using var_t = std::decay_t<decltype(var)>;
         using value_t = typename util::var_traits<var_t>::value_t;
 
-        if constexpr (util::param_is_base_of_v<var_t>) {
+#if __cplusplus <= 201703L
+        if constexpr (util::is_param_v<var_t>) {
+#else
+        if constexpr (util::param<var_t>) {
+#endif
             if constexpr (std::is_integral_v<value_t>) {
                 std::uniform_int_distribution init_sampler(dist.min(), dist.max());
                 var.set_value(init_sampler(gen));

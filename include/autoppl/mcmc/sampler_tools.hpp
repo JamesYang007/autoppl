@@ -40,7 +40,11 @@ void init_params(ModelType& model, GenType& gen)
         using var_t = std::decay_t<decltype(var)>;
         using value_t = typename util::var_traits<var_t>::value_t;
 
+#if __cplusplus <= 201703L
         if constexpr (util::is_param_v<var_t>) {
+#else
+        if constexpr (util::param<var_t>) {
+#endif
 
             if constexpr (std::is_integral_v<value_t>) {
                 std::uniform_int_distribution init_sampler(dist.min(), dist.max());
@@ -99,7 +103,11 @@ void init_sample(ModelType& model,
     auto copy_params_potential = [&](const auto& eq_node) {
         const auto& var = eq_node.get_variable();
         using var_t = std::decay_t<decltype(var)>;
+#if __cplusplus <= 201703L
         if constexpr (util::is_param_v<var_t>) {
+#else
+        if constexpr (util::param<var_t>) {
+#endif
             *theta_curr_it = var.get_value(); 
             ++theta_curr_it;
         }
@@ -121,7 +129,11 @@ void get_keys(const ModelType& model,
     auto get_keys = [&](auto& eq_node) {
         auto& var = eq_node.get_variable();
         using var_t = std::decay_t<decltype(var)>;
+#if __cplusplus <= 201703L
         if constexpr (util::is_param_v<var_t>) {
+#else
+        if constexpr (util::param<var_t>) {
+#endif
             *keys_it = &var;
             ++keys_it;
         }
@@ -142,7 +154,11 @@ void store_sample(ModelType& model,
     auto store_sample = [&, i](auto& eq_node) {
         auto& var = eq_node.get_variable();
         using var_t = std::decay_t<decltype(var)>;
+#if __cplusplus <= 201703L
         if constexpr (util::is_param_v<var_t>) {
+#else
+        if constexpr (util::param<var_t>) {
+#endif
             auto storage_ptr = var.get_storage();
             storage_ptr[i] = *theta_curr_it;
             ++theta_curr_it;

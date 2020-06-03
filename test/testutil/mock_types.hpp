@@ -117,8 +117,8 @@ struct MockDistExpr : util::DistExpr<MockDistExpr>
 
     dist_value_t log_pdf(value_t x, size_t=0) const { return std::log(x); }
 
-    value_t min(size_t=0) const { return 0.; }
-    value_t max(size_t=0) const { return 1.; }
+    value_t min() const { return 0.; }
+    value_t max() const { return 1.; }
 };
 
 /*
@@ -130,6 +130,7 @@ struct MockDistExpr_no_pdf :
     public MockDistExpr
 {
 private:
+    using dist_value_t = typename MockDistExpr::dist_value_t;
     using MockDistExpr::pdf;
 };
 

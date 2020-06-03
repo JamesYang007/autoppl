@@ -8,11 +8,18 @@
 namespace ppl {
 namespace expr {
 
+#if __cplusplus <= 201703L
 template <typename min_type, typename max_type>
+#else
+template <util::var_expr min_type, util::var_expr max_type>
+#endif
 struct Uniform : util::DistExpr<Uniform<min_type, max_type>>
 {
+
+#if __cplusplus <= 201703L
     static_assert(util::assert_is_var_expr_v<min_type>);
     static_assert(util::assert_is_var_expr_v<max_type>);
+#endif
 
     using value_t = util::cont_param_t;
     using base_t = util::DistExpr<Uniform<min_type, max_type>>; 

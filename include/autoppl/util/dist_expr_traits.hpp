@@ -1,9 +1,12 @@
 #pragma once
+#if __cplusplus <= 201703L
 #include <autoppl/util/concept.hpp>
+#endif
 #include <autoppl/util/type_traits.hpp>
 #include <autoppl/util/var_traits.hpp>
 #include <cstdint>
-#include <cstdio>
+#include <cstddef>
+
 namespace ppl {
 namespace util {
 
@@ -19,22 +22,32 @@ struct DistExpr : BaseCRTP<T>
     using dist_value_t = double;
 
     template <typename VarType>
+#if __cplusplus <= 201703L
     std::enable_if_t<is_var_v<std::decay_t<VarType>>, dist_value_t> 
-    log_pdf(const VarType& var) const {
+    log_pdf(const VarType& v) const {
+#else
+    dist_value_t log_pdf(const VarType& v) const 
+        requires var<std::decay_t<VarType>> {
+#endif
         dist_value_t value = 0.0;
-        for (size_t i = 0; i < var.size(); ++i) {
-            value += self().log_pdf(var.get_value(i), i);
+        for (size_t i = 0; i < v.size(); ++i) {
+            value += self().log_pdf(v.get_value(i), i);
         }
 
         return value;
     }
 
     template <typename VarType>
-    std::enable_if_t<is_var_v<std::decay_t<VarType>>, dist_value_t>
-    pdf(const VarType& var) const {
+#if __cplusplus <= 201703L
+    std::enable_if_t<is_var_v<std::decay_t<VarType>>, dist_value_t> 
+    pdf(const VarType& v) const {
+#else
+    dist_value_t pdf(const VarType& v) const
+        requires var<std::decay_t<VarType>> {
+#endif
         dist_value_t value = 1.0;
-        for (size_t i = 0; i < var.size(); ++i) {
-            value *= self().pdf(var.get_value(i), i);
+        for (size_t i = 0; i < v.size(); ++i) {
+            value *= self().pdf(v.get_value(i), i);
         }
 
         return value;
@@ -48,7 +61,9 @@ template <class T>
 inline constexpr bool dist_expr_is_base_of_v =
     std::is_base_of_v<DistExpr<T>, T>;
 
+#if __cplusplus <= 201703L
 DEFINE_ASSERT_ONE_PARAM(dist_expr_is_base_of_v);
+#endif
 
 /* 
  * TODO: Samplable distribution expression concept?
@@ -80,6 +95,8 @@ struct dist_expr_traits
     using dist_value_t = typename DistExprType::dist_value_t;
 };
 
+#if __cplusplus <= 201703L
+
 /**
  * A distribution expression is any class that satisfies the following concept:
  */
@@ -104,6 +121,27 @@ inline constexpr bool assert_is_dist_expr_v =
     assert_has_func_min_v<const T> &&
     assert_has_func_max_v<const T>
     ;
+
+#else
+
+template <class T>
+concept dist_expr = 
+    dist_expr_is_base_of_v<T> &&
+    requires () {
+        typename dist_expr_traits<T>::value_t;
+        typename dist_expr_traits<T>::dist_value_t;
+    } &&
+    requires (T x, const T cx,
+              typename dist_expr_traits<T>::value_t val,
+              size_t i) {
+        {cx.pdf(val, i)} -> std::same_as<typename dist_expr_traits<T>::dist_value_t>;
+        {cx.log_pdf(val, i)} -> std::same_as<typename dist_expr_traits<T>::dist_value_t>;
+        {cx.min()} -> std::same_as<typename dist_expr_traits<T>::value_t>;
+        {cx.max()} -> std::same_as<typename dist_expr_traits<T>::value_t>;
+    }
+    ;
+
+#endif
 
 } // namespace util
 } // namespace ppl

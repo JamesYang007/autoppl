@@ -31,6 +31,9 @@ namespace details {
  * - is_var_expr_v<T> true => T
  * Assumes each condition is non-overlapping.
  */
+
+#if __cplusplus <= 201703L
+
 template <class T, class = void>
 struct convert_to_param
 {};
@@ -65,9 +68,39 @@ struct convert_to_param<T,
     using type = T;
 };
 
+#else
+
+template <class T>
+struct convert_to_param;
+
+template <class T>
+requires util::var<std::decay_t<T>>
+struct convert_to_param<T>
+{
+    using type = expr::VariableViewer<std::decay_t<T>>;
+};
+
+template <class T>
+requires std::is_arithmetic_v<std::decay_t<T>>
+struct convert_to_param<T>
+{
+    using type = expr::Constant<std::decay_t<T>>;
+};
+
+template <class T>
+requires util::var_expr<std::decay_t<T>> 
+struct convert_to_param<T> 
+{
+    using type = T;
+};
+
+#endif
+
 template <class T>
 using convert_to_param_t = 
     typename convert_to_param<T>::type;
+
+#if __cplusplus <= 201703L
 
 /**
  * Checks if valid distribution parameter:
@@ -94,6 +127,25 @@ inline constexpr bool is_not_both_arithmetic_v =
       std::is_arithmetic_v<std::decay_t<T2>>)
     ;
 
+#else
+
+template <class T>
+concept valid_dist_param =
+    std::is_arithmetic_v<std::decay_t<T>> ||
+    (util::var<std::decay_t<T>> &&
+     !std::is_rvalue_reference_v<T> &&
+     !std::is_const_v<std::remove_reference_t<T>>) ||
+    (util::var_expr<std::decay_t<T>>)
+    ;
+
+template <class T1, class T2>
+concept not_both_arithmetic =
+    !(std::is_arithmetic_v<std::decay_t<T1>> &&
+      std::is_arithmetic_v<std::decay_t<T2>>)
+    ;
+
+#endif
+
 } // namespace details
 
 /**
@@ -101,6 +153,7 @@ inline constexpr bool is_not_both_arithmetic_v =
  * are both valid continuous distribution parameter types.
  * See var_expr.hpp for more information.
  */
+#if __cplusplus <= 201703L
 template <class MinType, class MaxType
         , class = std::enable_if_t<
             details::is_valid_dist_param_v<MinType> &&
@@ -108,6 +161,12 @@ template <class MinType, class MaxType
          > >
 inline constexpr auto uniform(MinType&& min_expr,
                               MaxType&& max_expr)
+#else
+template <details::valid_dist_param MinType
+        , details::valid_dist_param MaxType>
+inline constexpr auto uniform(MinType&& min_expr,
+                              MaxType&& max_expr)
+#endif
 {
     using min_t = details::convert_to_param_t<MinType>;
     using max_t = details::convert_to_param_t<MaxType>;
@@ -123,6 +182,7 @@ inline constexpr auto uniform(MinType&& min_expr,
  * are both valid continuous distribution parameter types.
  * See var_expr.hpp for more information.
  */
+#if __cplusplus <= 201703L
 template <class MeanType, class StddevType
         , class = std::enable_if_t<
             details::is_valid_dist_param_v<MeanType> &&
@@ -130,6 +190,12 @@ template <class MeanType, class StddevType
          > >
 inline constexpr auto normal(MeanType&& mean_expr,
                              StddevType&& stddev_expr)
+#else
+template <details::valid_dist_param MeanType
+        , details::valid_dist_param StddevType>
+inline constexpr auto normal(MeanType&& mean_expr,
+                             StddevType&& stddev_expr)
+#endif
 {
     using mean_t = details::convert_to_param_t<MeanType>;
     using stddev_t = details::convert_to_param_t<StddevType>;
@@ -145,11 +211,16 @@ inline constexpr auto normal(MeanType&& mean_expr,
  * is a valid discrete distribution parameter type.
  * See var_expr.hpp for more information.
  */
+#if __cplusplus <= 201703L
 template <class ProbType
         , class = std::enable_if_t<
             details::is_valid_dist_param_v<ProbType>
         > >
 inline constexpr auto bernoulli(ProbType&& p_expr)
+#else
+template <details::valid_dist_param ProbType>
+inline constexpr auto bernoulli(ProbType&& p_expr)
+#endif
 {
     using p_t = details::convert_to_param_t<ProbType>;
     p_t wrap_p_expr = std::forward<ProbType>(p_expr);
@@ -166,8 +237,10 @@ inline constexpr auto bernoulli(ProbType&& p_expr)
  * Ex. x |= uniform(0,1)
  */
 template <class VarType, class DistType>
-inline constexpr auto operator|=(util::Var<VarType>& var,
-           const util::DistExpr<DistType>& dist) { return expr::EqNode(var.self(), dist.self()); }
+inline constexpr auto operator|=(
+        util::Var<VarType>& var,
+        const util::DistExpr<DistType>& dist) 
+{ return expr::EqNode(var.self(), dist.self()); }
 
 /**
  * Builds a GlueNode to "glue" the left expression with the right
@@ -185,6 +258,8 @@ inline constexpr auto operator,(const util::ModelExpr<LHSNodeType>& lhs,
 
 namespace details {
 
+#if __cplusplus <= 201703L
+
 /**
  * Concept of valid variable expression parameter
  * for the operator overloads:
@@ -198,6 +273,16 @@ inline constexpr bool is_valid_op_param_v =
     util::is_var_expr_v<std::decay_t<T>> ||
     util::is_var_v<std::decay_t<T>>
     ;
+#else
+
+template <class T>
+concept valid_op_param =
+    std::is_arithmetic_v<std::decay_t<T>> || 
+    util::var_expr<std::decay_t<T>> ||
+    util::var<std::decay_t<T>>
+    ;
+
+#endif
 
 template <class Op, class LHSType, class RHSType>
 inline constexpr auto operator_helper(LHSType&& lhs, RHSType&& rhs)
@@ -224,12 +309,18 @@ inline constexpr auto operator_helper(LHSType&& lhs, RHSType&& rhs)
  * SFINAE to ensure concepts are placed.
  */
 
+#if __cplusplus <= 201703L
 template <class LHSType, class RHSType
         , class = std::enable_if_t<
             details::is_not_both_arithmetic_v<LHSType, RHSType> &&
             details::is_valid_op_param_v<LHSType> &&
             details::is_valid_op_param_v<RHSType>
         > >
+#else
+template <details::valid_op_param LHSType
+        , details::valid_op_param RHSType>
+requires details::not_both_arithmetic<LHSType, RHSType>
+#endif
 inline constexpr auto operator+(LHSType&& lhs,
 	                            RHSType&& rhs)
 { 
@@ -238,12 +329,18 @@ inline constexpr auto operator+(LHSType&& lhs,
             std::forward<RHSType>(rhs));
 }
 
+#if __cplusplus <= 201703L
 template <class LHSType, class RHSType
         , class = std::enable_if_t<
             details::is_not_both_arithmetic_v<LHSType, RHSType> &&
             details::is_valid_op_param_v<LHSType> &&
             details::is_valid_op_param_v<RHSType>
         > >
+#else
+template <details::valid_op_param LHSType
+        , details::valid_op_param RHSType>
+requires details::not_both_arithmetic<LHSType, RHSType>
+#endif
 inline constexpr auto operator-(LHSType&& lhs, RHSType&& rhs)
 {
     return details::operator_helper<expr::SubOp>(
@@ -251,12 +348,18 @@ inline constexpr auto operator-(LHSType&& lhs, RHSType&& rhs)
             std::forward<RHSType>(rhs));
 }
 
+#if __cplusplus <= 201703L
 template <class LHSType, class RHSType
         , class = std::enable_if_t<
             details::is_not_both_arithmetic_v<LHSType, RHSType> &&
             details::is_valid_op_param_v<LHSType> &&
             details::is_valid_op_param_v<RHSType>
         > >
+#else
+template <details::valid_op_param LHSType
+        , details::valid_op_param RHSType>
+requires details::not_both_arithmetic<LHSType, RHSType>
+#endif
 inline constexpr auto operator*(LHSType&& lhs, RHSType&& rhs)
 {
     return details::operator_helper<expr::MultOp>(
@@ -264,12 +367,18 @@ inline constexpr auto operator*(LHSType&& lhs, RHSType&& rhs)
             std::forward<RHSType>(rhs));
 }
 
+#if __cplusplus <= 201703L
 template <class LHSType, class RHSType
         , class = std::enable_if_t<
             details::is_not_both_arithmetic_v<LHSType, RHSType> &&
             details::is_valid_op_param_v<LHSType> &&
             details::is_valid_op_param_v<RHSType>
         > >
+#else
+template <details::valid_op_param LHSType
+        , details::valid_op_param RHSType>
+requires details::not_both_arithmetic<LHSType, RHSType>
+#endif
 inline constexpr auto operator/(LHSType&& lhs, RHSType&& rhs)
 {
     return details::operator_helper<expr::DivOp>(

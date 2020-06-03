@@ -24,7 +24,11 @@ protected:
 
 TEST_F(normal_fixture, ctor)
 {
+#if __cplusplus <= 201703L
     static_assert(util::assert_is_dist_expr_v<norm_t>);
+#else
+    static_assert(util::dist_expr<norm_t>);
+#endif
 }
 
 TEST_F(normal_fixture, normal_check_params) {

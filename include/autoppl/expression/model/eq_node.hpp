@@ -14,11 +14,18 @@ namespace expr {
  * This class represents a "node" in the model expression
  * that relates a var with a distribution.
  */
+#if __cplusplus <= 201703L
 template <class VarType, class DistType>
+#else
+template <util::var VarType, util::dist_expr DistType>
+#endif
 struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
 {
+
+#if __cplusplus <= 201703L
     static_assert(util::assert_is_var_v<VarType>);
     static_assert(util::assert_is_dist_expr_v<DistType>);
+#endif
 
     using var_t = VarType;
     using dist_t = DistType;
@@ -71,7 +78,11 @@ struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
     {
         // if parameter, find the corresponding variable
         // in vars and return the AD log-pdf with this variable.
+#if __cplusplus <= 201703L
         if constexpr (util::is_param_v<var_t>) {
+#else
+        if constexpr (util::param<var_t>) {
+#endif
             const void* addr = &orig_var_ref_.get();
             auto it = std::find(keys.begin(), keys.end(), addr);
             assert(it != keys.end());
@@ -82,7 +93,11 @@ struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
         // if data, return sum of log_pdf where each element
         // is a constant AD node containing each value of data.
         // note: data is not copied at any point.
+#if __cplusplus <= 201703L
         else if constexpr (util::is_data_v<var_t>) {
+#else
+        else if constexpr (util::data<var_t>) {
+#endif
             const auto& var = this->get_variable();
             size_t idx = 0;
             const size_t size = var.size();

@@ -45,7 +45,7 @@ struct Param : util::ParamLike<Param<ValueType>> {
     pointer_t get_storage() { return storage_ptr_; }
     const_pointer_t get_storage() const { return storage_ptr_; }
 
-   private:
+private:
     value_t value_;  // store value associated with var
     pointer_t storage_ptr_;        // points to beginning of storage
                                    // storage is assumed to be contiguous

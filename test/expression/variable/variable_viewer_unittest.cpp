@@ -15,7 +15,11 @@ protected:
 
 TEST_F(variable_viewer_fixture, ctor)
 {
+#if __cplusplus <= 201703L
     static_assert(util::assert_is_var_expr_v<VariableViewer<MockParam>>);
+#else
+    static_assert(util::var_expr<VariableViewer<MockParam>>);
+#endif
 }
 
 TEST_F(variable_viewer_fixture, convertible_value)

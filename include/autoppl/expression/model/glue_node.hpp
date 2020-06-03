@@ -10,11 +10,18 @@ namespace expr {
  * This class represents a "node" in a model expression that
  * "glues" two sub-model expressions.
  */
+#if __cplusplus <= 201703L
 template <class LHSNodeType, class RHSNodeType>
+#else
+template <util::model_expr LHSNodeType, util::model_expr RHSNodeType>
+#endif
 struct GlueNode : util::ModelExpr<GlueNode<LHSNodeType, RHSNodeType>>
 {
+
+#if __cplusplus <= 201703L
     static_assert(util::assert_is_model_expr_v<LHSNodeType>);
     static_assert(util::assert_is_model_expr_v<RHSNodeType>);
+#endif
 
     using left_node_t = LHSNodeType;
     using right_node_t = RHSNodeType;

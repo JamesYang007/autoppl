@@ -16,7 +16,11 @@ protected:
 
 TEST_F(constant_fixture, ctor)
 {
+#if __cplusplus <= 201703L
     static_assert(util::assert_is_var_expr_v<Constant<value_t>>);
+#else
+    static_assert(util::var_expr<Constant<value_t>>);
+#endif
 }
 
 TEST_F(constant_fixture, convertible_value)

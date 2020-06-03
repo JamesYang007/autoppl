@@ -5,12 +5,18 @@
 namespace ppl {
 namespace expr {
 
+#if __cplusplus <= 201703L
 template <class BinaryOp, class LHSVarExprType, class RHSVarExprType>
+#else
+template <class BinaryOp, util::var_expr LHSVarExprType, util::var_expr RHSVarExprType>
+#endif
 struct BinaryOpNode : 
     util::VarExpr<BinaryOpNode<BinaryOp, LHSVarExprType, RHSVarExprType>>
 {
+#if __cplusplus <= 201703L
 	static_assert(util::assert_is_var_expr_v<LHSVarExprType>);
 	static_assert(util::assert_is_var_expr_v<RHSVarExprType>);
+#endif
 
 	using value_t = std::common_type_t<
 		typename util::var_expr_traits<LHSVarExprType>::value_t,
