@@ -329,18 +329,8 @@ inline constexpr auto operator+(LHSType&& lhs,
             std::forward<RHSType>(rhs));
 }
 
-#if __cplusplus <= 201703L
-template <class LHSType, class RHSType
-        , class = std::enable_if_t<
-            details::is_not_both_arithmetic_v<LHSType, RHSType> &&
-            details::is_valid_op_param_v<LHSType> &&
-            details::is_valid_op_param_v<RHSType>
-        > >
-#else
-template <details::valid_op_param LHSType
-        , details::valid_op_param RHSType>
-requires details::not_both_arithmetic<LHSType, RHSType>
-#endif
+// LEFT UNCONSTRAINED JUST FOR CHRONO ERROR RECREATION
+template <class LHSType, class RHSType>
 inline constexpr auto operator-(LHSType&& lhs, RHSType&& rhs)
 {
     return details::operator_helper<expr::SubOp>(

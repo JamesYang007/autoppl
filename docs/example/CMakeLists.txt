@@ -38,3 +38,13 @@ target_compile_options(normal_posterior_mean_stddev PRIVATE
 target_include_directories(normal_posterior_mean_stddev
     PRIVATE ${AUTOPPL_INCLUDE_DIRS})
 target_link_libraries(normal_posterior_mean_stddev ${AUTOPPL_LIBS})
+
+# Recreate unconstrained operator- error with std::chrono
+add_executable(chrono_error
+    chrono_error.cpp
+    )
+target_compile_options(chrono_error PRIVATE
+    -g -Wall -Werror -Wextra)
+target_include_directories(chrono_error
+    PRIVATE ${AUTOPPL_INCLUDE_DIRS})
+target_link_libraries(chrono_error ${AUTOPPL_LIBS})
