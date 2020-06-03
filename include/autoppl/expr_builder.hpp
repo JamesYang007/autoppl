@@ -40,30 +40,24 @@ struct convert_to_param
 
 template <class T>
 struct convert_to_param<T,
-    std::enable_if_t<util::is_var_v<std::decay_t<T>> && 
-                    !std::is_arithmetic_v<std::decay_t<T>> &&
-                    !util::is_var_expr_v<std::decay_t<T>>
-                    >>
+    std::enable_if_t<util::is_var_v<std::decay_t<T>> >
+    >
 {
     using type = expr::VariableViewer<std::decay_t<T>>;
 };
 
 template <class T>
 struct convert_to_param<T, 
-    std::enable_if_t<!util::is_var_v<std::decay_t<T>> && 
-                    std::is_arithmetic_v<std::decay_t<T>> &&
-                    !util::is_var_expr_v<std::decay_t<T>>
-                    >>
+    std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> >
+    >
 {
     using type = expr::Constant<std::decay_t<T>>;
 };
 
 template <class T>
 struct convert_to_param<T, 
-    std::enable_if_t<!util::is_var_v<std::decay_t<T>> && 
-                    !std::is_arithmetic_v<std::decay_t<T>> &&
-                    util::is_var_expr_v<std::decay_t<T>>
-                    >>
+    std::enable_if_t<util::is_var_expr_v<std::decay_t<T>> > 
+    >
 {
     using type = T;
 };
