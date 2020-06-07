@@ -17,6 +17,18 @@
 
 namespace ppl {
 
+template <class ArrayType>
+inline double stddev(const ArrayType& v)
+{
+    double mean = std::accumulate(v.begin(), v.end(), 0.)/v.size();
+    double var = 0.;
+    for (auto x : v) {
+        auto diff = (x - mean);
+        var += diff * diff;
+    }
+    return std::sqrt(var/(v.size()));
+}
+
 static void BM_Regression(benchmark::State& state) {
     size_t num_samples = state.range(0);
 
@@ -65,10 +77,15 @@ static void BM_Regression(benchmark::State& state) {
 		ppl::nuts(model, config);
     }
 
+	std::cout << "Bias: " << sample_average(storage[0]) << std::endl;
 	std::cout << "Alcohol w: " << sample_average(storage[1]) << std::endl;
 	std::cout << "HIV/AIDS w: " << sample_average(storage[2]) << std::endl;
 	std::cout << "GDP: " << sample_average(storage[3]) << std::endl;
-	std::cout << "Bias: " << sample_average(storage[0]) << std::endl;
+
+	std::cout << "Bias: " << stddev(storage[0]) << std::endl;
+	std::cout << "Alcohol w: " << stddev(storage[1]) << std::endl;
+	std::cout << "HIV/AIDS w: " << stddev(storage[2]) << std::endl;
+	std::cout << "GDP: " << stddev(storage[3]) << std::endl;
 }
 
 BENCHMARK(BM_Regression)->Arg(100)->Arg(500)->Arg(1000)->Arg(5000)->Arg(10000)->Arg(50000)->Arg(100000);
