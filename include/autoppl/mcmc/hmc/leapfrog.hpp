@@ -12,11 +12,16 @@ namespace mcmc {
  * @param adjoints  Armadillo generic matrix type that supports member fn "zeros".
  * @return  result of calling ad::autodiff on ad_expr.
  */
-template <class ADExprType, class MatType>
-double reset_autodiff(ADExprType& ad_expr, MatType& adjoints)
+template <class ADExprType
+        , class MatType
+        , class ADVecType>
+double reset_autodiff(ADExprType& ad_expr, 
+                      MatType& adjoints,
+                      ADVecType& cache_ad)
 {
     // reset adjoints
     adjoints.zeros();
+    for (auto& v : cache_ad) { v.reset_adjoint(); }
     // compute current gradient
     return ad::autodiff(ad_expr);
 }
@@ -45,17 +50,19 @@ double reset_autodiff(ADExprType& ad_expr, MatType& adjoints)
  */
 template <class ADExprType
         , class MatType
+        , class ADVecType
         , class MomentumHandlerType>
 double leapfrog(ADExprType& ad_expr,
                 MatType& theta,
                 MatType& theta_adj,
+                ADVecType& cache_ad,
                 MatType& r,
                 const MomentumHandlerType& m_handler,
                 double epsilon,
                 bool reuse_adj)
 {
     if (!reuse_adj) {
-        reset_autodiff(ad_expr, theta_adj);
+        reset_autodiff(ad_expr, theta_adj, cache_ad);
     }
     const double half_step = epsilon/2.;
     r += half_step * theta_adj;
@@ -63,7 +70,7 @@ double leapfrog(ADExprType& ad_expr,
     theta += epsilon * m_handler.dkinetic_dr(r);
 
     const double new_potential = 
-        -reset_autodiff(ad_expr, theta_adj);
+        -reset_autodiff(ad_expr, theta_adj, cache_ad);
     r += half_step * theta_adj;
 
     return new_potential;

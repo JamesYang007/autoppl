@@ -1,39 +1,44 @@
 #pragma once
-#include <algorithm>
 #include <type_traits>
-#include <functional>
-#include <fastad>
-#include <autoppl/util/var_traits.hpp>
-#include <autoppl/util/model_expr_traits.hpp>
-#include <autoppl/util/dist_expr_traits.hpp>
+#include <autoppl/util/traits/var_traits.hpp>
+#include <autoppl/util/traits/model_expr_traits.hpp>
+#include <autoppl/util/traits/dist_expr_traits.hpp>
+#include <autoppl/util/functional.hpp>
+
+#define PPL_VAR_DIST_CONT_DISC_MATCH \
+    "A continuous variable can only be assigned to a continuous distribution. " \
+    "A discrete variable can only be assigned to a discrete distribution. "
 
 namespace ppl {
 namespace expr {
 
 /**
- * This class represents a "node" in the model expression
- * that relates a var with a distribution.
+ * This class represents a node in the model expression
+ * that relates a variable with a distribution.
+ * It cannot relate a variable expression in general to a distribution.
  */
-#if __cplusplus <= 201703L
-template <class VarType, class DistType>
-#else
-template <util::var VarType, util::dist_expr DistType>
-#endif
-struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
+template <class VarType
+        , class DistType>
+struct EqNode: util::ModelExprBase<EqNode<VarType, DistType>>
 {
-
-#if __cplusplus <= 201703L
-    static_assert(util::assert_is_var_v<VarType>);
-    static_assert(util::assert_is_dist_expr_v<DistType>);
-#endif
-
     using var_t = VarType;
     using dist_t = DistType;
-    using dist_value_t = typename util::dist_expr_traits<dist_t>::dist_value_t;
 
-    EqNode(var_t& var, 
+    static_assert(util::is_var_v<var_t>);
+    static_assert(util::is_dist_expr_v<dist_t>);
+
+    static_assert((util::var_traits<var_t>::is_cont_v &&
+                   util::dist_expr_traits<dist_t>::is_cont_v) ||
+                  (util::var_traits<var_t>::is_disc_v &&
+                   util::dist_expr_traits<dist_t>::is_disc_v),
+                  PPL_VAR_DIST_CONT_DISC_MATCH);
+
+    using dist_value_t = typename
+        util::dist_expr_traits<dist_t>::dist_value_t;
+
+    EqNode(const var_t& var, 
            const dist_t& dist) noexcept
-        : orig_var_ref_{var}
+        : var_{var}
         , dist_{dist}
     {}
 
@@ -60,67 +65,40 @@ struct EqNode : util::ModelExpr<EqNode<VarType, DistType>>
      * Compute pdf of underlying distribution with underlying value.
      * Assumes that underlying value has been assigned properly.
      */
-    dist_value_t pdf() const {
-        return dist_.pdf(get_variable());
-    }
+    template <class PVecType
+            , class F = util::identity>
+    auto pdf(const PVecType& pvalues,
+             F f = F()) const 
+    { return dist_.pdf(get_variable(), pvalues, f); }
 
     /**
      * Compute log-pdf of underlying distribution with underlying value.
      * Assumes that underlying value has been assigned properly.
      */
-    dist_value_t log_pdf() const {
-        return dist_.log_pdf(get_variable());
-    }
+    template <class PVecType
+            , class F = util::identity>
+    auto log_pdf(const PVecType& pvalues,
+                 F f = F()) const 
+    { return dist_.log_pdf(get_variable(), pvalues, f); }
 
-    template <class VecRefType, class VecADVarType>
-    auto ad_log_pdf(const VecRefType& keys,
-                    const VecADVarType& vars) const
-    {
-        // if parameter, find the corresponding variable
-        // in vars and return the AD log-pdf with this variable.
-#if __cplusplus <= 201703L
-        if constexpr (util::is_param_v<var_t>) {
-#else
-        if constexpr (util::param<var_t>) {
-#endif
-            const void* addr = &orig_var_ref_.get();
-            auto it = std::find(keys.begin(), keys.end(), addr);
-            assert(it != keys.end());
-            size_t idx = std::distance(keys.begin(), it);
-            return dist_.ad_log_pdf(vars[idx], keys, vars);
-        } 
+    /**
+     * Generates AD expression for log pdf of underlying distribution.
+     * @param   map     mapping of variable IDs to offset in ad_vars
+     * @param   ad_vars container of AD variables that correspond to parameters.
+     */
+    template <class VecADVarType>
+    auto ad_log_pdf(const VecADVarType& ad_vars,
+                    const VecADVarType& cache) const
+    { return dist_.ad_log_pdf(get_variable(), ad_vars, cache); }
 
-        // if data, return sum of log_pdf where each element
-        // is a constant AD node containing each value of data.
-        // note: data is not copied at any point.
-#if __cplusplus <= 201703L
-        else if constexpr (util::is_data_v<var_t>) {
-#else
-        else if constexpr (util::data<var_t>) {
-#endif
-            const auto& var = this->get_variable();
-            size_t idx = 0;
-            const size_t size = var.size();
-            return ad::sum(var.begin(), var.end(), 
-                    [&, idx, size](auto value) mutable {
-                        idx = idx % size; // may be important since mutable
-                        auto&& expr = dist_.ad_log_pdf(
-                                ad::constant(value), keys, vars, idx);
-                        ++idx;
-                        return expr;
-                    });
-        }
-    }
-
-    auto& get_variable() { return orig_var_ref_.get(); }
-    const auto& get_variable() const { return orig_var_ref_.get(); }
-    const auto& get_distribution() const { return dist_; }
+    var_t& get_variable() { return var_; }
+    const var_t& get_variable() const { return var_; }
+    dist_t& get_distribution() { return dist_; }
+    const dist_t& get_distribution() const { return dist_; }
 
 private:
-    using var_ref_t = std::reference_wrapper<var_t>;    
-    var_ref_t orig_var_ref_;      // reference of the original var since 
-                                  // any configuration may be changed until right before update 
-    dist_t dist_;                 // distribution associated with var
+    var_t var_; 
+    dist_t dist_;
 };
 
 } // namespace expr

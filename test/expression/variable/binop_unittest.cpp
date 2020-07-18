@@ -2,7 +2,7 @@
 #include <array>
 #include "gtest/gtest.h"
 #include <autoppl/expression/variable/binop.hpp>
-#include <testutil/mock_types.hpp>
+#include <autoppl/util/traits/mock_types.hpp>
 
 namespace ppl {
 namespace expr {
@@ -14,20 +14,12 @@ namespace expr {
 struct binop_fixture : ::testing::Test
 {
 protected:
-	MockVarExpr x = 0;
-	MockVarExpr y = 0;
-
-	using binop_result_t = double;
-	
-	using binop_node_t = BinaryOpNode<MockBinaryOp, MockVarExpr, MockVarExpr>;
-	
-	void reconfigureX(double val)
-	{ x.set_value(val); }
-
-	void reconfigureY(double val)
-	{ y.set_value(val); }
-
+	using addop_node_t = BinaryOpNode<AddOp, MockVarExpr, MockVarExpr>;
 };
+
+//////////////////////////////////////////////////////
+// Functor TESTS
+//////////////////////////////////////////////////////
 
 TEST_F(binop_fixture, add)
 {
@@ -78,16 +70,34 @@ TEST_F(binop_fixture, div)
 	EXPECT_EQ(divInt, 4);
 }
 
-TEST_F(binop_fixture, binop_node)
+//////////////////////////////////////////////////////
+// Binop Node TESTS
+//////////////////////////////////////////////////////
+
+TEST_F(binop_fixture, binop_node_value)
 {
-	reconfigureX(3);
-	reconfigureY(4);
+    addop_node_t node(MockVarExpr(3), MockVarExpr(4));
+    // first parameter is always ignored
+    // second parameter is ignored because MockVarExprs are scalars
+	EXPECT_DOUBLE_EQ(node.value(0, 0), 7);
+	EXPECT_DOUBLE_EQ(node.value(0, 1), 7);
+}
 
-	binop_node_t addNode = {x, y};
-	double res = addNode.get_value(0);
+TEST_F(binop_fixture, binop_node_size)
+{
+    addop_node_t node(MockVarExpr(0), MockVarExpr(1));
+	EXPECT_EQ(node.size(), 1ul);
 
-	EXPECT_EQ(res, 7);
+    addop_node_t node2(MockVarExpr(3), MockVarExpr(1));
+	EXPECT_EQ(node2.size(), 3ul);
+}
 
+TEST_F(binop_fixture, binop_node_to_ad)
+{
+    addop_node_t node(MockVarExpr(2), MockVarExpr(4));
+    // all parameters are ignored in this case by MockVarExpr
+    auto expr = node.to_ad(0,0,0);
+	EXPECT_DOUBLE_EQ(ad::evaluate(expr), 6.0);
 }
 
 } // namespace expr

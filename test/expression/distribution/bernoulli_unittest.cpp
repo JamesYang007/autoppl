@@ -1,116 +1,178 @@
 #include "gtest/gtest.h"
-#include <cmath>
-#include <array>
+#include "dist_fixture_base.hpp"
 #include <autoppl/expression/distribution/bernoulli.hpp>
-#include <testutil/mock_types.hpp>
-#include <testutil/sample_tools.hpp>
+#include <autoppl/util/traits/mock_types.hpp>
 
 namespace ppl {
 namespace expr {
 
-struct bernoulli_fixture : ::testing::Test 
+struct bernoulli_fixture : 
+    dist_fixture_base<int>,
+    dist_fixture_base<double>,
+    ::testing::Test
 {
 protected:
-    using value_t = typename MockVarExpr::value_t;
-    static constexpr size_t sample_size = 1000;
-    double p = 0.6;
-    MockVarExpr x{p};
-    Bernoulli<MockVarExpr> bern = {x};
-    std::array<double, sample_size> sample = {0.};
+    using disc_base_t = dist_fixture_base<int>;
+    using cont_base_t = dist_fixture_base<double>;
+
+    using cont_base_t::offsets;
+    using cont_base_t::storage;
+    using cont_base_t::cache;
+    using cont_base_t::vec_size;
+
+    disc_base_t::value_t x_val_in = 0;
+    disc_base_t::value_t x_val_out = -1;
+    disc_base_t::vec_t x_vec_in = {0, 1, 1};
+
+    cont_base_t::value_t p_val = 0.6;
+    cont_base_t::vec_t p_vec = {0.1, 0.58, 0.99998};
+
+    bernoulli_fixture()
+    {
+        cache.resize(100); // obscene amount of cache
+    }
 };
 
 TEST_F(bernoulli_fixture, ctor)
 {
-#if __cplusplus <= 201703L
-    static_assert(util::assert_is_dist_expr_v<Bernoulli<MockVarExpr>>);
-#else
-    static_assert(util::dist_expr<Bernoulli<MockVarExpr>>);
-#endif
+    static_assert(util::is_dist_expr_v<Bernoulli<MockVarExpr>>);
 }
 
-TEST_F(bernoulli_fixture, bernoulli_check_params) {
-    EXPECT_DOUBLE_EQ(bern.p(), x.get_value(0));
-}
-
-TEST_F(bernoulli_fixture, bernoulli_pdf_in_range)
+TEST_F(bernoulli_fixture, pdf_in)
 {
-    EXPECT_DOUBLE_EQ(bern.pdf(0), 1-p);
-    EXPECT_DOUBLE_EQ(bern.pdf(1), p);
+    using bern_t = Bernoulli<cont_base_t::dv_scl_t>;
+    disc_base_t::dv_scl_t x(x_val_in);
+    cont_base_t::dv_scl_t p(p_val);
+    bern_t bern(p);
+    cont_base_t::vec_t pvalues;  // no parameter values
+    EXPECT_DOUBLE_EQ(bern.pdf(x, pvalues), 
+                     1-p_val);
 }
 
-TEST_F(bernoulli_fixture, bernoulli_pdf_out_of_range)
+TEST_F(bernoulli_fixture, pdf_out)
 {
-    EXPECT_DOUBLE_EQ(bern.pdf(-100), 0.);
-    EXPECT_DOUBLE_EQ(bern.pdf(-3), 0.);
-    EXPECT_DOUBLE_EQ(bern.pdf(-2), 0.);
-    EXPECT_DOUBLE_EQ(bern.pdf(2), 0.);
-    EXPECT_DOUBLE_EQ(bern.pdf(3), 0.);
-    EXPECT_DOUBLE_EQ(bern.pdf(5), 0.);
-    EXPECT_DOUBLE_EQ(bern.pdf(100), 0.);
+    using bern_t = Bernoulli<cont_base_t::dv_scl_t>;
+    disc_base_t::dv_scl_t x(x_val_out);
+    cont_base_t::dv_scl_t p(p_val);
+    bern_t bern(p);
+    cont_base_t::vec_t pvalues;  // no parameter values
+    EXPECT_DOUBLE_EQ(bern.pdf(x, pvalues), 
+                     0.);
 }
 
-TEST_F(bernoulli_fixture, bernoulli_pdf_always_tail)
+TEST_F(bernoulli_fixture, log_pdf_in)
 {
-    double p = 0.;
-    MockVarExpr x{p};
-    Bernoulli<MockVarExpr> bern = {x};
-    EXPECT_DOUBLE_EQ(bern.pdf(0), 1.);
-    EXPECT_DOUBLE_EQ(bern.pdf(1), 0.);
+    using bern_t = Bernoulli<cont_base_t::dv_scl_t>;
+    disc_base_t::dv_scl_t x(x_val_in);
+    cont_base_t::dv_scl_t p(p_val);
+    bern_t bern(p);
+    cont_base_t::vec_t pvalues;  // no parameter values
+    EXPECT_DOUBLE_EQ(bern.log_pdf(x, pvalues), 
+                     std::log(1-p_val));
 }
 
-TEST_F(bernoulli_fixture, bernoulli_pdf_always_head)
+TEST_F(bernoulli_fixture, log_pdf_out)
 {
-    double p = 1.;
-    MockVarExpr x{p};
-    Bernoulli<MockVarExpr> bern = {x};
-    EXPECT_DOUBLE_EQ(bern.pdf(0), 0.);
-    EXPECT_DOUBLE_EQ(bern.pdf(1), 1.);
+    using bern_t = Bernoulli<cont_base_t::dv_scl_t>;
+    disc_base_t::dv_scl_t x(x_val_out);
+    cont_base_t::dv_scl_t p(p_val);
+    bern_t bern(p);
+    cont_base_t::vec_t pvalues;  // no parameter values
+    EXPECT_DOUBLE_EQ(bern.log_pdf(x, pvalues), 
+                     math::neg_inf<cont_base_t::value_t>);
 }
 
-TEST_F(bernoulli_fixture, bernoulli_log_pdf_in_range)
+/////////////////////////////////////////////////////////////////
+// TEST ad_log_pdf
+/////////////////////////////////////////////////////////////////
+
+// Case 1
+TEST_F(bernoulli_fixture, ad_log_pdf_case1_in)
 {
-    EXPECT_DOUBLE_EQ(bern.log_pdf(0), std::log(1-p));
-    EXPECT_DOUBLE_EQ(bern.log_pdf(1), std::log(p));
+    using bern_t = Bernoulli<cont_base_t::pv_scl_t>;
+    disc_base_t::dv_scl_t x(x_val_in); 
+    cont_base_t::pv_scl_t p(offsets[0], storage[0]);
+
+    bern_t bern(p); 
+    bern.set_cache_offset(0);
+
+    offsets[0] = 0;
+
+    cont_base_t::ad_vec_t ad_vars(1);
+    ad_vars[0].set_value(p_val);
+
+    auto expr = bern.ad_log_pdf(x, ad_vars, cache);
+    EXPECT_DOUBLE_EQ(ad::evaluate(expr),
+                     std::log(1-p_val));
 }
 
-TEST_F(bernoulli_fixture, bernoulli_log_pdf_out_of_range)
+TEST_F(bernoulli_fixture, ad_log_pdf_case1_out)
 {
-    EXPECT_DOUBLE_EQ(bern.log_pdf(-100), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(bern.log_pdf(-3), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(bern.log_pdf(-1), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(bern.log_pdf(2), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(bern.log_pdf(3), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(bern.log_pdf(5), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(bern.log_pdf(100), std::numeric_limits<double>::lowest());
+    using bern_t = Bernoulli<cont_base_t::pv_scl_t>;
+    disc_base_t::dv_scl_t x(x_val_out); 
+    cont_base_t::pv_scl_t p(offsets[0], storage[0]);
+
+    bern_t bern(p); 
+    bern.set_cache_offset(0);
+
+    offsets[0] = 0;
+
+    cont_base_t::ad_vec_t ad_vars(1);
+    ad_vars[0].set_value(p_val);
+
+    auto expr = bern.ad_log_pdf(x, ad_vars, cache);
+    EXPECT_DOUBLE_EQ(ad::evaluate(expr),
+                     math::neg_inf<typename cont_base_t::value_t>);
 }
 
-TEST_F(bernoulli_fixture, bernoulli_log_pdf_always_tail)
+// Case 2: undefined behavior if x is not in the range
+TEST_F(bernoulli_fixture, ad_log_pdf_case2)
 {
-    double p = 0.;
-    MockVarExpr x{p};
-    Bernoulli<MockVarExpr> bern = {x};
-    EXPECT_DOUBLE_EQ(bern.log_pdf(0), 0.);
-    EXPECT_DOUBLE_EQ(bern.log_pdf(1), std::numeric_limits<double>::lowest());
+    using bern_t = Bernoulli<cont_base_t::pv_scl_t>;
+    disc_base_t::dv_vec_t x(x_vec_in); 
+    cont_base_t::pv_scl_t p(offsets[0], storage[0]);
+
+    bern_t bern(p); 
+    bern.set_cache_offset(0);
+
+    offsets[0] = 0;
+
+    cont_base_t::ad_vec_t ad_vars(1);
+    ad_vars[0].set_value(p_val);
+
+    auto expr = bern.ad_log_pdf(x, ad_vars, cache);
+    
+    EXPECT_DOUBLE_EQ(ad::evaluate(expr),
+                     2*std::log(p_val) + std::log(1-p_val));
 }
 
-TEST_F(bernoulli_fixture, bernoulli_log_pdf_always_head)
+// Case 3: undefined behavior if x is not in the range
+TEST_F(bernoulli_fixture, ad_log_pdf_case3)
 {
-    double p = 1.;
-    MockVarExpr x{p};
-    Bernoulli<MockVarExpr> bern = {x};
-    EXPECT_DOUBLE_EQ(bern.log_pdf(0), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(bern.log_pdf(1), 0.);
-}
+    using bern_t = Bernoulli<cont_base_t::pv_vec_t>;
+    disc_base_t::dv_vec_t x(x_vec_in); 
+    cont_base_t::pv_vec_t p(offsets[0], storage, vec_size);
 
-TEST_F(bernoulli_fixture, bernoulli_sample) {
-    std::random_device rd{};
-    std::mt19937 gen{rd()};
+    bern_t bern(p); 
+    bern.set_cache_offset(0);
 
-    for (size_t i = 0; i < sample_size; i++) {
-        sample[i] = bern.sample(gen);
+    offsets[0] = 0;
+
+    cont_base_t::ad_vec_t ad_vars(p.size());
+    for (size_t i = 0; i < ad_vars.size(); ++i) {
+        ad_vars[i].set_value(p_vec[i]);
+    } 
+
+    auto expr = bern.ad_log_pdf(x, ad_vars, cache);
+
+    double actual = 0;
+    for (size_t i = 0; i < p.size(); ++i) { 
+        if (x_vec_in[i] == 1) actual += std::log(p_vec[i]);
+        else actual += std::log(1-p_vec[i]);
     }
-
-    plot_hist(sample);
+    
+    EXPECT_DOUBLE_EQ(ad::evaluate(expr),
+                     actual);
 }
 
 } // namespace expr

@@ -7,8 +7,9 @@
 #include <sstream>
 #include <unordered_map>
 
-#include <autoppl/variable.hpp>
-#include <autoppl/expr_builder.hpp>
+#include <autoppl/expression/variable/data.hpp>
+#include <autoppl/expression/variable/param.hpp>
+#include <autoppl/expression/expr_builder.hpp>
 #include <autoppl/mcmc/hmc/nuts/nuts.hpp>
 
 #include "benchmark_utils.hpp"
@@ -23,7 +24,7 @@ static void BM_Regression(benchmark::State& state) {
 
     std::array<std::string, 4> headers = {"b", "x1", "x2", "x3"};
 
-    std::unordered_map<std::string, ppl::Data<double>> data;
+    std::unordered_map<std::string, ppl::Data<double, ppl::vec>> data;
     std::unordered_map<std::string, ppl::Param<double>> params;
     std::array<std::vector<double>, 4> storage;
 
@@ -37,17 +38,17 @@ static void BM_Regression(benchmark::State& state) {
         double x1 = n1(gen);
         double x2 = n2(gen);
         double x3 = n3(gen);
-        data[headers[1]].observe(x1);
-        data[headers[2]].observe(x2);
-        data[headers[3]].observe(x3);
-        data["y"].observe(x1 * 1.4 + x2 * 2. + x3 * 0.32 + eps(gen));
+        data[headers[1]].push_back(x1);
+        data[headers[2]].push_back(x2);
+        data[headers[3]].push_back(x3);
+        data["y"].push_back(x1 * 1.4 + x2 * 2. + x3 * 0.32 + eps(gen));
     }
 
     // resize each storage and bind with param
     int i = 0;
     for (auto it = headers.begin(); it != headers.end(); ++it, ++i) {
         storage[i].resize(num_samples);
-        params[*it].set_storage(storage[i].data());
+        params[*it].storage() = storage[i].data();
     }
 
     auto model = (params["b"] |= ppl::normal(0., 5.),

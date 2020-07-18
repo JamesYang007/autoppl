@@ -2,7 +2,7 @@
 #include <vector>
 #include <fastad>
 #include <armadillo>
-#include <testutil/mock_types.hpp>
+#include <autoppl/util/traits/mock_types.hpp>
 #include <autoppl/mcmc/hmc/leapfrog.hpp>
 #include <autoppl/mcmc/hmc/momentum_handler.hpp>
 #include <autoppl/mcmc/hmc/ad_utils.hpp>
@@ -18,8 +18,9 @@ struct leapfrog_fixture : ::testing::Test
 {
 protected:
     static constexpr size_t n_params = 3;
-    static constexpr size_t n_args = 3;
+    static constexpr size_t n_args = 4;
     std::vector<ad::Var<double>> v;
+    std::vector<ad::Var<double>> cache_ad; // not used, but API requires
 
     // create matrix to store theta, adjoints, and momentum
     arma::mat mat;
@@ -34,10 +35,11 @@ protected:
 
     leapfrog_fixture() 
         : v(n_params)
+        , cache_ad(0)
         , mat(n_params, n_args)
         , theta(mat.unsafe_col(0))
         , theta_adj(mat.unsafe_col(1))
-        , r(mat.unsafe_col(2))
+        , r(mat.unsafe_col(3))
     {
         // bind AD variables to theta and theta_adj
         ad_bind_storage(v, theta, theta_adj);
@@ -55,7 +57,8 @@ TEST_F(leapfrog_fixture, leapfrog_no_reuse_adj)
 {
     auto ad_expr = (v[0] * v[1] + v[2]);
     double ham = leapfrog(
-            ad_expr, theta, theta_adj, r, m_handler, epsilon, false);
+            ad_expr, theta, theta_adj, cache_ad,
+            r, m_handler, epsilon, false);
 
     EXPECT_DOUBLE_EQ(ham, -19.);
     EXPECT_DOUBLE_EQ(theta[0], 3.);
@@ -73,7 +76,8 @@ TEST_F(leapfrog_fixture, leapfrog_reuse_adj)
 {
     auto ad_expr = (v[0] * v[1] + v[2]);
     double ham = leapfrog(
-            ad_expr, theta, theta_adj, r, m_handler, epsilon, true);
+            ad_expr, theta, theta_adj, cache_ad,
+            r, m_handler, epsilon, true);
 
     EXPECT_DOUBLE_EQ(ham, -17.);
     EXPECT_DOUBLE_EQ(theta[0], 1.);

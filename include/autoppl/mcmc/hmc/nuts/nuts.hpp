@@ -1,19 +1,15 @@
 #pragma once
-#include <chrono>
-#include <cassert>
-#include <cmath>
-#include <stack>
-#include <optional>
 #include <type_traits>
 #include <iostream>
 #include <armadillo>
-#include <fastad>
-#include <autoppl/util/var_traits.hpp>
+#include <fastad_bits/node.hpp>
+#include <fastad_bits/eval.hpp>
+#include <autoppl/util/traits/var_traits.hpp>
 #include <autoppl/util/logging.hpp>
+#include <autoppl/util/time/stopwatch.hpp>
+#include <autoppl/expression/activate.hpp>
 #include <autoppl/mcmc/hmc/nuts/tree_utils.hpp>
-#include <autoppl/expression/model/glue_node.hpp>
-#include <autoppl/expression/model/eq_node.hpp>
-#include <autoppl/math/smoothers.hpp>
+#include <autoppl/math/math.hpp>
 #include <autoppl/mcmc/sampler_tools.hpp>
 #include <autoppl/mcmc/hmc/ad_utils.hpp>
 #include <autoppl/mcmc/hmc/leapfrog.hpp>
@@ -51,18 +47,17 @@ bool check_entropy(const MatType1& rho,
  *
  * Note that the caller MUST have input theta_adj already pre-computed.
  */
-template <size_t n_params
-        , class InputType
+template <class InputType
         , class UniformDistType
         , class GenType
         , class MomentumHandlerType
     >
-TreeOutput build_tree(InputType& input, 
+TreeOutput build_tree(size_t n_params, 
+                      InputType& input, 
                       uint8_t depth,
                       UniformDistType& unif_sampler,
                       GenType& gen,
-                      const MomentumHandlerType& momentum_handler
-                      )
+                      const MomentumHandlerType& momentum_handler)
 {
     constexpr double delta_max = 1000;  // suggested by Gelman
 
@@ -71,6 +66,7 @@ TreeOutput build_tree(InputType& input,
         double new_potential = leapfrog(input.ad_expr_ref.get(),
                                         input.theta_ref.get(),
                                         input.theta_adj_ref.get(),
+                                        input.cache_ad_ref.get(),
                                         input.p_most_ref.get(),
                                         momentum_handler,
                                         input.v * input.epsilon,
@@ -114,11 +110,11 @@ TreeOutput build_tree(InputType& input,
     }
 
     // recursion
-    arma::mat::fixed<n_params, 3> mat_first(arma::fill::zeros);
+    arma::mat mat_first(n_params, 3, arma::fill::zeros);
     auto p_end_inner = mat_first.col(0);
     auto p_end_scaled_inner = mat_first.col(1);
     auto rho_first = mat_first.col(2);
-    double log_sum_weight_first = -std::numeric_limits<double>::infinity();
+    double log_sum_weight_first = math::neg_inf<double>;
 
     // create a new input for first recursion
     // some references have to rebound
@@ -130,8 +126,8 @@ TreeOutput build_tree(InputType& input,
 
     // build first subtree
     TreeOutput first_output = 
-        build_tree<n_params>(first_input, depth - 1, 
-                             unif_sampler, gen, momentum_handler);
+        build_tree(n_params, first_input, depth - 1, 
+                   unif_sampler, gen, momentum_handler);
 
     // if first subtree is already invalid, early exit
     // note that caller will break out of doubling process now,
@@ -139,12 +135,12 @@ TreeOutput build_tree(InputType& input,
     if (!first_output.valid) { return first_output; }
 
     // second recursion
-    arma::mat::fixed<n_params, 4> mat_second(arma::fill::zeros);
+    arma::mat mat_second(n_params, 4, arma::fill::zeros);
     auto theta_double_prime = mat_second.col(0);
     auto p_beg_inner = mat_second.col(1);
     auto p_beg_scaled_inner = mat_second.col(2);
     auto rho_second = mat_second.col(3);
-    double log_sum_weight_second = -std::numeric_limits<double>::infinity();
+    double log_sum_weight_second = math::neg_inf<double>;
 
     // create a new input for second recursion
     InputType second_input = input;
@@ -156,8 +152,8 @@ TreeOutput build_tree(InputType& input,
 
     // build second subtree
     TreeOutput second_output = 
-        build_tree<n_params>(second_input, depth - 1, 
-                             unif_sampler, gen, momentum_handler);
+        build_tree(n_params, second_input, depth - 1, 
+                   unif_sampler, gen, momentum_handler);
 
     // if second subtree is invalid, early exit
     // note that we must return first output since it has the potential
@@ -211,27 +207,28 @@ TreeOutput build_tree(InputType& input,
  * Finds a reasonable epsilon for NUTS algorithm.
  * @param   ad_expr     AD expression bound to theta and theta_adj
  */
-template <size_t n_params
-        , class ADExprType
+template <class ADExprType
         , class MatType
+        , class ADVecType
         , class MomentumHandlerType>
 double find_reasonable_epsilon(double eps,
                                ADExprType& ad_expr,
                                MatType& theta,
                                MatType& theta_adj,
+                               ADVecType& cache_ad,
                                const MomentumHandlerType& momentum_handler)
 {
     // See (STAN) for reference: if epsilon is way out of bounds, just return eps
-    if (eps == 0 || eps > 1e7) return eps;
+    if (eps <= 0 || eps > 1e7) return eps;
 
     const double diff_bound = std::log(0.8);
 
-    arma::mat::fixed<n_params, 1> r_mat(arma::fill::zeros);
-    auto r = r_mat.col(0);
+    size_t n_params = theta.n_elem; // theta is expected to be vector-like
 
-    arma::mat::fixed<n_params, 2> theta_mat(arma::fill::zeros);
-    auto theta_orig = theta_mat.col(0);
-    auto theta_adj_orig = theta_mat.col(1);
+    arma::mat r_theta_mat(n_params, 3, arma::fill::zeros);
+    auto r = r_theta_mat.col(0);
+    auto theta_orig = r_theta_mat.col(1);
+    auto theta_adj_orig = r_theta_mat.col(2);
 
     // sample momentum vector based on handler
     momentum_handler.sample(r);
@@ -247,7 +244,8 @@ double find_reasonable_epsilon(double eps,
     
     // get current hamiltonian after leapfrog
     double potential_curr = leapfrog(
-            ad_expr, theta, theta_adj, r, momentum_handler, eps, true);
+            ad_expr, theta, theta_adj, cache_ad, 
+            r, momentum_handler, eps, true);
     double kinetic_curr = momentum_handler.kinetic(r);
     double ham_curr = hamiltonian(potential_curr, kinetic_curr);
 
@@ -275,7 +273,8 @@ double find_reasonable_epsilon(double eps,
 
         // leapfrog and compute current hamiltonian
         potential_curr = leapfrog(
-                ad_expr, theta, theta_adj, r, momentum_handler, eps, true);
+                ad_expr, theta, theta_adj, cache_ad,
+                r, momentum_handler, eps, true);
         kinetic_curr = momentum_handler.kinetic(r);
         ham_curr = hamiltonian(potential_curr, kinetic_curr);
 
@@ -295,10 +294,14 @@ double find_reasonable_epsilon(double eps,
  */
 template <class ModelType
         , class NUTSConfigType = NUTSConfig<>>
-void nuts(ModelType& model, NUTSConfigType config = NUTSConfigType())
+NUTSResult nuts(ModelType& model, 
+                NUTSConfigType config = NUTSConfigType())
 {
+    // activate model
+    size_t n_params = expr::activate(model);
+    size_t cache_size = expr::activate_cache(model);
+
     // initialization of meta-variables
-    constexpr size_t n_params = get_n_params_v<ModelType>;
     std::mt19937 gen(config.seed);
     std::uniform_int_distribution direction_sampler(0, 1);
     std::uniform_real_distribution unif_sampler(0., 1.);
@@ -310,7 +313,7 @@ void nuts(ModelType& model, NUTSConfigType config = NUTSConfigType())
     // right-subtree forwardmost momentum => ff
     // scaled versions are based on hamiltonian adjusted covariance matrix
     constexpr uint8_t n_p_cached = 8;
-    arma::mat::fixed<n_params, n_p_cached> p_mat(arma::fill::zeros);
+    arma::mat p_mat(n_params, n_p_cached, arma::fill::zeros);
     auto p_bb = p_mat.col(0);
     auto p_bb_scaled = p_mat.col(1);
     auto p_bf = p_mat.col(2);
@@ -322,7 +325,7 @@ void nuts(ModelType& model, NUTSConfigType config = NUTSConfigType())
 
     // position matrix for thetas and adjoints
     constexpr uint8_t n_thetas_cached = 7;
-    arma::mat::fixed<n_params, n_thetas_cached> theta_mat(arma::fill::zeros);
+    arma::mat theta_mat(n_params, n_thetas_cached, arma::fill::zeros);
     auto theta_bb = theta_mat.col(0);
     auto theta_bb_adj = theta_mat.col(1);
     auto theta_ff = theta_mat.col(2);
@@ -336,7 +339,7 @@ void nuts(ModelType& model, NUTSConfigType config = NUTSConfigType())
     // backward-subtree => rho_b
     // combined subtrees => rho
     constexpr uint8_t n_rho_cached = 3;
-    arma::mat::fixed<n_params, n_rho_cached> rho_mat(arma::fill::zeros);
+    arma::mat rho_mat(n_params, n_rho_cached, arma::fill::zeros);
     auto rho_f = rho_mat.col(0);
     auto rho_b = rho_mat.col(1);
     auto rho = rho_mat.col(2);
@@ -347,24 +350,20 @@ void nuts(ModelType& model, NUTSConfigType config = NUTSConfigType())
     std::vector<ad::Var<double>> theta_bb_ad(n_params);
     std::vector<ad::Var<double>> theta_ff_ad(n_params);
     std::vector<ad::Var<double>> theta_curr_ad(n_params);
+    std::vector<ad::Var<double>> cache_ad(cache_size);
     mcmc::ad_bind_storage(theta_bb_ad, theta_bb, theta_bb_adj);
     mcmc::ad_bind_storage(theta_ff_ad, theta_ff, theta_ff_adj);
     mcmc::ad_bind_storage(theta_curr_ad, theta_curr, theta_curr_adj);
 
-    // keys needed to construct a correct AD expression from model
-    // key: address of original variable tags
-    std::vector<const void*> keys;
-    mcmc::get_keys(model, keys);
-
     // AD Expressions for L(theta) (log-pdf up to constant at theta)
     // Note that these expressions are the only ones used ever.
-    auto theta_bb_ad_expr = model.ad_log_pdf(keys, theta_bb_ad);
-    auto theta_ff_ad_expr = model.ad_log_pdf(keys, theta_ff_ad);
-    auto theta_curr_ad_expr = model.ad_log_pdf(keys, theta_curr_ad);
+    auto theta_bb_ad_expr = model.ad_log_pdf(theta_bb_ad, cache_ad);
+    auto theta_ff_ad_expr = model.ad_log_pdf(theta_ff_ad, cache_ad);
+    auto theta_curr_ad_expr = model.ad_log_pdf(theta_curr_ad, cache_ad);
     
     // initializes first sample into theta_curr
     // TODO: allow users to choose how to initialize first point?
-    mcmc::init_sample(model, theta_curr, gen);
+    mcmc::init_params(model, gen, theta_curr);
 
     // initialize current potential (will be "previous" starting in for-loop)
     double potential_prev = -ad::evaluate(theta_curr_ad_expr);
@@ -376,10 +375,10 @@ void nuts(ModelType& model, NUTSConfigType config = NUTSConfigType())
 
     // initialize step adapter
     const double log_eps = std::log(
-        mcmc::find_reasonable_epsilon<n_params>(
+        mcmc::find_reasonable_epsilon(
             1., // initial epsilon
             theta_curr_ad_expr, theta_curr, 
-            theta_curr_adj, momentum_handler)); 
+            theta_curr_adj, cache_ad, momentum_handler)); 
     mcmc::StepAdapter step_adapter(log_eps);        // initialize step adapter with initial log-epsilon
     step_adapter.step_config = config.step_config;  // copy step configs from user
 
@@ -389,15 +388,28 @@ void nuts(ModelType& model, NUTSConfigType config = NUTSConfigType())
             config.var_config.term_buffer, config.var_config.window_base
             );
 
+    // construct miscellaneous  objects 
     auto logger = util::ProgressLogger(config.n_samples + config.warmup, "NUTS");
+    util::StopWatch<> stopwatch_warmup;
+    util::StopWatch<> stopwatch_sampling;
+
+    // start timing warmup
+    stopwatch_warmup.start();
 
     for (size_t i = 0; i < config.n_samples + config.warmup; ++i) {
+
+        // if warmup is finished, stop timing warmup and start timing sampling
+        if (i == config.warmup) {
+            stopwatch_warmup.stop();
+            stopwatch_sampling.start();
+        }
+
         logger.printProgress(i);
 
         // re-initialize vectors to current theta as the "root" of tree
         theta_bb = theta_curr;
         theta_ff = theta_bb;
-        mcmc::reset_autodiff(theta_bb_ad_expr, theta_bb_adj); 
+        mcmc::reset_autodiff(theta_bb_ad_expr, theta_bb_adj, cache_ad); 
         theta_ff_adj = theta_bb_adj;   // no need to differentiate again
 
         // initialize values for multinomial sampling
@@ -432,18 +444,17 @@ void nuts(ModelType& model, NUTSConfigType config = NUTSConfigType())
 
         for (size_t depth = 0; depth < config.max_depth; ++depth) {
 
-            // TODO: optimization with rho's and copying
             // zero-out subtree integrated momentum vectors
             rho_b.zeros();
             rho_f.zeros();
 
-            double log_sum_weight_subtree = std::numeric_limits<double>::lowest();
+            double log_sum_weight_subtree = math::neg_inf<double>;
             
             int8_t v = 2 * direction_sampler(gen) - 1; // -1 or 1
             if (v == -1) {
                 auto input = mcmc::TreeInput(
                     // position information to update
-                    theta_bb_ad_expr, theta_bb, theta_bb_adj, 
+                    theta_bb_ad_expr, theta_bb, theta_bb_adj, cache_ad,
                     theta_prime, p_bb,
                     // momentum vectors to update
                     p_bf, p_bb, p_bf_scaled, p_bb_scaled, rho_b,
@@ -453,16 +464,15 @@ void nuts(ModelType& model, NUTSConfigType config = NUTSConfigType())
                     v, std::exp(step_adapter.log_eps), ham_prev
                 );
                 rho_f = rho;
-                // TODO: optimization to avoid these copies
                 p_fb = p_bb;
                 p_fb_scaled = p_bb_scaled;
 
-                output = mcmc::build_tree<n_params>(input, depth, 
-                                           unif_sampler, gen, momentum_handler);
+                output = mcmc::build_tree(n_params, input, depth, 
+                                          unif_sampler, gen, momentum_handler);
             } else {
                 auto input = mcmc::TreeInput(
                     // correct position information to update
-                    theta_ff_ad_expr, theta_ff, theta_ff_adj, 
+                    theta_ff_ad_expr, theta_ff, theta_ff_adj, cache_ad,
                     theta_prime, p_ff,
                     // correct momentum vectors to update
                     p_fb, p_ff, p_fb_scaled, p_ff_scaled, rho_f,
@@ -475,8 +485,8 @@ void nuts(ModelType& model, NUTSConfigType config = NUTSConfigType())
                 p_bf = p_ff;
                 p_bf_scaled = p_ff_scaled;
 
-                output = mcmc::build_tree<n_params>(input, depth, 
-                                           unif_sampler, gen, momentum_handler);
+                output = mcmc::build_tree(n_params, input, depth, 
+                                          unif_sampler, gen, momentum_handler);
             }
 
             // early break if starting to U-Turn
@@ -528,10 +538,10 @@ void nuts(ModelType& model, NUTSConfigType config = NUTSConfigType())
                           std::is_same_v<var_adapter_policy_t, dense_var>) {
                 const bool update = var_adapter.adapt(theta_curr, momentum_handler.get_m_inverse());
                 if (update) {
-                    double log_eps = std::log(mcmc::find_reasonable_epsilon<n_params>(
+                    double log_eps = std::log( mcmc::find_reasonable_epsilon(
                                         std::exp(step_adapter.log_eps),
                                         theta_curr_ad_expr, theta_curr, 
-                                        theta_curr_adj, momentum_handler)); 
+                                        theta_curr_adj, cache_ad, momentum_handler) ); 
                     step_adapter.reset();
                     step_adapter.init(log_eps);
                 }
@@ -550,7 +560,18 @@ void nuts(ModelType& model, NUTSConfigType config = NUTSConfigType())
 
     } // end for-loop to sample 1 point
 
+    // stop timing sampling
+    stopwatch_sampling.stop();
+
+    // end progress bar with a newline
     std::cout << std::endl;
+
+    // create output object and return
+    NUTSResult res;
+    res.warmup_time = stopwatch_warmup.elapsed();
+    res.sampling_time = stopwatch_sampling.elapsed();
+
+    return res;
 }
 
 } // namespace ppl

@@ -1,6 +1,6 @@
 #include "gtest/gtest.h" 
 #include <array>
-#include <autoppl/expr_builder.hpp>
+#include <autoppl/expression/expr_builder.hpp>
 #include <autoppl/mcmc/hmc/nuts/nuts.hpp>
 #include <testutil/sample_tools.hpp>
 #include <fastad>
@@ -112,6 +112,7 @@ protected:
     using ad_vec_t = std::vector<ad::Var<double>>;
     size_t n_params = 3;
     ad_vec_t ad_vars;
+    ad_vec_t cache_ad;
     arma::mat data;
 
     using subview_t = std::decay_t<decltype(data.col(0))>;
@@ -135,6 +136,7 @@ protected:
 
     nuts_build_tree_fixture()
         : ad_vars(3)
+        , cache_ad(0) // not used in this fixture (only for API)
         , data(n_params, 6)
         , theta(data.col(0))
         , theta_adj(data.col(1))
@@ -164,7 +166,8 @@ TEST_F(nuts_build_tree_fixture, find_reasonable_log_epsilon)
                     ad_vars[1] * ad_vars[1] +
                     ad_vars[2] * ad_vars[2]
                    ) ;
-    double eps = mcmc::find_reasonable_epsilon<3>(1., ad_expr, theta, theta_adj, m_handler);
+    double eps = mcmc::find_reasonable_epsilon(
+            1., ad_expr, theta, theta_adj, cache_ad, m_handler);
     static_cast<void>(eps);
 }
 
@@ -172,12 +175,16 @@ struct nuts_fixture : nuts_tools_fixture
 {
 protected:
     size_t n_samples = 5000;
-    std::vector<double> w_storage, b_storage;
-    Param<double> w, b;
-    ppl::Data<double> x {2.5, 3, 3.5, 4, 4.5, 5.};
-    ppl::Data<double> y {3.5, 4, 4.5, 5, 5.5, 6.};
-    ppl::Data<double> q{2.4, 3.1, 3.6, 4, 4.5, 5.};
-    ppl::Data<double> r{3.5, 4, 4.4, 5.01, 5.46, 6.1};
+    using value_t = double;
+    using p_scl_t = ppl::Param<value_t>;
+    using p_vec_t = ppl::Param<value_t, ppl::vec>;
+    using d_vec_t = ppl::Data<value_t, ppl::vec>;
+    std::vector<value_t> w_storage, b_storage;
+    p_scl_t w, b;
+    d_vec_t x {2.5, 3, 3.5, 4, 4.5, 5.};
+    d_vec_t y {3.5, 4, 4.5, 5, 5.5, 6.};
+    d_vec_t q{2.4, 3.1, 3.6, 4, 4.5, 5.};
+    d_vec_t r{3.5, 4, 4.4, 5.01, 5.46, 6.1};
     NUTSConfig<> config;
 
     nuts_fixture()
@@ -188,15 +195,15 @@ protected:
     {
         config.n_samples = n_samples;
         config.warmup = n_samples;
-        config.seed = 1;
+        config.seed = 0;
     }
 
     void reconfigure(size_t n)
     {
         w_storage.resize(n);
         b_storage.resize(n);
-        w.set_storage(w_storage.data());
-        b.set_storage(b_storage.data());
+        w.storage() = w_storage.data();
+        b.storage() = b_storage.data();
     }
 };
 
@@ -205,11 +212,11 @@ TEST_F(nuts_fixture, nuts_std_normal)
     auto model = (
         w |= normal(0., 1.)
     );
-
+    
     nuts(model, config);
 
     plot_hist(w_storage);
-    EXPECT_NEAR(sample_average(w_storage), 0., 0.1);
+    EXPECT_NEAR(sample_average(w_storage), 0., 0.05);
 }
 
 TEST_F(nuts_fixture, nuts_uniform)
@@ -221,7 +228,7 @@ TEST_F(nuts_fixture, nuts_uniform)
     nuts(model, config);
 
     plot_hist(w_storage, 0.1);
-    EXPECT_NEAR(sample_average(w_storage), 0.5, 0.1);
+    EXPECT_NEAR(sample_average(w_storage), 0.5, 0.01);
 }
 
 TEST_F(nuts_fixture, nuts_sample_unif_normal_posterior_stddev)
@@ -233,7 +240,7 @@ TEST_F(nuts_fixture, nuts_sample_unif_normal_posterior_stddev)
     );
     nuts(model, config);
     plot_hist(w_storage, 0.2);
-    EXPECT_NEAR(sample_average(w_storage), 3.27226, 0.1);
+    EXPECT_NEAR(sample_average(w_storage), 3.27226, 0.05);
 }
 
 TEST_F(nuts_fixture, nuts_sample_normal_stddev)
@@ -259,7 +266,7 @@ TEST_F(nuts_fixture, nuts_sample_unif_normal_posterior_mean)
     );
     nuts(model, config);
     plot_hist(w_storage); 
-    EXPECT_NEAR(sample_average(w_storage), 3.0, 0.1);
+    EXPECT_NEAR(sample_average(w_storage), 3.0, 0.03);
 }
 
 TEST_F(nuts_fixture, nuts_sample_regression_dist_weight) 
@@ -271,7 +278,7 @@ TEST_F(nuts_fixture, nuts_sample_regression_dist_weight)
     nuts(model, config);
 
     plot_hist(w_storage, 0.1);
-    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
+    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.05);
 }
 
 TEST_F(nuts_fixture, nuts_sample_regression_dist_weight_bias) 
@@ -285,8 +292,8 @@ TEST_F(nuts_fixture, nuts_sample_regression_dist_weight_bias)
 
     plot_hist(w_storage, 0.1);
     plot_hist(b_storage);
-    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
-    EXPECT_NEAR(sample_average(b_storage), 1.0, 0.3);
+    EXPECT_NEAR(sample_average(w_storage), 1.0319, 0.05);
+    EXPECT_NEAR(sample_average(b_storage), 0.8712, 0.05);
 }
 
 TEST_F(nuts_fixture, nuts_sample_regression_dist_uniform) {
@@ -300,8 +307,8 @@ TEST_F(nuts_fixture, nuts_sample_regression_dist_uniform) {
     plot_hist(w_storage, 0.2, 0., 2.);
     plot_hist(b_storage, 0.2, 0., 2.);
 
-    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
-    EXPECT_NEAR(sample_average(b_storage), 1.0, 0.1);
+    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.05);
+    EXPECT_NEAR(sample_average(b_storage), 1.0, 0.05);
 }
 
 TEST_F(nuts_fixture, nuts_sample_regression_fuzzy_uniform) {
@@ -314,8 +321,117 @@ TEST_F(nuts_fixture, nuts_sample_regression_fuzzy_uniform) {
     plot_hist(w_storage, 0.2, 0., 1.);
     plot_hist(b_storage, 0.2, 0., 1.);
 
-    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
-    EXPECT_NEAR(sample_average(b_storage), 0.95, 0.1);
+    EXPECT_NEAR(sample_average(w_storage), 1.0013, 0.05);
+    EXPECT_NEAR(sample_average(b_storage), 0.9756, 0.05);
+}
+
+TEST_F(nuts_fixture, nuts_sample_regression_no_dot) {
+    arma::vec x_vec(3,arma::fill::zeros);
+    x_vec(0) = 1.;
+    x_vec(1) = -1.;
+    x_vec(2) = 0.5;
+
+    arma::vec y_vec(3, arma::fill::zeros);
+    y_vec(0) = 2.;
+    y_vec(1) = -0.13;
+    y_vec(2) = 1.32;
+
+    auto x = make_data_view<ppl::vec>(x_vec);
+    auto y = make_data_view<ppl::vec>(y_vec);
+    p_scl_t w;
+
+    w.storage() = w_storage.data();
+
+    auto model = (w |= uniform(0., 2.),
+                  b |= uniform(0., 2.),
+                  y |= normal(x*w + b, 0.5)
+    );
+
+    nuts(model, config);
+
+    plot_hist(w_storage, 0.2, 0., 2.);
+    plot_hist(b_storage, 0.2, 0., 2.);
+
+    EXPECT_NEAR(sample_average(w_storage), 1.04, 0.05);
+    EXPECT_NEAR(sample_average(b_storage), 0.89, 0.05);
+}
+
+TEST_F(nuts_fixture, nuts_sample_regression_dot) {
+    arma::mat x_mat(3,1,arma::fill::zeros);
+    x_mat(0,0) = 1.;
+    x_mat(1,0) = -1.;
+    x_mat(2,0) = 0.5;
+
+    arma::vec y_vec(3, arma::fill::zeros);
+    y_vec(0) = 2.;
+    y_vec(1) = -0.13;
+    y_vec(2) = 1.32;
+
+    auto x = make_data_view<ppl::mat>(x_mat);
+    auto y = make_data_view<ppl::vec>(y_vec);
+    p_vec_t w(1);
+
+    w.storage(0) = w_storage.data();
+
+    auto model = (w |= uniform(0., 2.),
+                  b |= uniform(0., 2.),
+                  y |= normal(ppl::dot(x, w) + b, 0.5)
+    );
+
+    nuts(model, config);
+
+    plot_hist(w_storage, 0.2, 0., 2.);
+    plot_hist(b_storage, 0.2, 0., 2.);
+
+    EXPECT_NEAR(sample_average(w_storage), 1.0407, 0.05);
+    EXPECT_NEAR(sample_average(b_storage), 0.8909, 0.05);
+}
+
+TEST_F(nuts_fixture, nuts_coin_flip) {
+    std::vector<int> x_data({0, 1, 1});
+    auto x = make_data_view<ppl::vec>(x_data);    
+    p_scl_t p;
+    p.storage() = w_storage.data();
+
+    auto model = (p |= uniform(0., 1.),
+                  x |= bernoulli(p)
+    );
+
+    nuts(model, config);
+
+    plot_hist(w_storage, 0.1, 0., 1.);
+
+    EXPECT_NEAR(sample_average(w_storage), 0.6, 0.01);
+}
+
+TEST_F(nuts_fixture, nuts_mean_vec_stddev_vec) {
+    d_vec_t x {2.5, 3};
+    d_vec_t y {3.5, 4};
+    p_vec_t s(y.size());
+
+    std::vector<value_t> s1_storage(n_samples);
+    std::vector<value_t> s2_storage(n_samples);
+
+    s.storage(0) = s1_storage.data();
+    s.storage(1) = s2_storage.data();
+
+    auto model = (s |= uniform(0.5, 5.),
+                  w |= uniform(0., 2.),
+                  b |= uniform(0., 2.),
+                  y |= normal(x * w + b, s)
+    );
+
+    nuts(model, config);
+
+    plot_hist(w_storage, 0.2, 0., 2.);
+    plot_hist(b_storage, 0.2, 0., 2.);
+    plot_hist(s1_storage, 0.25, 0.5, 5.);
+    plot_hist(s2_storage, 0.25, 0.5, 5.);
+
+    EXPECT_NEAR(sample_average(w_storage), 1.0, 0.25);
+    EXPECT_NEAR(sample_average(b_storage), 1.0, 0.25);
+    EXPECT_NEAR(sample_average(s1_storage), 2.23439659, 0.25);
+    EXPECT_NEAR(sample_average(s2_storage), 2.30538608, 0.25);
 }
 
 } // namespace ppl

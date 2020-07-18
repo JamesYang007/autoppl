@@ -47,8 +47,11 @@ struct VarAdapter<unit_var>
 };
 
 /**
- * Diagonal variance matrix M is estimated for momentum covariance matrix.
+ * Diagonal precision matrix M is estimated for momentum covariance matrix.
  * M inverse is estimated as sample variance and is regularized towards identity.
+ *
+ * Follows STAN guide: https://mc-stan.org/docs/2_18/reference-manual/hmc-algorithm-parameters.html
+ * STAN implementation: https://github.com/stan-dev/stan/blob/develop/src/stan/mcmc/windowed_adaptation.hpp
  */
 template <>
 struct VarAdapter<diag_var>

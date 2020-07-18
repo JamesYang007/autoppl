@@ -1,93 +1,308 @@
 #include "gtest/gtest.h"
-#include <cmath>
-#include <array>
+#include "dist_fixture_base.hpp"
 #include <autoppl/expression/distribution/uniform.hpp>
-#include <testutil/mock_types.hpp>
-#include <testutil/sample_tools.hpp>
+#include <autoppl/util/traits/mock_types.hpp>
 
 namespace ppl {
 namespace expr {
 
-struct uniform_fixture : ::testing::Test {
+struct uniform_fixture: 
+    dist_fixture_base<double>,
+    ::testing::Test 
+{
 protected:
-    using value_t = typename MockVarExpr::value_t;
-    static constexpr size_t sample_size = 1000;
-    double min = -2.3;
-    double max = 2.7;
-    MockVarExpr x{min};
-    MockVarExpr y{max};
-    using unif_t = Uniform<MockVarExpr, MockVarExpr>;
-    unif_t unif = {x, y};
-    std::array<double, sample_size> sample = {0.};
+    // vectors must be size 3 for consistency in this fixture
+    value_t x_val_in = 0.;
+    value_t x_val_out = -1.;
+    vec_t x_vec_in = {0., 0.3, 1.1};
+    vec_t x_vec_out = {0., 1., 2.}; // last number is changed to be at the edge of range
+    value_t min_val = -1.;
+    vec_t min_vec = {-1., 0., 1.};
+    value_t max_val = 2.;
+    vec_t max_vec = {1., 2., 3.};
+
+    uniform_fixture()
+    {
+        this->cache.resize(100); // obscene amount of cache
+    }
 };
 
-TEST_F(uniform_fixture, ctor)
+TEST_F(uniform_fixture, type_check)
 {
-#if __cplusplus <= 201703L
-    static_assert(util::assert_is_dist_expr_v<unif_t>);
-#else
-    static_assert(util::dist_expr<unif_t>);
-#endif
+    using unif_scl_t = Uniform<MockVarExpr, MockVarExpr>;
+    static_assert(util::is_dist_expr_v<unif_scl_t>);
 }
 
-TEST_F(uniform_fixture, uniform_check_params) {
-    EXPECT_DOUBLE_EQ(unif.min(), x.get_value(0));
-    EXPECT_DOUBLE_EQ(unif.max(), y.get_value(0));
-}
+////////////////////////////////////////////////////////////
+// PDF TEST
+////////////////////////////////////////////////////////////
 
-TEST_F(uniform_fixture, uniform_pdf_in_range)
+TEST_F(uniform_fixture, pdf_in_scl)
 {
-    EXPECT_DOUBLE_EQ(unif.pdf(-2.2999999999), 0.2);
-    EXPECT_DOUBLE_EQ(unif.pdf(-2.), 0.2);
-    EXPECT_DOUBLE_EQ(unif.pdf(-1.423), 0.2);
-    EXPECT_DOUBLE_EQ(unif.pdf(0.), 0.2);
-    EXPECT_DOUBLE_EQ(unif.pdf(1.31), 0.2);
-    EXPECT_DOUBLE_EQ(unif.pdf(2.41), 0.2);
-    EXPECT_DOUBLE_EQ(unif.pdf(2.69999999999), 0.2);
+    using unif_t = Uniform<dv_scl_t, dv_scl_t>;
+    dv_scl_t x(x_val_in);
+    dv_scl_t min(min_val);
+    dv_scl_t max(max_val);
+    unif_t unif(min, max);
+    vec_t pvalues;  // no parameter values
+    EXPECT_DOUBLE_EQ(unif.pdf(x, pvalues), 
+                     1./3);
 }
 
-TEST_F(uniform_fixture, uniform_pdf_out_of_range)
+TEST_F(uniform_fixture, pdf_in_vec)
 {
-    EXPECT_DOUBLE_EQ(unif.pdf(-100), 0.);
-    EXPECT_DOUBLE_EQ(unif.pdf(-3.41), 0.);
-    EXPECT_DOUBLE_EQ(unif.pdf(-2.3), 0.);
-    EXPECT_DOUBLE_EQ(unif.pdf(2.7), 0.);
-    EXPECT_DOUBLE_EQ(unif.pdf(3.5), 0.);
-    EXPECT_DOUBLE_EQ(unif.pdf(3214), 0.);
+    using unif_t = Uniform<dv_vec_t, dv_vec_t>;
+    dv_vec_t x(x_vec_in);
+    dv_vec_t min(min_vec);
+    dv_vec_t max(max_vec);
+    unif_t unif(min, max);
+    vec_t pvalues;  // no parameter values
+    EXPECT_DOUBLE_EQ(unif.pdf(x, pvalues), 
+                     0.125);
 }
 
-TEST_F(uniform_fixture, uniform_log_pdf_in_range)
+TEST_F(uniform_fixture, pdf_in_scl_vec)
 {
-    EXPECT_DOUBLE_EQ(unif.log_pdf(-2.2999999999), std::log(0.2));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(-2.), std::log(0.2));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(-1.423), std::log(0.2));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(0.), std::log(0.2));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(1.31), std::log(0.2));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(2.41), std::log(0.2));
-    EXPECT_DOUBLE_EQ(unif.log_pdf(2.69999999999), std::log(0.2));
+    using unif_t = Uniform<dv_scl_t, dv_vec_t>;
+    dv_vec_t x(x_vec_in);
+    dv_scl_t min(min_val);
+    dv_vec_t max(max_vec);
+    unif_t unif(min, max);
+    vec_t pvalues;  // no parameter values
+    EXPECT_DOUBLE_EQ(unif.pdf(x, pvalues), 
+                     0.5 * 1./3 * 0.25);
 }
 
-TEST_F(uniform_fixture, uniform_log_pdf_out_of_range)
+TEST_F(uniform_fixture, pdf_out)
 {
-    EXPECT_DOUBLE_EQ(unif.log_pdf(-100), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(unif.log_pdf(-3.41), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(unif.log_pdf(-2.3), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(unif.log_pdf(2.7), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(unif.log_pdf(3.5), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(unif.log_pdf(3214), std::numeric_limits<double>::lowest());
+    using unif_t = Uniform<dv_scl_t, dv_scl_t>;
+    dv_scl_t x(x_val_out);
+    dv_scl_t min(min_val);
+    dv_scl_t max(max_val);
+    unif_t unif(min, max);
+    vec_t pvalues;  // no parameter values
+    EXPECT_DOUBLE_EQ(unif.pdf(x, pvalues), 
+                     0.0);
 }
 
-TEST_F(uniform_fixture, uniform_sample) {
-    std::random_device rd{};
-    std::mt19937 gen{rd()};
+////////////////////////////////////////////////////////////
+// Log-PDF TEST
+////////////////////////////////////////////////////////////
 
-    for (size_t i = 0; i < sample_size; i++) {
-        sample[i] = unif.sample(gen);
-        EXPECT_GT(sample[i], min);
-        EXPECT_LT(sample[i], max);
+TEST_F(uniform_fixture, log_pdf_in)
+{
+    using unif_t = Uniform<dv_scl_t, dv_scl_t>;
+    dv_scl_t x(x_val_in);
+    dv_scl_t min(min_val);
+    dv_scl_t max(max_val);
+    unif_t unif(min, max);
+    vec_t pvalues;  // no parameter values
+    EXPECT_DOUBLE_EQ(unif.log_pdf(x, pvalues), 
+                     -std::log(3.));
+}
+
+TEST_F(uniform_fixture, log_pdf_in_scl_vec)
+{
+    using unif_t = Uniform<dv_scl_t, dv_vec_t>;
+    dv_vec_t x(x_vec_in);
+    dv_scl_t min(min_val);
+    dv_vec_t max(max_vec);
+    unif_t unif(min, max);
+    vec_t pvalues;  // no parameter values
+    EXPECT_DOUBLE_EQ(unif.log_pdf(x, pvalues), 
+                     std::log(0.5 * 1./3 * 0.25));
+}
+
+
+TEST_F(uniform_fixture, log_pdf_out)
+{
+    using unif_t = Uniform<dv_scl_t, dv_scl_t>;
+    dv_scl_t x(x_val_out);
+    dv_scl_t min(min_val);
+    dv_scl_t max(max_val);
+    unif_t unif(min, max);
+    vec_t pvalues;  // no parameter values
+    EXPECT_DOUBLE_EQ(unif.log_pdf(x, pvalues), 
+                     math::neg_inf<value_t>);
+}
+
+////////////////////////////////////////////////////////////
+// ad_log_pdf TEST
+////////////////////////////////////////////////////////////
+
+// Case 1:
+TEST_F(uniform_fixture, ad_log_pdf_case1) 
+{
+    using unif_t = Uniform<pv_scl_t, pv_scl_t>;
+
+    // storage is ignored for now
+    pv_scl_t x(offsets[0], storage[0]);
+    pv_scl_t min(offsets[1], storage[1]);
+    pv_scl_t max(offsets[2], storage[2]);
+    unif_t unif(min, max);
+
+    unif.set_cache_offset(0);
+
+    offsets[0] = 0;
+    offsets[1] = 1;
+    offsets[2] = 2;
+
+    ad_vec_t ad_vars(3);
+    ad_vars[0].set_value(x_val_in);
+    ad_vars[1].set_value(min_val);
+    ad_vars[2].set_value(max_val);
+
+    auto expr = unif.ad_log_pdf(x, ad_vars, cache);
+    EXPECT_DOUBLE_EQ(ad::evaluate(expr),
+                     -std::log(max_val - min_val));
+}
+
+// Case 2, Subcase 1:
+TEST_F(uniform_fixture, ad_log_pdf_case21) 
+{
+    using unif_t = Uniform<dv_scl_t, dv_scl_t>;
+    dv_vec_t x(x_vec_in);
+    dv_scl_t min(min_val);
+    dv_scl_t max(max_val);
+    unif_t unif(min, max);
+
+    unif.set_cache_offset(0);
+
+    ad_vec_t ad_vars;
+
+    auto expr = unif.ad_log_pdf(x, ad_vars, cache);
+    EXPECT_DOUBLE_EQ(ad::evaluate(expr),
+                     -std::log(27.));
+}
+
+// Case 2, Subcase 2:
+TEST_F(uniform_fixture, ad_log_pdf_case22) 
+{
+    using unif_t = Uniform<dv_scl_t, dv_scl_t>;
+    pv_vec_t x(offsets[0], storage, vec_size);
+    dv_scl_t min(min_val);
+    dv_scl_t max(max_val);
+    unif_t unif(min, max);
+
+    unif.set_cache_offset(0);
+
+    offsets[0] = 0;
+
+    ad_vec_t ad_vars(vec_size);
+    std::for_each(util::counting_iterator<>(0),
+                  util::counting_iterator<>(vec_size),
+                  [&](size_t i) { ad_vars[i].set_value(x_vec_in[i]); });
+
+    auto expr = unif.ad_log_pdf(x, ad_vars, cache);
+    EXPECT_DOUBLE_EQ(ad::evaluate(expr),
+                     -std::log(27.));
+}
+
+// Case 3:
+TEST_F(uniform_fixture, ad_log_pdf_case3) 
+{
+    using unif_t = Uniform<pv_vec_t, pv_scl_t>;
+
+    // storage is ignored for now
+    pv_vec_t x(offsets[0], storage, vec_size);
+    pv_vec_t min(offsets[1], storage, vec_size);
+    pv_scl_t max(offsets[2], storage[0]);
+    unif_t unif(min, max);
+
+    unif.set_cache_offset(0);
+
+    offsets[0] = 0;
+    offsets[1] = vec_size;
+    offsets[2] = 2*vec_size;
+
+    ad_vec_t ad_vars(vec_size * 2 + 1);
+    ad_vars[2*vec_size].set_value(max_val);
+
+    std::for_each(util::counting_iterator<>(0),
+                  util::counting_iterator<>(vec_size),
+                  [&](size_t i) { 
+                    ad_vars[i].set_value(x_vec_in[i]); 
+                    ad_vars[i+vec_size].set_value(min_vec[i]); 
+                });
+
+    double actual = 0;
+    for (auto m : min_vec) {
+        actual -= std::log(max_val - m);
     }
 
-    plot_hist(sample, 0.5, min, max);
+    auto expr = unif.ad_log_pdf(x, ad_vars, cache);
+    EXPECT_DOUBLE_EQ(ad::evaluate(expr),
+                     actual);
+}
+
+// Case 4:
+TEST_F(uniform_fixture, ad_log_pdf_case4) 
+{
+    using unif_t = Uniform<dv_scl_t, pv_vec_t>;
+
+    // storage is ignored for now
+    pv_vec_t x(offsets[0], storage, vec_size);
+    dv_scl_t min(min_val);
+    pv_vec_t max(offsets[1], storage, vec_size);
+    unif_t unif(min, max);
+
+    unif.set_cache_offset(0);
+
+    offsets[0] = 0;
+    offsets[1] = vec_size;
+
+    ad_vec_t ad_vars(vec_size * 2);
+    std::for_each(util::counting_iterator<>(0),
+                  util::counting_iterator<>(vec_size),
+                  [&](size_t i) { 
+                    ad_vars[i].set_value(x_vec_in[i]); 
+                    ad_vars[i+vec_size].set_value(max_vec[i]); 
+                });
+
+    double actual = 0;
+    for (auto m : max_vec) {
+        actual -= std::log(m - min_val);
+    }
+
+    auto expr = unif.ad_log_pdf(x, ad_vars, cache);
+    EXPECT_DOUBLE_EQ(ad::evaluate(expr),
+                     actual);
+}
+
+// Case 5:
+TEST_F(uniform_fixture, ad_log_pdf_case5)
+{
+    using unif_t = Uniform<pv_vec_t, pv_vec_t>;
+
+    // storage is ignored for now
+    pv_vec_t x(offsets[0], storage, vec_size);
+    pv_vec_t min(offsets[1], storage, vec_size);
+    pv_vec_t max(offsets[2], storage, vec_size);
+    unif_t unif(min, max);
+
+    unif.set_cache_offset(0);
+
+    offsets[0] = 0;
+    offsets[1] = vec_size;
+    offsets[2] = vec_size * 2;
+
+    ad_vec_t ad_vars(vec_size * 3);
+    std::for_each(util::counting_iterator<>(0),
+                  util::counting_iterator<>(vec_size),
+                  [&](size_t i) { 
+                    ad_vars[i].set_value(x_vec_in[i]); 
+                    ad_vars[i+vec_size].set_value(min_vec[i]); 
+                    ad_vars[i+2*vec_size].set_value(max_vec[i]); 
+                });
+
+    double actual = 0;
+    for (size_t i = 0; i < min_vec.size(); ++i) {
+        actual -= std::log(max_vec[i] - min_vec[i]);
+    }
+
+    auto expr = unif.ad_log_pdf(x, ad_vars, cache);
+    EXPECT_DOUBLE_EQ(ad::evaluate(expr),
+                     actual);
 }
 
 } // namespace expr

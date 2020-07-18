@@ -11,18 +11,22 @@ namespace mcmc {
  */
 template <class ADExprType
         , class SubviewType
+        , class ADVecType
         >
 struct TreeInput
 {
     using ad_expr_t = ADExprType;
     using subview_t = SubviewType;
+    using ad_vec_t = ADVecType;
 
     using ad_expr_ref_t = std::reference_wrapper<ad_expr_t>;
     using subview_ref_t = std::reference_wrapper<subview_t>;
+    using ad_vec_ref_t = std::reference_wrapper<ad_vec_t>;
 
     TreeInput(ad_expr_t& ad_expr,
               subview_t& theta,
               subview_t& theta_adj,
+              ad_vec_t& cache_ad,
               subview_t& theta_prime,
               subview_t& p_most,
               subview_t& p_beg, 
@@ -40,6 +44,7 @@ struct TreeInput
         : ad_expr_ref{ad_expr} 
         , theta_ref{theta}
         , theta_adj_ref{theta_adj}
+        , cache_ad_ref{cache_ad}
         , theta_prime_ref{theta_prime}
         , p_most_ref{p_most}
         , p_beg_ref{p_beg}
@@ -58,6 +63,7 @@ struct TreeInput
     ad_expr_ref_t ad_expr_ref;
     subview_ref_t theta_ref;
     subview_ref_t theta_adj_ref;
+    ad_vec_ref_t  cache_ad_ref;
     subview_ref_t theta_prime_ref;
     subview_ref_t p_most_ref;   // either forward/backward-most momentum
     subview_ref_t p_beg_ref;    // begin new subtree (in the direction of v)

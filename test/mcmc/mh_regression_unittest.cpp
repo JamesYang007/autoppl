@@ -2,7 +2,7 @@
 #include <array>
 #include <limits>
 #include <autoppl/mcmc/mh.hpp>
-#include <autoppl/expr_builder.hpp>
+#include <autoppl/expression/expr_builder.hpp>
 #include <testutil/sample_tools.hpp>
 #include <vector>
 
@@ -12,20 +12,24 @@ namespace ppl {
  * Fixture for Metropolis-Hastings 
  */
 struct mh_regression_fixture : ::testing::Test {
-   protected:
+protected:
+    using cont_value_t = double;
+    using p_cont_scl_t = Param<cont_value_t>;
+    using d_cont_vec_t = Data<cont_value_t, ppl::vec>;
+
     size_t sample_size = 50000;
-    double tol = 1e-8;
+    cont_value_t tol = 1e-8;
 
-    std::vector<double> w_storage, b_storage;
-    Param<double> w, b;
+    std::vector<cont_value_t> w_storage, b_storage;
+    p_cont_scl_t w, b;
 
-    ppl::Data<double> x {2.5, 3, 3.5, 4, 4.5, 5.};
-    ppl::Data<double> y {3.5, 4, 4.5, 5, 5.5, 6.};
+    d_cont_vec_t x {2.5, 3, 3.5, 4, 4.5, 5.};
+    d_cont_vec_t y {3.5, 4, 4.5, 5, 5.5, 6.};
 
-    ppl::Data<double> q{2.4, 3.1, 3.6, 4, 4.5, 5.};
-    ppl::Data<double> r{3.5, 4, 4.4, 5.01, 5.46, 6.1};
+    d_cont_vec_t q{2.4, 3.1, 3.6, 4, 4.5, 5.};
+    d_cont_vec_t r{3.5, 4, 4.4, 5.01, 5.46, 6.1};
 
-    size_t burn = 1000;
+    size_t warmup = 1000;
 
     mh_regression_fixture()
         : w_storage(sample_size)
@@ -35,19 +39,19 @@ struct mh_regression_fixture : ::testing::Test {
     {}
 
     template <class ArrayType>
-    double sample_average(const ArrayType& storage)
+    cont_value_t sample_average(const ArrayType& storage)
     {
-        double sum = std::accumulate(
-                std::next(storage.begin(), burn), 
+        cont_value_t sum = std::accumulate(
+                std::next(storage.begin(), warmup), 
                 storage.end(), 
                 0.);
-        return sum / (storage.size() - burn);
+        return sum / (storage.size() - warmup);
     }
 };
 
 TEST_F(mh_regression_fixture, sample_regression_dist) {
-    auto model = (w |= ppl::uniform(0, 2),
-                  b |= ppl::uniform(0, 2),
+    auto model = (w |= ppl::uniform(0., 2.),
+                  b |= ppl::uniform(0., 2.),
                   y |= ppl::normal(x * w + b, 0.5)
     );
 
@@ -61,8 +65,8 @@ TEST_F(mh_regression_fixture, sample_regression_dist) {
 }
 
 TEST_F(mh_regression_fixture, sample_regression_fuzzy_dist) {
-    auto model = (w |= ppl::uniform(0, 2),
-                  b |= ppl::uniform(0, 2),
+    auto model = (w |= ppl::uniform(0., 2.),
+                  b |= ppl::uniform(0., 2.),
                   r |= ppl::normal(q * w + b, 0.5));
 
     ppl::mh(model, sample_size);
@@ -85,4 +89,4 @@ TEST_F(mh_regression_fixture, sample_regression_normal_weight) {
     EXPECT_NEAR(sample_average(w_storage), 1.0, 0.1);
 }
 
-} // ppl
+} // namespace ppl

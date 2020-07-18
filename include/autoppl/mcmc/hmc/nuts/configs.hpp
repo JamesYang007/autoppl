@@ -1,6 +1,6 @@
 #pragma once
 #include <cstddef>
-#include <autoppl/mcmc/hmc/nuts/step_adapter.hpp>
+#include <autoppl/mcmc/hmc/step_adapter.hpp>
 #include <autoppl/mcmc/hmc/momentum_handler.hpp>
 #include <autoppl/mcmc/sampler_tools.hpp>
 
@@ -35,6 +35,15 @@ struct nuts_config_traits
 {
     using var_adapter_policy_t = 
         typename NUTSConfigType::var_adapter_policy_t;
+};
+
+/**
+ * Output result for NUTS
+ */
+struct NUTSResult
+{
+    double warmup_time;
+    double sampling_time;
 };
 
 } // namespace ppl

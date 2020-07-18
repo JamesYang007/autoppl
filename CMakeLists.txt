@@ -5,7 +5,6 @@ project("autoppl"
         LANGUAGES C CXX)
 
 option(AUTOPPL_ENABLE_TEST "Enable unit tests to be built." ON)
-# TODO: later when we make benchmarks, this should be ON
 option(AUTOPPL_ENABLE_BENCHMARK "Enable benchmarks to be built." OFF)
 option(AUTOPPL_ENABLE_TEST_COVERAGE "Build with test coverage (AUTOPPL_ENABLE_TEST must be ON)" OFF)
 option(AUTOPPL_ENABLE_EXAMPLE "Enable compilation of examples." OFF)
@@ -72,5 +71,5 @@ endif()
 
 # Compile examples if enabled
 if (AUTOPPL_ENABLE_EXAMPLE)
-    add_subdirectory(${PROJECT_SOURCE_DIR}/docs/example ${PROJECT_BINARY_DIR}/example)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/example ${PROJECT_BINARY_DIR}/example)
 endif()
