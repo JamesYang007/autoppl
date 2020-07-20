@@ -1,3 +1,4 @@
+#pragma once
 #include <chrono>
 
 namespace ppl {
@@ -16,11 +17,11 @@ struct StopWatch
         end_ = ClockType::now();
     }
 
-    double elapsed() const 
+    double elapsed() const
     {
         static constexpr double nano = 1e-9;
         return std::chrono::duration_cast<
-            std::chrono::nanoseconds>(end_-start_).count() * nano;
+        std::chrono::nanoseconds>(end_-start_).count() * nano;
     }
 
 private:
