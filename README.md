@@ -1,10 +1,9 @@
 # AutoPPL
-
-[![Build Status](https://travis-ci.org/JamesYang007/autoppl.svg?branch=master)](https://travis-ci.org/JamesYang007/autoppl)
-[![Coverage Status](https://coveralls.io/repos/github/JamesYang007/autoppl/badge.svg?branch=master)](https://coveralls.io/github/JamesYang007/autoppl?branch=master)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
+[![Build Status](https://travis-ci.org/JamesYang007/autoppl.svg?branch=master)](https://travis-ci.org/JamesYang007/autoppl)
+[![Coverage Status](https://coveralls.io/repos/github/JamesYang007/autoppl/badge.svg?branch=master)](https://coveralls.io/github/JamesYang007/autoppl?branch=master)
 
 ## Table of Contents
 
@@ -426,8 +425,9 @@ auto res = ppl::nuts(model, config);
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="https://github.com/lucieleblanc"><img src="https://avatars3.githubusercontent.com/u/14223323?v=4" width="100px;" alt=""/><br /><sub><b>lucieleblanc</b></sub></a><br /><a href="https://github.com/JamesYang007/autoppl/commits?author=lucieleblanc" title="Code">💻</a> <a href="#design-lucieleblanc" title="Design">🎨</a></td>
     <td align="center"><a href="https://jacobaustin123.github.io/"><img src="https://avatars0.githubusercontent.com/u/28993550?v=4" width="100px;" alt=""/><br /><sub><b>Jacob Austin</b></sub></a><br /><a href="https://github.com/JamesYang007/autoppl/commits?author=jacobaustin123" title="Code">💻</a> <a href="#design-jacobaustin123" title="Design">🎨</a> <a href="https://github.com/JamesYang007/autoppl/commits?author=jacobaustin123" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://jenny-chen.net"><img src="https://avatars0.githubusercontent.com/u/13106682?v=4" width="100px;" alt=""/><br /><sub><b>Jenny Chen</b></sub></a><br /><a href="https://github.com/JamesYang007/autoppl/commits?author=jenchen1398" title="Code">💻</a> <a href="#design-jenchen1398" title="Design">🎨</a></td>
+    <td align="center"><a href="https://github.com/lucieleblanc"><img src="https://avatars3.githubusercontent.com/u/14223323?v=4" width="100px;" alt=""/><br /><sub><b>lucieleblanc</b></sub></a><br /><a href="https://github.com/JamesYang007/autoppl/commits?author=lucieleblanc" title="Code">💻</a> <a href="#design-lucieleblanc" title="Design">🎨</a></td>
     <td align="center"><a href="http://lancaster.ac.uk/~ludkinm/"><img src="https://avatars3.githubusercontent.com/u/28777642?v=4" width="100px;" alt=""/><br /><sub><b>Matt Ludkin</b></sub></a><br /><a href="https://github.com/JamesYang007/autoppl/commits?author=ludkinm" title="Code">💻</a></td>
   </tr>
 </table>
