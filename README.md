@@ -1,4 +1,7 @@
 # AutoPPL
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Build Status](https://travis-ci.org/JamesYang007/autoppl.svg?branch=master)](https://travis-ci.org/JamesYang007/autoppl)
 [![Coverage Status](https://coveralls.io/repos/github/JamesYang007/autoppl/badge.svg?branch=master)](https://coveralls.io/github/JamesYang007/autoppl?branch=master)
@@ -418,10 +421,19 @@ auto res = ppl::nuts(model, config);
 
 ## Contributors
 
-| **James Yang** | **Jacob Austin** | **Jenny Chen** | **Lucie Le Blanc** |
-| :---: | :---: | :---: | :---: |
-| [![JamesYang007](https://avatars3.githubusercontent.com/u/5008832?s=150&v=4)](https://github.com/JamesYang007) | [![jacobaustin123](https://avatars1.githubusercontent.com/u/28993550?s=150&u=151a97ac00d11e39ab3c0dbb8920dad934177d06&v=4)](https://github.com/jacobaustin123) | [![jenchen1398](https://avatars2.githubusercontent.com/u/13106682?s=150&u=926a625662c64366b66355dbdfc7b02f21dd4c91&v=4)](https://github.com/jenchen1398) | [![lucieleblanc](https://avatars1.githubusercontent.com/u/14223323?s=20&v=4)](https://github.com/lucieleblanc) |
-| <a href="http://github.com/JamesYang007" target="_blank">`github.com/JamesYang007`</a> | <a href="https://github.com/jacobaustin123" target="_blank">`github.com/jacobaustin123`</a> | <a href="https://github.com/jenchen1398" target="_blank">`github.com/jenchen1398`</a> | <a href="https://github.com/lucieleblanc" target="_blank">`github.com/lucieleblanc`</a> |
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://jacobaustin123.github.io/"><img src="https://avatars0.githubusercontent.com/u/28993550?v=4" width="100px;" alt=""/><br /><sub><b>Jacob Austin</b></sub></a><br /><a href="https://github.com/JamesYang007/autoppl/commits?author=jacobaustin123" title="Code">💻</a> <a href="#design-jacobaustin123" title="Design">🎨</a> <a href="https://github.com/JamesYang007/autoppl/commits?author=jacobaustin123" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://lancaster.ac.uk/~ludkinm/"><img src="https://avatars3.githubusercontent.com/u/28777642?v=4" width="100px;" alt=""/><br /><sub><b>Matt Ludkin</b></sub></a><br /><a href="https://github.com/JamesYang007/autoppl/commits?author=ludkinm" title="Code">💻</a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-enable -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 
 ## Third Party Tools
 
