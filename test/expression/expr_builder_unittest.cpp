@@ -1,32 +1,47 @@
 #include "gtest/gtest.h"
-#include <autoppl/expression/expr_builder.hpp>
-#include <autoppl/util/traits/mock_types.hpp>
+#include <testutil/base_fixture.hpp>
+#include <autoppl/util/traits/var_expr_traits.hpp>
+#include <autoppl/expression/variable/param.hpp>
+#include <autoppl/expression/variable/data.hpp>
+#include <autoppl/expression/variable/constant.hpp>
+#include <autoppl/expression/variable/binary.hpp>
+#include <autoppl/expression/variable/dot.hpp>
+#include <autoppl/expression/distribution/uniform.hpp>
+#include <autoppl/expression/model/bar_eq.hpp>
+#include <autoppl/expression/model/glue.hpp>
+#include <autoppl/expression/op_overloads.hpp>
 
 namespace ppl {
 
-struct expr_builder_fixture : ::testing::Test
+struct expr_builder_fixture: 
+    base_fixture<double>,
+    ::testing::Test
 {
 protected:
-    using param_t = ppl::Param<double, ppl::scl>;
-    using pview_t = ppl::ParamView<
-        typename util::param_traits<param_t>::pointer_t,
-        ppl::scl>;
-    MockVarExpr x;
-    MockVarExpr y;
-    param_t v;
+    scl_pv_t x;
+    scl_pv_t y;
+    scl_p_t v;
     double d;
     long int i;
+
+    info_pack_t info;
+
+    expr_builder_fixture()
+        : x(&info)
+        , y(nullptr)
+        , v()
+    {}
 };
 
 TEST_F(expr_builder_fixture, convert_to_param_var)
 {
     using namespace details;
-    static_assert(std::is_same_v<MockParam, std::decay_t<MockParam>>);
-    static_assert(util::is_var_v<MockParam>);
-    static_assert(!std::is_same_v<MockParam, util::cont_param_t>);
+    static_assert(std::is_same_v<scl_p_t, std::decay_t<scl_p_t>>);
+    static_assert(util::is_var_v<scl_p_t>);
+    static_assert(!std::is_same_v<scl_p_t, util::cont_param_t>);
     static_assert(std::is_same_v<
-            convert_to_param_t<MockParam>,
-            pview_t
+            util::convert_to_param_t<scl_p_t>,
+            scl_pv_t
             >);
 }
 
@@ -37,26 +52,24 @@ TEST_F(expr_builder_fixture, convert_to_param_raw)
     static_assert(std::is_same_v<data_t, std::decay_t<data_t>>);
     static_assert(!util::is_var_v<data_t>);
     static_assert(std::is_same_v<data_t, util::cont_param_t>);
-    static_assert(!util::is_var_expr_v<data_t>);
     static_assert(std::is_same_v<
-            convert_to_param_t<data_t>,
-            expr::Constant<data_t>
+            util::convert_to_param_t<data_t>,
+            expr::var::Constant<data_t>
             >);
 }
 
 TEST_F(expr_builder_fixture, convert_to_param_var_expr)
 {
     using namespace details;
-    static_assert(!util::is_var_v<MockVarExpr>);
-    static_assert(!std::is_same_v<MockVarExpr, util::cont_param_t>);
-    static_assert(util::is_var_expr_v<MockVarExpr>);
+    static_assert(!std::is_same_v<scl_pv_t, util::cont_param_t>);
+    static_assert(util::is_var_expr_v<scl_pv_t>);
     static_assert(std::is_same_v<
-            convert_to_param_t<MockVarExpr&>,
-            MockVarExpr&
+            util::convert_to_param_t<scl_pv_t&>,
+            scl_pv_t
             >);
     static_assert(std::is_same_v<
-            convert_to_param_t<MockVarExpr&&>,
-            MockVarExpr&&
+            util::convert_to_param_t<scl_pv_t&&>,
+            scl_pv_t
             >);
 }
 
@@ -65,35 +78,35 @@ TEST_F(expr_builder_fixture, op_plus)
     // sanity-check: both literals lead to choosing default operator+
     static_assert(std::is_same_v<int, std::decay_t<decltype(3 + 4)> >);
 
-    // MockVarExpr, [MockVarExpr, double, long int, MockVar]
+    // scl_pv_t, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, MockVarExpr, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Add, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(x + y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, MockVarExpr, expr::Constant<double>>,
+            expr::var::BinaryNode<ad::math::Add, scl_pv_t, expr::var::Constant<double>>,
             std::decay_t<decltype(x + 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, MockVarExpr, expr::Constant<long int>>,
+            expr::var::BinaryNode<ad::math::Add, scl_pv_t, expr::var::Constant<long int>>,
             std::decay_t<decltype(x + 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, MockVarExpr, pview_t>,
+            expr::var::BinaryNode<ad::math::Add, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(x + v)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, MockVarExpr, MockVarExpr>,
-            std::decay_t<decltype(MockVarExpr()+ y)> >);
+            expr::var::BinaryNode<ad::math::Add, scl_pv_t, scl_pv_t>,
+            std::decay_t<decltype(scl_pv_t(&info)+ y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, MockVarExpr, expr::Constant<double>>,
-            std::decay_t<decltype(MockVarExpr()+ 3.)> >);
+            expr::var::BinaryNode<ad::math::Add, scl_pv_t, expr::var::Constant<double>>,
+            std::decay_t<decltype(scl_pv_t(&info)+ 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, MockVarExpr, expr::Constant<long int>>,
-            std::decay_t<decltype(MockVarExpr()+ 3l)> >);
+            expr::var::BinaryNode<ad::math::Add, scl_pv_t, expr::var::Constant<long int>>,
+            std::decay_t<decltype(scl_pv_t(&info)+ 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, MockVarExpr, pview_t>,
-            std::decay_t<decltype(MockVarExpr()+ v)> >);
+            expr::var::BinaryNode<ad::math::Add, scl_pv_t, scl_pv_t>,
+            std::decay_t<decltype(scl_pv_t(&info)+ v)> >);
 
-    // double, [MockVarExpr, double, long int, MockVar]
+    // double, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::Constant<double>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Add, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(d + y)> >);
     static_assert(std::is_same_v<
             double,
@@ -102,10 +115,10 @@ TEST_F(expr_builder_fixture, op_plus)
             double,
             std::decay_t<decltype(d + 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::Constant<double>, pview_t>,
+            expr::var::BinaryNode<ad::math::Add, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(d + v)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::Constant<double>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Add, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(3. + y)> >);
     static_assert(std::is_same_v<
             double,
@@ -114,12 +127,12 @@ TEST_F(expr_builder_fixture, op_plus)
             double,
             std::decay_t<decltype(3. + 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::Constant<double>, pview_t>,
+            expr::var::BinaryNode<ad::math::Add, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(3. + v)> >);
 
-    // long int, [MockVarExpr, double, long int, MockVar]
+    // long int, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::Constant<long>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Add, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(i + y)> >);
     static_assert(std::is_same_v<
             double,
@@ -128,10 +141,10 @@ TEST_F(expr_builder_fixture, op_plus)
             long,
             std::decay_t<decltype(i + 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::Constant<long>, pview_t>,
+            expr::var::BinaryNode<ad::math::Add, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(i + v)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::Constant<long>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Add, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(3l + y)> >);
     static_assert(std::is_same_v<
             double,
@@ -140,55 +153,55 @@ TEST_F(expr_builder_fixture, op_plus)
             long,
             std::decay_t<decltype(3l + 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, expr::Constant<long>, pview_t>,
+            expr::var::BinaryNode<ad::math::Add, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(3l + v)> >);
 
-    // MockVar, [MockVarExpr, double, long int, MockVar]
+    // MockVar, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, pview_t, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Add, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(v + y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, pview_t, expr::Constant<double>>,
+            expr::var::BinaryNode<ad::math::Add, scl_pv_t, expr::var::Constant<double>>,
             std::decay_t<decltype(v + 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, pview_t, expr::Constant<long>>,
+            expr::var::BinaryNode<ad::math::Add, scl_pv_t, expr::var::Constant<long>>,
             std::decay_t<decltype(v + 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::AddOp, pview_t, pview_t>,
+            expr::var::BinaryNode<ad::math::Add, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(v + v)> >);
 }
 
 TEST_F(expr_builder_fixture, op_minus)
 {
-    // MockVarExpr, [MockVarExpr, double, long int, MockVar]
+    // scl_pv_t, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, MockVarExpr, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Sub, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(x - y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, MockVarExpr, expr::Constant<double>>,
+            expr::var::BinaryNode<ad::math::Sub, scl_pv_t, expr::var::Constant<double>>,
             std::decay_t<decltype(x - 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, MockVarExpr, expr::Constant<long int>>,
+            expr::var::BinaryNode<ad::math::Sub, scl_pv_t, expr::var::Constant<long int>>,
             std::decay_t<decltype(x - 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, MockVarExpr, pview_t>,
+            expr::var::BinaryNode<ad::math::Sub, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(x - v)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, MockVarExpr, MockVarExpr>,
-            std::decay_t<decltype(MockVarExpr()- y)> >);
+            expr::var::BinaryNode<ad::math::Sub, scl_pv_t, scl_pv_t>,
+            std::decay_t<decltype(scl_pv_t(&info)- y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, MockVarExpr, expr::Constant<double>>,
-            std::decay_t<decltype(MockVarExpr()- 3.)> >);
+            expr::var::BinaryNode<ad::math::Sub, scl_pv_t, expr::var::Constant<double>>,
+            std::decay_t<decltype(scl_pv_t(&info)- 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, MockVarExpr, expr::Constant<long int>>,
-            std::decay_t<decltype(MockVarExpr()- 3l)> >);
+            expr::var::BinaryNode<ad::math::Sub, scl_pv_t, expr::var::Constant<long int>>,
+            std::decay_t<decltype(scl_pv_t(&info)- 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, MockVarExpr, pview_t>,
-            std::decay_t<decltype(MockVarExpr()- v)> >);
+            expr::var::BinaryNode<ad::math::Sub, scl_pv_t, scl_pv_t>,
+            std::decay_t<decltype(scl_pv_t(&info)- v)> >);
 
-    // double, [MockVarExpr, double, long int, MockVar]
+    // double, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::Constant<double>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Sub, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(d - y)> >);
     static_assert(std::is_same_v<
             double,
@@ -197,10 +210,10 @@ TEST_F(expr_builder_fixture, op_minus)
             double,
             std::decay_t<decltype(d - 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::Constant<double>, pview_t>,
+            expr::var::BinaryNode<ad::math::Sub, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(d - v)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::Constant<double>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Sub, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(3. - y)> >);
     static_assert(std::is_same_v<
             double,
@@ -209,12 +222,12 @@ TEST_F(expr_builder_fixture, op_minus)
             double,
             std::decay_t<decltype(3. - 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::Constant<double>, pview_t>,
+            expr::var::BinaryNode<ad::math::Sub, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(3. - v)> >);
 
-    // long int, [MockVarExpr, double, long int, MockVar]
+    // long int, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::Constant<long>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Sub, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(i - y)> >);
     static_assert(std::is_same_v<
             double,
@@ -223,10 +236,10 @@ TEST_F(expr_builder_fixture, op_minus)
             long,
             std::decay_t<decltype(i - 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::Constant<long>, pview_t>,
+            expr::var::BinaryNode<ad::math::Sub, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(i - v)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::Constant<long>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Sub, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(3l - y)> >);
     static_assert(std::is_same_v<
             double,
@@ -235,55 +248,55 @@ TEST_F(expr_builder_fixture, op_minus)
             long,
             std::decay_t<decltype(3l - 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, expr::Constant<long>, pview_t>,
+            expr::var::BinaryNode<ad::math::Sub, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(3l - v)> >);
 
-    // MockVar, [MockVarExpr, double, long int, MockVar]
+    // MockVar, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, pview_t, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Sub, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(v - y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, pview_t, expr::Constant<double>>,
+            expr::var::BinaryNode<ad::math::Sub, scl_pv_t, expr::var::Constant<double>>,
             std::decay_t<decltype(v - 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, pview_t, expr::Constant<long>>,
+            expr::var::BinaryNode<ad::math::Sub, scl_pv_t, expr::var::Constant<long>>,
             std::decay_t<decltype(v - 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::SubOp, pview_t, pview_t>,
+            expr::var::BinaryNode<ad::math::Sub, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(v - v)> >);
 }
 
 TEST_F(expr_builder_fixture, op_times)
 {
-    // MockVarExpr, [MockVarExpr, double, long int, MockVar]
+    // scl_pv_t, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, MockVarExpr, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Mul, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(x * y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, MockVarExpr, expr::Constant<double>>,
+            expr::var::BinaryNode<ad::math::Mul, scl_pv_t, expr::var::Constant<double>>,
             std::decay_t<decltype(x * 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, MockVarExpr, expr::Constant<long int>>,
+            expr::var::BinaryNode<ad::math::Mul, scl_pv_t, expr::var::Constant<long int>>,
             std::decay_t<decltype(x * 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, MockVarExpr, pview_t>,
+            expr::var::BinaryNode<ad::math::Mul, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(x * v)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, MockVarExpr, MockVarExpr>,
-            std::decay_t<decltype(MockVarExpr()* y)> >);
+            expr::var::BinaryNode<ad::math::Mul, scl_pv_t, scl_pv_t>,
+            std::decay_t<decltype(scl_pv_t(&info)* y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, MockVarExpr, expr::Constant<double>>,
-            std::decay_t<decltype(MockVarExpr()* 3.)> >);
+            expr::var::BinaryNode<ad::math::Mul, scl_pv_t, expr::var::Constant<double>>,
+            std::decay_t<decltype(scl_pv_t(&info)* 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, MockVarExpr, expr::Constant<long int>>,
-            std::decay_t<decltype(MockVarExpr()* 3l)> >);
+            expr::var::BinaryNode<ad::math::Mul, scl_pv_t, expr::var::Constant<long int>>,
+            std::decay_t<decltype(scl_pv_t(&info)* 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, MockVarExpr, pview_t>,
-            std::decay_t<decltype(MockVarExpr()* v)> >);
+            expr::var::BinaryNode<ad::math::Mul, scl_pv_t, scl_pv_t>,
+            std::decay_t<decltype(scl_pv_t(&info)* v)> >);
 
-    // double, [MockVarExpr, double, long int, MockVar]
+    // double, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::Constant<double>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Mul, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(d * y)> >);
     static_assert(std::is_same_v<
             double,
@@ -292,10 +305,10 @@ TEST_F(expr_builder_fixture, op_times)
             double,
             std::decay_t<decltype(d * 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::Constant<double>, pview_t>,
+            expr::var::BinaryNode<ad::math::Mul, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(d * v)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::Constant<double>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Mul, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(3. * y)> >);
     static_assert(std::is_same_v<
             double,
@@ -304,12 +317,12 @@ TEST_F(expr_builder_fixture, op_times)
             double,
             std::decay_t<decltype(3. * 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::Constant<double>, pview_t>,
+            expr::var::BinaryNode<ad::math::Mul, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(3. * v)> >);
 
-    // long int, [MockVarExpr, double, long int, MockVar]
+    // long int, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::Constant<long>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Mul, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(i * y)> >);
     static_assert(std::is_same_v<
             double,
@@ -318,10 +331,10 @@ TEST_F(expr_builder_fixture, op_times)
             long,
             std::decay_t<decltype(i * 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::Constant<long>, pview_t>,
+            expr::var::BinaryNode<ad::math::Mul, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(i * v)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::Constant<long>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Mul, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(3l * y)> >);
     static_assert(std::is_same_v<
             double,
@@ -330,55 +343,55 @@ TEST_F(expr_builder_fixture, op_times)
             long,
             std::decay_t<decltype(3l * 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, expr::Constant<long>, pview_t>,
+            expr::var::BinaryNode<ad::math::Mul, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(3l * v)> >);
 
-    // MockVar, [MockVarExpr, double, long int, MockVar]
+    // MockVar, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, pview_t, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Mul, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(v * y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, pview_t, expr::Constant<double>>,
+            expr::var::BinaryNode<ad::math::Mul, scl_pv_t, expr::var::Constant<double>>,
             std::decay_t<decltype(v * 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, pview_t, expr::Constant<long>>,
+            expr::var::BinaryNode<ad::math::Mul, scl_pv_t, expr::var::Constant<long>>,
             std::decay_t<decltype(v * 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::MultOp, pview_t, pview_t>,
+            expr::var::BinaryNode<ad::math::Mul, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(v * v)> >);
 }
 
 TEST_F(expr_builder_fixture, op_div)
 {
-    // MockVarExpr, [MockVarExpr, double, long int, MockVar]
+    // scl_pv_t, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, MockVarExpr, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Div, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(x / y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, MockVarExpr, expr::Constant<double>>,
+            expr::var::BinaryNode<ad::math::Div, scl_pv_t, expr::var::Constant<double>>,
             std::decay_t<decltype(x / 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, MockVarExpr, expr::Constant<long int>>,
+            expr::var::BinaryNode<ad::math::Div, scl_pv_t, expr::var::Constant<long int>>,
             std::decay_t<decltype(x / 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, MockVarExpr, pview_t>,
+            expr::var::BinaryNode<ad::math::Div, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(x / v)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, MockVarExpr, MockVarExpr>,
-            std::decay_t<decltype(MockVarExpr()/ y)> >);
+            expr::var::BinaryNode<ad::math::Div, scl_pv_t, scl_pv_t>,
+            std::decay_t<decltype(scl_pv_t(&info)/ y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, MockVarExpr, expr::Constant<double>>,
-            std::decay_t<decltype(MockVarExpr()/ 3.)> >);
+            expr::var::BinaryNode<ad::math::Div, scl_pv_t, expr::var::Constant<double>>,
+            std::decay_t<decltype(scl_pv_t(&info)/ 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, MockVarExpr, expr::Constant<long int>>,
-            std::decay_t<decltype(MockVarExpr()/ 3l)> >);
+            expr::var::BinaryNode<ad::math::Div, scl_pv_t, expr::var::Constant<long int>>,
+            std::decay_t<decltype(scl_pv_t(&info)/ 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, MockVarExpr, pview_t>,
-            std::decay_t<decltype(MockVarExpr()/ v)> >);
+            expr::var::BinaryNode<ad::math::Div, scl_pv_t, scl_pv_t>,
+            std::decay_t<decltype(scl_pv_t(&info)/ v)> >);
 
-    // double, [MockVarExpr, double, long int, MockVar]
+    // double, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::Constant<double>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Div, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(d / y)> >);
     static_assert(std::is_same_v<
             double,
@@ -387,10 +400,10 @@ TEST_F(expr_builder_fixture, op_div)
             double,
             std::decay_t<decltype(d / 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::Constant<double>, pview_t>,
+            expr::var::BinaryNode<ad::math::Div, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(d / v)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::Constant<double>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Div, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(3. / y)> >);
     static_assert(std::is_same_v<
             double,
@@ -399,12 +412,12 @@ TEST_F(expr_builder_fixture, op_div)
             double,
             std::decay_t<decltype(3. / 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::Constant<double>, pview_t>,
+            expr::var::BinaryNode<ad::math::Div, expr::var::Constant<double>, scl_pv_t>,
             std::decay_t<decltype(3. / v)> >);
 
-    // long int, [MockVarExpr, double, long int, MockVar]
+    // long int, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::Constant<long>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Div, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(i / y)> >);
     static_assert(std::is_same_v<
             double,
@@ -413,10 +426,10 @@ TEST_F(expr_builder_fixture, op_div)
             long,
             std::decay_t<decltype(i / 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::Constant<long>, pview_t>,
+            expr::var::BinaryNode<ad::math::Div, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(i / v)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::Constant<long>, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Div, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(3l / y)> >);
     static_assert(std::is_same_v<
             double,
@@ -425,21 +438,21 @@ TEST_F(expr_builder_fixture, op_div)
             long,
             std::decay_t<decltype(3l / 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, expr::Constant<long>, pview_t>,
+            expr::var::BinaryNode<ad::math::Div, expr::var::Constant<long>, scl_pv_t>,
             std::decay_t<decltype(3l / v)> >);
 
-    // MockVar, [MockVarExpr, double, long int, MockVar]
+    // MockVar, [scl_pv_t, double, long int, MockVar]
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, pview_t, MockVarExpr>,
+            expr::var::BinaryNode<ad::math::Div, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(v / y)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, pview_t, expr::Constant<double>>,
+            expr::var::BinaryNode<ad::math::Div, scl_pv_t, expr::var::Constant<double>>,
             std::decay_t<decltype(v / 3.)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, pview_t, expr::Constant<long>>,
+            expr::var::BinaryNode<ad::math::Div, scl_pv_t, expr::var::Constant<long>>,
             std::decay_t<decltype(v / 3l)> >);
     static_assert(std::is_same_v<
-            expr::BinaryOpNode<expr::DivOp, pview_t, pview_t>,
+            expr::var::BinaryNode<ad::math::Div, scl_pv_t, scl_pv_t>,
             std::decay_t<decltype(v / v)> >);
 }
 } // namespace ppl

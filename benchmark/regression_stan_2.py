@@ -3,16 +3,16 @@ import pandas as pd
 import numpy as np
 
 N = 30000
-X = np.random.normal(loc=[-1, 0, 1], scale=1.4, size=(N, 3))
-w_true = np.array([1.4, 2., 0.32])
+K = 50
+X = np.random.normal(loc=-1, scale=1.4, size=(N, K))
+w_true = np.array([j/K for j in range(K)])
 y = X.dot(w_true) + np.random.normal(loc=0., scale=1.0, size=N)
 
 cool_dat = {
     'N' : N,
-    'x1' : list(X[:,0]),
-    'x2' : list(X[:,1]),
-    'x3' : list(X[:,2]),
-    'y' : list(y)
+    'K' : K,
+    'X' : X.tolist(),
+    'y' : y.tolist()
 }
 
 stan_file = "regression_stan_2.stan"

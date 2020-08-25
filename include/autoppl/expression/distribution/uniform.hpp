@@ -1,21 +1,18 @@
 #pragma once
 #include <cassert>
-#include <fastad_bits/node.hpp>
-#include <fastad_bits/math.hpp>
-#include <fastad_bits/ifelse.hpp>
-#include <autoppl/util/traits/dist_expr_traits.hpp>
-#include <autoppl/util/traits/var_expr_traits.hpp>
-#include <autoppl/util/iterator/counting_iterator.hpp>
-#include <autoppl/util/functional.hpp>
+#include <random>
+#include <fastad_bits/reverse/stat/uniform.hpp>
+#include <autoppl/util/traits/traits.hpp>
+#include <autoppl/expression/distribution/dist_utils.hpp>
 #include <autoppl/math/density.hpp>
 #include <autoppl/math/math.hpp>
-#include <autoppl/expression/distribution/dist_utils.hpp>
 
 #define PPL_UNIFORM_PARAM_SHAPE \
     "Uniform parameters min and max must be either scalar or vector. "
 
 namespace ppl {
 namespace expr {
+namespace dist {
 namespace details {
 
 /**
@@ -82,236 +79,158 @@ template <class MinType
         , class MaxType>
 struct Uniform: util::DistExprBase<Uniform<MinType, MaxType>>
 {
-    static_assert(util::is_var_expr_v<MinType>);
-    static_assert(util::is_var_expr_v<MaxType>);
-    static_assert(details::uniform_valid_param_dim_v<MinType, MaxType>,
+private:
+    using min_t = MinType;
+    using max_t = MaxType;
+
+    static_assert(util::is_var_expr_v<min_t>);
+    static_assert(util::is_var_expr_v<max_t>);
+    static_assert(details::uniform_valid_param_dim_v<min_t, max_t>,
                   PPL_DIST_SHAPE_MISMATCH
                   PPL_UNIFORM_PARAM_SHAPE
                   );
 
+public:
     using value_t = util::cont_param_t;
-    using base_t = util::DistExprBase<Uniform<MinType, MaxType>>; 
-    using index_t = uint32_t;
+    using base_t = util::DistExprBase<Uniform<min_t, max_t>>; 
     using typename base_t::dist_value_t;
 
-    Uniform(const MinType& min, 
-            const MaxType& max)
+    Uniform(const min_t& min, 
+            const max_t& max)
         : min_{min}, max_{max} 
     {}
 
-    template <class VarType
-            , class PVecType
-            , class F = util::identity>
-    dist_value_t pdf(const VarType& x,
-                     const PVecType& pvalues,
-                     F f = F()) const
+    template <class XType>
+    dist_value_t pdf(const XType& x) 
     {
-        static_assert(util::is_var_v<VarType>);
-        static_assert(details::uniform_valid_dim_v<VarType, MinType, MaxType>,
+        static_assert(util::is_dist_assignable_v<XType>);
+        static_assert(details::uniform_valid_dim_v<XType, min_t, max_t>,
                       PPL_DIST_SHAPE_MISMATCH);
-        return pdf_indep([&](size_t i) {
-                            return math::uniform_pdf(
-                                    x.value(pvalues, i, f), 
-                                    min_.value(pvalues, i, f), 
-                                    max_.value(pvalues, i, f));
-                          }, x.size());
+        return math::uniform_pdf(x.get(), min_.eval(), max_.eval());
     }
 
-    template <class VarType
-            , class PVecType
-            , class F = util::identity>
-    dist_value_t log_pdf(const VarType& x,
-                         const PVecType& pvalues,
-                         F f = F()) const
+    template <class XType>
+    dist_value_t log_pdf(const XType& x) 
     {
-        static_assert(util::is_var_v<VarType>);
-        static_assert(details::uniform_valid_dim_v<VarType, MinType, MaxType>,
+        static_assert(util::is_dist_assignable_v<XType>);
+        static_assert(details::uniform_valid_dim_v<XType, min_t, max_t>,
                       PPL_DIST_SHAPE_MISMATCH);
-        return log_pdf_indep([&](size_t i) {
-                                return math::uniform_log_pdf(
-                                        x.value(pvalues, i, f), 
-                                        min_.value(pvalues, i, f), 
-                                        max_.value(pvalues, i, f));
-                              }, x.size());
+        return math::uniform_log_pdf(x.get(), min_.eval(), max_.eval());
     }
 
-    /**
-     * Up to constant addition, returns ad expression of log pdf
-     */
-    template <class VarType, class VecADVarType>
-    auto ad_log_pdf(const VarType& x,
-                    const VecADVarType& vars,
-                    const VecADVarType& cache) const
+    template <class XType
+            , class PtrPackType>
+    auto ad_log_pdf(const XType& x,
+                    const PtrPackType& pack) const
     {
-
-        // Case 1: x -> scl, min -> scl, max -> scl
-        if constexpr (util::is_scl_v<VarType> &&
-                      util::is_scl_v<MinType> &&
-                      util::is_scl_v<MaxType>) {
-            auto&& ad_x = x.to_ad(vars, cache);
-            auto&& ad_min = min_.to_ad(vars, cache);
-            auto&& ad_max = max_.to_ad(vars, cache);
-
-            return (cache[offset_] = ad_min,
-                    cache[offset_+1] = ad_max,
-                    ad::if_else(
-                        (cache[offset_] < ad_x) && (ad_x < cache[offset_+1]),
-                         -ad::log(cache[offset_+1] - cache[offset_]),
-                         ad::constant(math::neg_inf<dist_value_t>)
-                    ));
-        }
-
-        // Case 2: x -> vec, min -> scl, max -> scl
-        else if constexpr (util::is_vec_v<VarType> &&
-                           util::is_scl_v<MinType> &&
-                           util::is_scl_v<MaxType>) 
-        {
-            auto&& ad_min = min_.to_ad(vars, cache);
-            auto&& ad_max = max_.to_ad(vars, cache);
-
-            // Subcase 1: x -> has no param
-            if constexpr (!VarType::has_param) {
-
-                // Note: value can be used instead of to_ad because
-                // vars will be ignored by anything that does not have param
-                // and here we guaranteed that x has no params.
-                
-                auto x_min = math::min(util::counting_iterator<>(0),
-                                       util::counting_iterator<>(x.size()),
-                                       [&](auto i) { return x.value(vars, i); });
-                auto x_max = math::max(util::counting_iterator<>(0),
-                                       util::counting_iterator<>(x.size()),
-                                       [&](auto i) { return x.value(vars, i); });
-                return (cache[offset_] = ad_min,
-                        cache[offset_+1] = ad_max,
-                        ad::if_else(
-                            ((cache[offset_] < ad::constant(x_min)) && 
-                             (ad::constant(x_max) < cache[offset_+1])),
-                            -ad::constant<dist_value_t>(x.size()) *
-                            ad::log(cache[offset_+1] - cache[offset_]),
-                            ad::constant(math::neg_inf<dist_value_t>)
-                        ) );
-            }
-
-            // Subcase 2: x -> has param
-            else {
-                return (cache[offset_] = ad_min,
-                        cache[offset_+1] = ad_max,
-                        -ad::constant<dist_value_t>(x.size()) *
-                        ad::log(cache[offset_+1] - cache[offset_])) 
-                        + ad::sum(util::counting_iterator<>(0),
-                                  util::counting_iterator<>(x.size()),
-                                  [&](auto i) {
-                                    return ad::if_else(
-                                        ( (cache[offset_] < x.to_ad(vars, cache, i)) && 
-                                          (x.to_ad(vars, cache, i) < cache[offset_+1]) ),
-                                        ad::constant<dist_value_t>(0),
-                                        ad::constant(math::neg_inf<dist_value_t>)
-                                        );
-                                  }
-                            );
-            }
-        }
-
-        // Case 3: x -> vec, min -> vec, max -> scl
-        else if constexpr (util::is_vec_v<VarType> &&
-                           util::is_vec_v<MinType> &&
-                           util::is_scl_v<MaxType>) {
-
-            assert(x.size() == min_.size());
-            auto&& ad_max = max_.to_ad(vars, cache);
-            return (cache[offset_] = ad_max,
-                    ad::sum(util::counting_iterator<>(0),
-                            util::counting_iterator<>(x.size()),
-                            [&](auto i) {
-                                 auto&& ad_x = x.to_ad(vars, cache, i);
-                                 auto&& ad_min = min_.to_ad(vars, cache, i);
-                                 return (cache[offset_+1+i] = ad_min,
-                                         ad::if_else(
-                                             (cache[offset_+1+i] < ad_x) && (ad_x < cache[offset_]),
-                                             -ad::log(cache[offset_] - cache[offset_+1+i]),
-                                             ad::constant(math::neg_inf<dist_value_t>)
-                                        ) );
-                            }) 
-                    );
-        }
-
-        // Case 4: x -> vec, min -> scl, max -> vec
-        else if constexpr (util::is_vec_v<VarType> &&
-                           util::is_scl_v<MinType> &&
-                           util::is_vec_v<MaxType>) {
-
-            assert(x.size() == max_.size());
-            auto&& ad_min = min_.to_ad(vars, cache);
-            return (cache[offset_] = ad_min,
-                    ad::sum(util::counting_iterator<>(0),
-                            util::counting_iterator<>(x.size()),
-                            [&](auto i) {
-                                 auto&& ad_x = x.to_ad(vars, cache, i);
-                                 auto&& ad_max = max_.to_ad(vars, cache, i);
-                                 return (cache[offset_+1+i] = ad_max,
-                                         ad::if_else(
-                                             (cache[offset_] < ad_x) && (ad_x < cache[offset_+1+i]),
-                                             -ad::log(cache[offset_+1+i] - cache[offset_]),
-                                             ad::constant(math::neg_inf<dist_value_t>)
-                                        ) );
-                            }) 
-                    );
-        }
-
-        // Case 5: x -> vec, min -> vec, max -> vec
-        else {
-
-            assert(x.size() == max_.size() && 
-                    x.size() == min_.size());
-
-            return ad::sum(util::counting_iterator<>(0),
-                           util::counting_iterator<>(x.size()),
-                           [&](auto i) {
-                                auto&& ad_x = x.to_ad(vars, cache, i);
-                                auto&& ad_min = min_.to_ad(vars, cache, i);
-                                auto&& ad_max = max_.to_ad(vars, cache, i);
-                                return (cache[offset_+i] = ad_min,
-                                        cache[offset_+i+1] = ad_max,
-                                        ad::if_else(
-                                            (cache[offset_+i] < ad_x) && (ad_x < cache[offset_+i+1]),
-                                            -ad::log(cache[offset_+i+1] - cache[offset_+i]),
-                                            ad::constant(math::neg_inf<dist_value_t>)
-                                       ) );
-                           });
-        }
-
+        return ad::uniform_adj_log_pdf(x.ad(pack),
+                                       min_.ad(pack),
+                                       max_.ad(pack));
     }
 
-    template <class PVecType
-            , class F = util::identity>
-    value_t min(const PVecType& pvalues, 
-                size_t i=0,
-                F f = F()) const 
-    { return min_.value(pvalues, i, f); }
-
-    template <class PVecType
-            , class F = util::identity>
-    value_t max(const PVecType& pvalues, 
-                size_t i=0,
-                F f = F()) const 
-    { return max_.value(pvalues, i, f); }
-
-    index_t set_cache_offset(index_t idx) 
+    template <class PtrPackType>
+    void bind(const PtrPackType& pack)
     { 
-        idx = min_.set_cache_offset(idx);
-        idx = max_.set_cache_offset(idx);
-        offset_ = idx;
-        return idx + min_.size() + max_.size(); 
+        static_cast<void>(pack);
+        if constexpr (min_t::has_param) {
+            min_.bind(pack);
+        }
+        if constexpr (max_t::has_param) {
+            max_.bind(pack);
+        }
+    }
+
+    void activate_refcnt() const 
+    { 
+        min_.activate_refcnt(); 
+        max_.activate_refcnt();
+    }
+
+    // Note: assumes that min_ and max_ have already been evaluated!
+    template <class XType, class GenType>
+    bool prune(XType& x, GenType& gen) const { 
+        using x_t = std::decay_t<XType>;
+        static_assert(util::is_param_v<x_t>);
+
+        auto m = min_.get();
+        auto M = max_.get();
+        std::uniform_real_distribution<dist_value_t> dist(0.,1.);
+
+        if constexpr (util::is_scl_v<x_t>) {
+            bool needs_prune = (x.get() <= m) || (x.get() >= M); 
+            if (needs_prune) {
+                x.get() = (M-m) * dist(gen) + m;
+            }
+            return needs_prune;
+
+        } else if constexpr (util::is_vec_v<x_t>) {
+            auto get = [](const auto& v, size_t i=0, size_t j=0) {
+                using v_t = std::decay_t<decltype(v)>;
+                static_cast<void>(i);
+                static_cast<void>(j);
+                if constexpr (!ad::util::is_eigen_v<v_t>) {
+                    return v;
+                } else {
+                    return v(i,j);
+                }
+            };
+            auto to_array = [](const auto& v) {
+                using v_t = std::decay_t<decltype(v)>;
+                if constexpr (!ad::util::is_eigen_v<v_t>) {
+                    return v;
+                } else {
+                    return v.array();
+                }
+            };
+            
+            auto xa = x.get().array();
+            bool needs_prune = (xa <= to_array(m)).max(xa >= to_array(M)).any();
+            if (needs_prune) {
+                using vec_t = std::decay_t<decltype(x.get())>;
+                x.get() = vec_t::NullaryExpr(x.get().size(), 
+                        [&](size_t i) { 
+                            return (get(M, i) - get(m, i)) * dist(gen) + get(m, i);
+                        });
+            }
+            return needs_prune;
+
+        } else {
+            static_assert(util::is_scl_v<x_t> ||
+                          util::is_vec_v<x_t>, 
+                          "x must be a scalar or vector shape.");
+        }
     }
 
 private:
-    index_t offset_;
-    MinType min_; 
-    MaxType max_;
+    min_t min_; 
+    max_t max_;
 };
 
+} // namespace dist
 } // namespace expr
+
+/**
+ * Builds a Uniform expression only when the parameters
+ * are both valid continuous distribution parameter types.
+ * See var_expr.hpp for more information.
+ */
+template <class MinType, class MaxType
+        , class = std::enable_if_t<
+            util::is_valid_dist_param_v<MinType> &&
+            util::is_valid_dist_param_v<MaxType>
+         > >
+inline constexpr auto uniform(const MinType& min_expr,
+                              const MaxType& max_expr)
+{
+    using min_t = util::convert_to_param_t<MinType>;
+    using max_t = util::convert_to_param_t<MaxType>;
+
+    min_t wrap_min_expr = min_expr;
+    max_t wrap_max_expr = max_expr;
+
+    return expr::dist::Uniform(wrap_min_expr, wrap_max_expr);
+}
+
 } // namespace ppl
 
 #undef PPL_UNIFORM_PARAM_SHAPE

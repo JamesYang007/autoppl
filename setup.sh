@@ -21,23 +21,6 @@ if [ ! -d "$gtestpath" ]; then
     cd ~- # change back to previous dir and no output to terminal
 fi
 
-# setup Armadillo
-if [ ! -d "$armapath" ]; then
-    if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "darwin"* ]]; then
-        cd lib &> /dev/null
-        if [[ "$OSTYPE" == "linux-gnu" ]]; then
-            sudo apt install libopenblas-dev liblapack-dev
-        fi
-        wget http://sourceforge.net/projects/arma/files/armadillo-9.870.2.tar.xz
-        tar -xvf armadillo-9.870.2.tar.xz
-        cd armadillo-9.870.2
-        cmake . -DCMAKE_INSTALL_PREFIX="../armadillo"
-        make
-        make install
-        cd ../../ &> /dev/null
-    fi
-fi
-
 # setup FastAD
 if [ ! -d "$fastadpath" ]; then
     git clone https://github.com/JamesYang007/FastAD.git $fastadpath

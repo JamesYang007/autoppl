@@ -5,3 +5,6 @@ build
 lib/*
 !lib/CMakeLists.txt
 CMakeSettings.json
+test/mcmc/hmc/nuts/ref/*_stan*
+!test/mcmc/hmc/nuts/ref/*_stan.py
+!test/mcmc/hmc/nuts/ref/*_stan.stan

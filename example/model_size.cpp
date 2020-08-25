@@ -25,7 +25,7 @@ void complex_model()
 {
     // complicated model size
     ppl::Data<double> X;
-    ppl::Param<double, ppl::vec> theta(6);
+    std::array<ppl::Param<double>, 6> theta;
     auto model = (
         theta[0] |= ppl::uniform(-1., 1.),
         theta[1] |= ppl::uniform(theta[0], theta[0] + 2.),

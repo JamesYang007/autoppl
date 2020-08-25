@@ -1,5 +1,4 @@
 #pragma once
-#include <armadillo>
 #include <autoppl/math/welford.hpp>
 
 namespace ppl {
@@ -56,8 +55,6 @@ struct VarAdapter<unit_var>
 template <>
 struct VarAdapter<diag_var>
 {
-    using variance_t = arma::vec;
-
     VarAdapter(size_t n_params,
                size_t warmup,
                size_t init_buffer,
@@ -104,7 +101,8 @@ struct VarAdapter<diag_var>
     // otherwise, adapt variance if within window.
     // If reached end of current window, update variance, reset estimator, get new window.
     template <class MatType1, class MatType2>
-    bool adapt(const MatType1& x, MatType2& var) 
+    bool adapt(const Eigen::MatrixBase<MatType1>& x, 
+               Eigen::MatrixBase<MatType2>& var) 
     {
         // if counter is not at the end of all windows
         if (counter_ >= init_buffer_ &&
@@ -115,10 +113,11 @@ struct VarAdapter<diag_var>
         // if currently at the end of the window,
         // get updated variance and reset estimator
         if (counter_ == window_end_ - 1) {
-            var_estimator_.get_variance(var);
+            auto&& v = var_estimator_.get_variance();
             double n = var_estimator_.get_n_samples();
             // regularized sample variance (see STAN)
-            var = (n / (n + 5.0)) * var + 1e-3 * (5.0 / (n + 5.0));
+            var.array() = ( (n / ((n + 5.0) * (n - 1.))) * v.array() + 
+                            1e-3 * (5.0 / (n + 5.0)) );
             var_estimator_.reset();
             shift_window();
             ++counter_;

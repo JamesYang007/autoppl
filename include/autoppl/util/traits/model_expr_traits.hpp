@@ -5,7 +5,6 @@
 #include <concepts>
 #endif
 #include <autoppl/util/traits/type_traits.hpp>
-#include <autoppl/util/ad_boost/type_traits.hpp>
 
 namespace ppl {
 namespace util {
@@ -34,18 +33,10 @@ struct model_expr_traits
 
 #if __cplusplus <= 201703L
 
-DEFINE_ASSERT_ONE_PARAM(model_expr_is_base_of_v);
-
 template <class T>
 inline constexpr bool is_model_expr_v = 
     model_expr_is_base_of_v<T> &&
     has_type_dist_value_t_v<T>
-    ;
-
-template <class T>
-inline constexpr bool assert_is_model_expr_v = 
-    assert_model_expr_is_base_of_v<T> &&
-    assert_has_type_dist_value_t_v<T>
     ;
 
 #else
@@ -53,13 +44,10 @@ inline constexpr bool assert_is_model_expr_v =
 template <class T>
 concept model_expr_c =
     model_expr_is_base_of_v<T> &&
-    requires (const MockVector<double>& v,
-              const MockVector<ad::Var<double>>& ad_vars,
-              const T& cx) {
+    requires (const T& cx) {
         typename model_expr_traits<T>::dist_value_t;
-        { cx.pdf(v) } -> std::same_as<typename model_expr_traits<T>::dist_value_t>;
-        { cx.log_pdf(v) } -> std::same_as<typename model_expr_traits<T>::dist_value_t>;
-        { cx.ad_log_pdf(ad_vars, ad_vars) } -> ad::is_ad_expr;
+        { cx.pdf() } -> std::same_as<typename model_expr_traits<T>::dist_value_t>;
+        { cx.log_pdf() } -> std::same_as<typename model_expr_traits<T>::dist_value_t>;
     }
     ;
 

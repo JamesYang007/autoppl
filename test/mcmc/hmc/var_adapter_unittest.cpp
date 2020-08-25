@@ -8,10 +8,18 @@ struct var_adapter_fixture : ::testing::Test
 {
 protected:
     using diag_adapter_t = VarAdapter<diag_var>;
-    arma::vec x = arma::zeros(1);
-    arma::vec var = arma::zeros(1);
+    Eigen::VectorXd x;
+    Eigen::VectorXd var;
 
     size_t n_params = 1;
+
+    var_adapter_fixture()
+        : x(1)
+        , var(1)
+    {
+        x.setZero();
+        var.setZero();
+    }
 
     void test_case_1(size_t warmup,
                      size_t init_buffer,

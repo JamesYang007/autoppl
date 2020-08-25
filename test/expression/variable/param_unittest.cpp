@@ -1,176 +1,143 @@
 #include "gtest/gtest.h"
-#include <unordered_map>
-#include <array>
+#include <testutil/base_fixture.hpp>
 #include <autoppl/expression/variable/param.hpp>
+#include <autoppl/expression/constraint/pos_def.hpp>
 #include <autoppl/util/traits/var_traits.hpp>
-#include <autoppl/util/iterator/counting_iterator.hpp>
 
 namespace ppl {
 namespace expr {
+namespace var {
 
-struct param_fixture : ::testing::Test {
+struct param_fixture: 
+    base_fixture<double>,
+    ::testing::Test
+{
 protected:
-    using value_type = double;
-    using pointer_t = value_type*;
-    using vec_pointer_t = std::vector<pointer_t>;
+    using pos_def_t = constraint::PosDef;
+    using pos_def_mat_pv_t = ParamView<value_t, mat, pos_def_t>;
 
-    using pview_scl_t = ParamView<pointer_t, ppl::scl>;
-    using pview_vec_t = ParamView<vec_pointer_t, ppl::vec>;
-    using p_scl_t = Param<value_type, ppl::scl>;
-    using p_vec_t = Param<value_type, ppl::vec>;
-
-    using index_t = typename util::param_traits<pview_scl_t>::index_t;
-
-    static constexpr value_type defval1 = 1.0;
-    static constexpr value_type defval2 = 2.0;
+    static constexpr value_t defval1 = 1.0;
+    static constexpr value_t defval2 = 2.0;
     static constexpr size_t size1 = 7;
     static constexpr size_t size2 = 17;
 
-    // hypothetical storage: one sample for each param value
-    std::array<value_type, size1> storage1 = {0};
-    std::array<value_type, size2> storage2 = {0};
+    info_pack_t pack;
+    size_t offset;
+
+    value_t tol = 7e-15;
 
     // hypothetical parameter values
-    std::vector<value_type> values1;    
-    std::vector<value_type> values2;
-
-    // hypothetical storage ptrs for sample
-    vec_pointer_t storage_ptrs1;    
-    vec_pointer_t storage_ptrs2;
-
-    // hypothetical offsets
-    index_t offset = 0;
+    std::vector<value_t> values1;    
+    std::vector<value_t> values2;
 
     param_fixture() 
-        : values1(size1)
-        , values2(size2)
-        , storage_ptrs1(size1)
-        , storage_ptrs2(size2)
+        : pack()
+        , offset(pack.off_pack.uc_offset)
+        , values1(size1 + offset)
+        , values2(size2 + offset)
     {
-        std::transform(util::counting_iterator<>(0),
-                       util::counting_iterator<>(size1),
-                       values1.begin(),
-                       [=](auto i) { return i + defval1; });
-
-        std::transform(util::counting_iterator<>(0),
-                       util::counting_iterator<>(size2),
-                       values2.begin(),
-                       [=](auto i) { return i + defval2; });
-
-        std::transform(storage1.begin(),
-                       storage1.end(),
-                       storage_ptrs1.begin(),
-                       [](auto& x) { return &x; });
-
-        std::transform(storage2.begin(),
-                       storage2.end(),
-                       storage_ptrs2.begin(),
-                       [](auto& x) { return &x; });
+        for (size_t i = 0; i < values1.size(); ++i) {
+            values1[i] = i + defval1;
+        }
+        for (size_t i = 0; i < values2.size(); ++i) {
+            values2[i] = i + defval2;
+        }
+    
+        ptr_pack.uc_val = values1.data();
     }
 };
 
 TEST_F(param_fixture, type_check)
 {
-    static_assert(util::is_param_v<pview_scl_t>);
-    static_assert(util::is_param_v<pview_vec_t>);
-    static_assert(util::is_param_v<p_scl_t>);
-    static_assert(util::is_param_v<p_vec_t>);
+    static_assert(util::is_param_v<scl_pv_t>);
+    static_assert(util::is_param_v<vec_pv_t>);
+    static_assert(util::is_param_v<scl_p_t>);
+    static_assert(util::is_param_v<vec_p_t>);
 }
 
 ////////////////////////////////////////
-// DataView: scl
+// ParamView: scl
 ////////////////////////////////////////
 
-TEST_F(param_fixture, pview_scl_value)
+TEST_F(param_fixture, scl_pv_value)
 {
-    auto&& s1 = storage_ptrs1[0];
-    pview_scl_t view(offset, s1, 1);
-
-    // last parameter should not matter
-    EXPECT_DOUBLE_EQ(view.value(values1, 0), values1[1]);
-    EXPECT_DOUBLE_EQ(view.value(values1, 1), values1[1]);
-    EXPECT_DOUBLE_EQ(view.value(values1, 2), values1[1]);
-
-    // able to view a different array of values
-    EXPECT_DOUBLE_EQ(view.value(values2, 0), values2[1]);
-    EXPECT_DOUBLE_EQ(view.value(values2, 1), values2[1]);
-    EXPECT_DOUBLE_EQ(view.value(values2, 2), values2[1]);
+    scl_pv_t view(&pack);
+    view.bind(ptr_pack);
+    EXPECT_DOUBLE_EQ(view.get(), values1[offset]);
 }
 
-TEST_F(param_fixture, pview_scl_storage)
+TEST_F(param_fixture, scl_pv_size)
 {
-    auto&& s1 = storage_ptrs1[0];
-
-    pview_scl_t view(offset, s1, 2);
-    // parameter should not matter 
-    EXPECT_EQ(view.storage(0), s1);
-    EXPECT_EQ(view.storage(1), s1);
-    EXPECT_EQ(view.storage(2), s1);
-
-    // relative offset should not affect storage
-    pview_scl_t view2(offset, s1, 13124);
-    EXPECT_EQ(view2.storage(0), s1);
-    EXPECT_EQ(view2.storage(1), s1);
-    EXPECT_EQ(view2.storage(2), s1);
-}
-
-TEST_F(param_fixture, pview_scl_size)
-{
-    pview_scl_t view(offset, storage_ptrs1[0]);
+    scl_pv_t view(&pack);
     EXPECT_EQ(view.size(), 1ul);
 }
 
-TEST_F(param_fixture, pview_scl_to_ad)
+TEST_F(param_fixture, scl_pv_to_ad)
 {
-    auto&& s1 = storage_ptrs1[0];
-    pview_scl_t view(offset, s1);
+    scl_pv_t view(&pack);
 
     // simply tests if gets correct elt from passed in array
     // last two parameter should be ignored
-    const auto& elt = view.to_ad(storage_ptrs1, storage_ptrs1, 0); 
-    EXPECT_EQ(elt, s1);
+    auto elt = view.ad(ptr_pack); 
+    EXPECT_DOUBLE_EQ(elt.get(), values1[offset]);
 
-    const auto& elt2 = view.to_ad(storage_ptrs1, storage_ptrs1, 1); 
-    EXPECT_EQ(elt2, s1);
+    ptr_pack.uc_val = values2.data();
+    auto elt2 = view.ad(ptr_pack); 
+    EXPECT_DOUBLE_EQ(elt2.get(), values2[offset]);
 }
 
 ////////////////////////////////////////
-// DataView: vec
+// ParamView: vec
 ////////////////////////////////////////
 
-TEST_F(param_fixture, pview_vec_value)
+TEST_F(param_fixture, vec_pv_value)
 {
-    pview_vec_t view(offset, storage_ptrs1, storage_ptrs1.size());
-    // parameter SHOULD matter
-    EXPECT_DOUBLE_EQ(view.value(values1, 0), values1[0]);
-    EXPECT_DOUBLE_EQ(view.value(values1, 1), values1[1]);
-    EXPECT_DOUBLE_EQ(view.value(values1, 2), values1[2]);
+    vec_pv_t view(&pack, size1);
+    view.bind(ptr_pack);
+    for (size_t i = 0; i < size1; ++i) {
+        EXPECT_DOUBLE_EQ(view.get()(i), values1[offset+i]);
+    }
 }
 
-TEST_F(param_fixture, pview_vec_size)
+TEST_F(param_fixture, vec_pv_size)
 {
-    pview_vec_t view(offset, storage_ptrs1, storage_ptrs1.size());
+    vec_pv_t view(&pack, size1);
     EXPECT_EQ(view.size(), size1);
 }
 
-TEST_F(param_fixture, pview_vec_storage)
+TEST_F(param_fixture, vec_pv_to_ad)
 {
-    pview_vec_t view(offset, storage_ptrs1, storage_ptrs1.size());
-    EXPECT_EQ(view.storage(0), storage_ptrs1[0]);
-    EXPECT_EQ(view.storage(1), storage_ptrs1[1]);
-    EXPECT_EQ(view.storage(2), storage_ptrs1[2]);
+    vec_pv_t view(&pack, size1);
+
+    auto elt = view.ad(ptr_pack);
+
+    for (size_t i = 0; i < size1; ++i) {
+        EXPECT_DOUBLE_EQ(elt.get()(i), values1[offset+i]);
+    }
 }
 
-TEST_F(param_fixture, pview_vec_to_ad)
+////////////////////////////////////////
+// ParamView: pos-def mat
+////////////////////////////////////////
+TEST_F(param_fixture, pos_def_mat_pv_transform)
 {
-    pview_vec_t view(offset, storage_ptrs1, storage_ptrs1.size());
+    pos_def_mat_pv_t S(&pack, 2, 2);    
+    std::vector<value_t> c(100, 0); // obscene amount
+    std::vector<size_t> v(100, 0); // obscene amount
+    Eigen::Map<Eigen::VectorXd> mp(values1.data(), values1.size());
+    Eigen::VectorXd orig = mp;
 
-    auto elt = view.to_ad(storage_ptrs1, storage_ptrs1, 0);
-    EXPECT_EQ(elt, &storage1[0]);
-
-    elt = view.to_ad(storage_ptrs1, storage_ptrs1, 3);
-    EXPECT_EQ(elt, &storage1[3]);
+    ptr_pack.c_val = c.data();
+    ptr_pack.v_val = v.data();
+    S.activate_refcnt();
+    S.bind(ptr_pack);
+    S.eval();
+    S.inv_eval();
+    for (int i = 0; i < mp.size(); ++i) {
+        EXPECT_NEAR(mp(i), orig(i), tol);
+    }
 }
 
-}  // namespace expr
-}  // namespace ppl
+} // namespace var
+} // namespace expr
+} // namespace ppl

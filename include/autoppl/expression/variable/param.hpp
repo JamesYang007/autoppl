@@ -1,9 +1,10 @@
 #pragma once
-#include <cassert>
-#include <vector>
+#include <autoppl/expression/constraint/unconstrained.hpp>
 #include <autoppl/util/traits/var_traits.hpp>
 #include <autoppl/util/traits/shape_traits.hpp>
-#include <autoppl/util/functional.hpp>
+#include <autoppl/util/packs/offset_pack.hpp>
+#include <autoppl/util/packs/ptr_pack.hpp>
+#include <fastad_bits/reverse/core/var_view.hpp>
 
 #define PPL_PARAMVIEW_SHAPE_UNSUPPORTED \
     "Unsupported shape for ParamView. "
@@ -11,289 +12,289 @@
     "Unsupported shape for Param. "
 
 namespace ppl {
+namespace details {
+
+struct ParamInfoPack 
+{
+    size_t refcnt = 0;          // total reference count
+    util::OffsetPack off_pack;
+};
+
+} // namespace details
 
 /**
- * ParamView is a class that views the storage pointer(s).
- * Note that it is viewing a storage pointer (or vector of pointers) and not the storage itself.
+ * ParamView is a class that views or references a parameter entity.
+ * It views the internal data of the first parameter object that was created.
+ * This is our way of making sure that all references to a parameter object
+ * when creating a model expression indeed refers to that first object.
+ *
  * Users will likely not need to create these objects directly.
- * The easier-to-use Param class template will be used.
- * When constructing a model expression, both types will be converted to a ParamView.
+ * The easier-to-use Param class template will likely be used.
+ * When constructing a model expression, both Param and ParamView objects 
+ * will be converted to a ParamView.
  *
- * Specializations when ShapeType is not one of (ppl::scl, ppl::vec, or ppl::mat)
- * is disabled.
- *
- * @tparam PointerType  pointer type for storage pointer to view when ShapeType
- *                      is ppl::scl. It is a vector of pointer type when ShapeType
- *                      is ppl::vec.
- * @tparam ShapeType    shape of the object it is viewing. 
- *                      Currently does not support ppl::mat.
+ * @tparam  ValueType       value type to view  
+ * @tparam  ShapeType       shape of the object it is viewing. 
+ * @tparam  ConstraintType  constraint expression type   
  */
 
-template <class PointerType
-        , class ShapeType = ppl::scl>
-struct ParamView
+template <class ValueType
+        , class ShapeType = ppl::scl
+        , class ConstraintType = expr::constraint::Unconstrained>
+struct ParamView:
+    util::VarExprBase<ParamView<ValueType, ShapeType, ConstraintType>>,
+    util::ParamBase<ParamView<ValueType, ShapeType, ConstraintType>> 
 {
-    static_assert(util::is_scl_v<ShapeType> ||
-                  util::is_vec_v<ShapeType>,
-                  PPL_PARAMVIEW_SHAPE_UNSUPPORTED);
-};
-
-template <class PointerType>
-struct ParamView<PointerType, ppl::scl>:
-    util::VarExprBase<ParamView<PointerType, ppl::scl>>,
-    util::ParamBase<ParamView<PointerType, ppl::scl>> 
-{
-    using pointer_t = PointerType;
-    using value_t = std::remove_const_t<
-        std::remove_pointer_t<pointer_t> >;
-    using const_pointer_t = const value_t*;
-    using const_storage_pointer_t = const pointer_t*;
-    using id_t = const void*;
-    using shape_t = ppl::scl;
-    using index_t = uint32_t;
-    static constexpr bool has_param = true;
-    static constexpr size_t fixed_size = 1;
-
-    // Note: id may need to be provided when subscripting
-    ParamView(index_t& offset, 
-              const pointer_t& storage_ptr,
-              id_t id,
-              index_t rel_offset = 0) noexcept
-        : offset_ptr_{&offset} 
-        , rel_offset_{rel_offset}
-        , storage_ptr_ptr_{&storage_ptr} 
-        , id_{id}
-    {}
-
-    ParamView(index_t& offset, 
-              const pointer_t& storage_ptr,
-              index_t rel_offset = 0) noexcept
-        : ParamView(offset, storage_ptr, this, rel_offset)
-    {}
-
-    template <class VecType
-            , class F = util::identity>
-    auto& value(VecType& vars,
-                size_t=0,
-                F f = F()) const 
-    { 
-        return f.template operator()<value_t>(
-            vars[*offset_ptr_ + rel_offset_]); 
-    }
-
-    template <class VecType
-            , class F = util::identity>
-    auto value(const VecType& vars,
-               size_t=0,
-               F f = F()) const 
-    { 
-        return f.template operator()<value_t>(
-            vars[*offset_ptr_ + rel_offset_]); 
-    }
-    
-    constexpr size_t size() const { return fixed_size; }
-
-    pointer_t storage(size_t=0) const 
-    { return *storage_ptr_ptr_; }
-
-    id_t id() const { return id_; }
-
-    template <class VecType>
-    auto to_ad(const VecType& vars,
-               const VecType&,
-               size_t=0) const 
-    { return vars[*offset_ptr_ + rel_offset_]; }
-
-    index_t set_offset(index_t offset) { 
-        *offset_ptr_ = offset; 
-        return offset + this->size();
-    }
-
-    index_t set_cache_offset(index_t idx) const 
-    { return idx; }
-
-private:
-    index_t* const offset_ptr_;
-    const index_t rel_offset_;
-    const_storage_pointer_t storage_ptr_ptr_;
-    const id_t id_; 
-};
-
-template <class VecType>
-struct ParamView<VecType, ppl::vec>:
-    util::VarExprBase<ParamView<VecType, ppl::vec>>,
-    util::ParamBase<ParamView<VecType, ppl::vec>> 
-{
-    using vec_t = VecType;
-    using pointer_t = typename VecType::value_type;
-    using value_t = std::remove_const_t<
-        std::remove_pointer_t<pointer_t> >;
-    using const_pointer_t = const value_t*;
-    using shape_t = ppl::vec;
-    using index_t = uint32_t;
+    using value_t = ValueType;
+    using shape_t = ShapeType;
+    using constraint_t = ConstraintType;
+    using var_t = util::var_t<value_t, shape_t>;
     using id_t = const void*;
     static constexpr bool has_param = true;
-    static constexpr size_t fixed_size = 0;
 
-    ParamView(index_t& offset,
-              const vec_t& storages,
-              index_t size) noexcept
-        : offset_ptr_{&offset} 
-        , storages_ptr_{&storages} 
+    ParamView(details::ParamInfoPack* i_pack,
+              size_t rows=1,
+              size_t cols=1,
+              constraint_t c = constraint_t()) noexcept
+        : i_pack_{i_pack}
+        , transformer_{rows, cols, c}
         , id_{this}
-        , size_{size}
     {}
 
-    template <class PVecType
-            , class F = util::identity>
-    auto& value(PVecType& vars,
-                size_t i,
-                F f = F()) const 
-    { 
-        return f.template operator()<value_t>(
-                vars[*offset_ptr_ + i]); 
+    template <class Func>
+    void traverse(Func&&) const {}
+
+    /**
+     * Evaluates the ParamView expression by first incrementing the visit count.
+     * If it is the first to visit such parameter when evaluating the model,
+     * it must first transform the unconstrained parameters to constrained parameters.
+     * If it is the last to visit such parameter, it must reset the visit count back to 0
+     * for the next time we evaluate the model.
+     *
+     * @return  constrained parameter view
+     */
+    const var_t& eval() { 
+        transformer_.inv_transform(i_pack_->refcnt);
+        return transformer_.get_c();
     }
 
-    template <class PVecType
-            , class F = util::identity>
-    auto value(const PVecType& vars,
-               size_t i,
-               F f = F()) const 
-    { 
-        return f.template operator()<value_t>(
-                vars[*offset_ptr_ + i]); 
+    /**
+     * This method is currently only used during pruning in initialization.
+     * It assumes that reference counting is not needed, 
+     * since a full model evaluation is not required when this is called.
+     */
+    void inv_eval() { transformer_.transform(); }
+
+    template <class TPValPtrType
+            , class TPAdjPtrType>
+    auto ad(const util::PtrPack<value_t*, 
+                                value_t*, 
+                                TPValPtrType,
+                                TPAdjPtrType,
+                                value_t*>& pack) const { 
+        auto curr_pack = pack;
+        curr_pack.uc_val += i_pack_->off_pack.uc_offset; 
+        curr_pack.uc_adj += i_pack_->off_pack.uc_offset;
+        curr_pack.c_val += i_pack_->off_pack.c_offset; 
+        curr_pack.v_val += i_pack_->off_pack.v_offset;
+        return transformer_.inv_transform_ad(curr_pack, pack,
+                                             i_pack_->refcnt);
     }
 
-    size_t size() const { return size_; }
+    template <class TPValPtrType
+            , class TPAdjPtrType>
+    auto logj_ad(const util::PtrPack<value_t*, 
+                                     value_t*, 
+                                     TPValPtrType,
+                                     TPAdjPtrType,
+                                     value_t*>& pack) const { 
+        auto curr_pack = pack;
+        curr_pack.uc_val += i_pack_->off_pack.uc_offset;
+        curr_pack.uc_adj += i_pack_->off_pack.uc_offset;
+        curr_pack.c_val += i_pack_->off_pack.c_offset;
+        curr_pack.v_val += i_pack_->off_pack.v_offset;
+        return transformer_.logj_inv_transform_ad(curr_pack, pack);
+    }
 
-    pointer_t storage(size_t i) const 
-    { return (*storages_ptr_)[i]; }
+    /**
+     * Initialize unconstrained values by generating constrained values
+     * and then transforming to unconstrained values.
+     * Undefined behavior if bind has not been called before.
+     */
+    template <class GenType, class ContDist>
+    void init(GenType& gen, ContDist& dist)
+    { transformer_.init(gen, dist); }
 
+    /**
+     * Set the common offsets with pack and resets reference count to 0.
+     * Updates pack to contain the next offsets after accounting for current ParamView.
+     *
+     * Note: this should only be called exactly once per parameter referenced in a model.
+     * Since a model must assign a distribution to every parameter referenced in the model,
+     * it suffices to activate parameters in those expressions.
+     */
+    void activate(util::OffsetPack& pack) const { 
+        i_pack_->off_pack = pack;
+        i_pack_->refcnt = 0;
+        pack.uc_offset += transformer_.bind_size_uc();
+        pack.c_offset += transformer_.bind_size_c();
+        pack.v_offset += transformer_.bind_size_v();
+    }
+
+    /**
+     * Increments the reference count to activate the current ParamView.
+     * The total number of reference counts for a parameter is defined to be
+     * the number of inverse-transforms required for the paarameter during model evaluation.
+     * This is identical to the number of ParamView objects referencing the parrameter in the model.
+     * In general, constraint expression may need to be activated as well.
+     * It requires the current reference count to determine if the activation is needed.
+     */
+    void activate_refcnt() const { 
+        ++i_pack_->refcnt; 
+        transformer_.activate_refcnt(i_pack_->refcnt);
+    }
+
+    /**
+     * Finds the correct offsetted pointers for the three parameters
+     * using the common offsets in info pack and delegates binding to underlying transformer.
+     * This only needs to be called if user wishes to call eval().
+     * For AD support only, this does not need to be called.
+     */
+    template <class PtrPackType>
+    void bind(const PtrPackType& pack) 
+    { 
+        static_cast<void>(pack);
+        if constexpr (std::is_convertible_v<typename PtrPackType::uc_val_ptr_t, value_t*> &&
+                      std::is_convertible_v<typename PtrPackType::c_val_ptr_t, value_t*>) {
+            value_t* ucp = pack.uc_val;
+            value_t* cp = pack.c_val;
+            size_t* vp = pack.v_val;
+            util::PtrPack curr_pack(ucp, nullptr, nullptr, nullptr, cp, vp);
+            curr_pack.uc_val += i_pack_->off_pack.uc_offset;
+            curr_pack.c_val += i_pack_->off_pack.c_offset; 
+            curr_pack.v_val += i_pack_->off_pack.v_offset;
+            transformer_.bind(curr_pack, pack);
+        }
+    }
+
+    var_t& get() { return transformer_.get_c(); }
+    const var_t& get() const { return transformer_.get_c(); }
+    constexpr size_t size() const { return transformer_.size_c(); }
+    constexpr size_t rows() const { return transformer_.rows_c(); }
+    constexpr size_t cols() const { return transformer_.cols_c(); }
     id_t id() const { return id_; }
 
-    template <class VecADVarType>
-    auto to_ad(const VecADVarType& vars,
-               const VecADVarType&,
-               size_t i) const 
-    { return vars[*offset_ptr_ + i]; }
-
-    index_t set_offset(index_t offset) { 
-        *offset_ptr_ = offset; 
-        return offset + this->size();
-    }
-
-    index_t set_cache_offset(index_t idx) const 
-    { return idx; }
-    
-    auto operator[](index_t i) { 
-        return ParamView<pointer_t, ppl::scl>(
-                *offset_ptr_, 
-                (*storages_ptr_)[i], 
-                id_,
-                i);
-    }
+    // API specific to ParamView
+    auto& offset() { return i_pack_->off_pack; }
+    auto offset() const { return i_pack_->off_pack; }
+    constexpr size_t size_uc() const { return transformer_.size_uc(); }
+    constexpr size_t size_c() const { return transformer_.size_c(); }
 
 private:
-    index_t* const offset_ptr_; // note: underlying offset CAN be changed by viewer
-    const vec_t* storages_ptr_;
-    const id_t id_;
-    const index_t size_;
+    details::ParamInfoPack* const i_pack_;
+    expr::constraint::Transformer<value_t, shape_t, constraint_t> transformer_;
+    const id_t id_; 
 };
 
 /**
  * Param is a class template wrapping a ParamView for user-friendly usage.
- * It owns a container of storage pointers which the user specifies
- * to point to where samples should go.
  * A Param is a ParamView (it views itself).
  * Similar to ParamView, it must be given a shape tag.
  *
  * @tparam ValueType    underlying value type (usually double or int)
  * @tparam ShapeType    one of the three shape tags.
- *                      Currently, ppl::mat is not supported.
  */
 
 template <class ValueType
-        , class ShapeType = ppl::scl>
+        , class ShapeType = ppl::scl
+        , class ConstraintType = expr::constraint::Unconstrained>
 struct Param
 {
-    static_assert(util::is_scl_v<ShapeType> ||
-                  util::is_vec_v<ShapeType>,
+    static_assert(util::is_shape_v<ShapeType>,
                   PPL_PARAM_SHAPE_UNSUPPORTED);
 };
 
-template <class ValueType>
-struct Param<ValueType, ppl::scl>: 
-    ParamView<ValueType*, ppl::scl>,
-    util::VarExprBase<Param<ValueType, ppl::scl>>,
-    util::ParamBase<Param<ValueType, ppl::scl>>
+template <class ValueType, class ConstraintType>
+struct Param<ValueType, ppl::scl, ConstraintType>: 
+    ParamView<ValueType, ppl::scl, ConstraintType>,
+    util::ParamBase<Param<ValueType, ppl::scl, ConstraintType>>
 {
-    using base_t = ParamView<ValueType*, ppl::scl>;
-    using typename base_t::value_t;
-    using typename base_t::pointer_t;
-    using typename base_t::const_pointer_t;
-    using typename base_t::id_t;
-    using typename base_t::index_t;
-    using typename base_t::shape_t;
-    using base_t::value;
-    using base_t::size;
-    using base_t::storage;
-    using base_t::to_ad;
-    using base_t::id;
-    using base_t::set_offset;
+    using base_t = ParamView<ValueType, ppl::scl, ConstraintType>;
+    using typename base_t::constraint_t;
 
-    Param(pointer_t ptr=nullptr) noexcept
-        : base_t(offset_, storage_ptr_)
-        , offset_(0) 
-        , storage_ptr_(ptr)
+    Param(size_t=1,
+          size_t=1,
+          constraint_t c = constraint_t()) noexcept
+        : base_t(&i_pack_, 1, 1, c)
     {}
-
-    pointer_t& storage(size_t=0) { return storage_ptr_; }
 
 private:
-    index_t offset_;
-    pointer_t storage_ptr_;
+    details::ParamInfoPack i_pack_;
 };
 
-template <class ValueType>
-struct Param<ValueType, ppl::vec> : 
-    ParamView<std::vector<ValueType*>, ppl::vec>,
-    util::VarExprBase<Param<ValueType, ppl::vec>>,
-    util::ParamBase<Param<ValueType, ppl::vec>>
+template <class ValueType, class ConstraintType>
+struct Param<ValueType, ppl::vec, ConstraintType> : 
+    ParamView<ValueType, ppl::vec, ConstraintType>,
+    util::ParamBase<Param<ValueType, ppl::vec, ConstraintType>>
 {
-    using base_t = ParamView<std::vector<ValueType*>, ppl::vec>;
-    using typename base_t::value_t;
-    using typename base_t::pointer_t;
-    using typename base_t::const_pointer_t;
-    using typename base_t::id_t;
-    using typename base_t::index_t;
-    using typename base_t::shape_t;
-    using base_t::value;
-    using base_t::size;
-    using base_t::storage;
-    using base_t::to_ad;
-    using base_t::id;
-    using base_t::set_offset;
+    using base_t = ParamView<ValueType, ppl::vec, ConstraintType>;
+    using typename base_t::constraint_t;
 
-    Param(size_t n)
-        : base_t(offset_, storage_ptrs_, n)
-        , storage_ptrs_(n, nullptr)
+    Param(size_t n, 
+          size_t=1,
+          constraint_t c = constraint_t())
+        : base_t(&i_pack_, n, 1, c)
     {}
-
-    Param(std::initializer_list<pointer_t> ptrs) noexcept
-        : base_t(offset_, storage_ptrs_, ptrs.size())
-        , offset_(0)
-        , storage_ptrs_(ptrs)
-    {}
-
-    pointer_t& storage(size_t i) { return storage_ptrs_[i]; }
 
 private:
-    index_t offset_; 
-    std::vector<pointer_t> storage_ptrs_;
+    details::ParamInfoPack i_pack_;
 };
 
-// TODO: Specialization: mat-like
-// TODO: ParamFixed
+template <class ValueType, class ConstraintType>
+struct Param<ValueType, ppl::mat, ConstraintType> : 
+    ParamView<ValueType, ppl::mat, ConstraintType>,
+    util::ParamBase<Param<ValueType, ppl::mat, ConstraintType>>
+{
+    using base_t = ParamView<ValueType, ppl::mat, ConstraintType>;
+    using typename base_t::constraint_t;
+
+    Param(size_t rows, size_t cols, constraint_t c = constraint_t())
+        : base_t(&i_pack_, rows, cols, c)
+    {}
+
+private:
+    details::ParamInfoPack i_pack_;
+};
+
+
+// Helper function to create a Param object and deduce the constraint expression.
+
+template <class ValueType
+        , class ShapeType = scl
+        , class ConstraintType = expr::constraint::Unconstrained>
+constexpr inline auto make_param(size_t rows,
+                                 size_t cols,
+                                 const ConstraintType& c = ConstraintType())
+{
+    return Param<ValueType, ShapeType, ConstraintType>(rows, cols, c);
+}
+
+template <class ValueType
+        , class ShapeType = scl
+        , class ConstraintType = expr::constraint::Unconstrained>
+constexpr inline auto make_param(size_t rows,
+                                 const ConstraintType& c = ConstraintType())
+{
+    return Param<ValueType, ShapeType, ConstraintType>(rows, 1, c);
+}
+
+template <class ValueType
+        , class ShapeType = scl
+        , class ConstraintType = expr::constraint::Unconstrained>
+constexpr inline auto make_param(const ConstraintType& c = ConstraintType())
+{
+    return Param<ValueType, ShapeType, ConstraintType>(1, 1, c);
+}
 
 } // namespace ppl
 

@@ -1,17 +1,19 @@
 #include "gtest/gtest.h"
+#include <fastad>
+#include <testutil/base_fixture.hpp>
 #include <autoppl/expression/variable/constant.hpp>
 #include <autoppl/util/traits/var_expr_traits.hpp>
-#include <autoppl/util/traits/mock_types.hpp>
 
 namespace ppl {
 namespace expr {
+namespace var {
 
-struct constant_fixture : ::testing::Test
+struct constant_fixture: 
+    base_fixture<double>,
+    ::testing::Test
 {
 protected:
-    static constexpr double defval = 0.3;
-    using value_t = double;
-    value_t c = defval;
+    value_t c = 0.3;
     Constant<value_t> x{c};
 };
 
@@ -22,10 +24,10 @@ TEST_F(constant_fixture, ctor)
 
 TEST_F(constant_fixture, value)
 {
-    // first parameter ignored and was chosen arbitrarily
-    EXPECT_DOUBLE_EQ(x.value(0), defval);
+    value_t orig = c;
+    EXPECT_DOUBLE_EQ(x.get(), orig);
     c = 3.41;
-    EXPECT_DOUBLE_EQ(x.value(0), defval);
+    EXPECT_DOUBLE_EQ(x.get(), orig);
 }
 
 TEST_F(constant_fixture, size) 
@@ -33,12 +35,12 @@ TEST_F(constant_fixture, size)
     EXPECT_EQ(x.size(), 1ul);
 }
 
-TEST_F(constant_fixture, to_ad)
+TEST_F(constant_fixture, ad)
 {
-    // Note: arbitrarily first 2 inputs (will ignore)
-    auto expr = x.to_ad(0,0,0);
-    EXPECT_DOUBLE_EQ(ad::evaluate(expr), defval);
+    auto expr = x.ad(ptr_pack);
+    EXPECT_DOUBLE_EQ(ad::evaluate(expr), c);
 }
 
+} // namespace var
 } // namespace expr
 } // namespace ppl

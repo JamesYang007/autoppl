@@ -1,6 +1,5 @@
 #pragma once
 #include <fastad>
-#include <armadillo>
 
 namespace ppl {
 namespace mcmc {
@@ -8,31 +7,29 @@ namespace mcmc {
 /**
  * Helper function for leapfrog algorithm.
  * Resets adjoints and then differentiates AD expression.
- * @param ad_expr   AD expression to differentiate.
- * @param adjoints  Armadillo generic matrix type that supports member fn "zeros".
- * @return  result of calling ad::autodiff on ad_expr.
+ *
+ * @param   ad_expr         AD expression to differentiate
+ * @param   adjoints        Eigen generic matrix type that supports member fn "setZero"
+ * @param   tp_adjoints     Eigen generic matrix type that supports member fn "setZero" 
+ *
+ * @return  result of calling ad::autodiff on ad_expr after resetting adjoints
  */
 template <class ADExprType
-        , class MatType
-        , class ADVecType>
-double reset_autodiff(ADExprType& ad_expr, 
-                      MatType& adjoints,
-                      ADVecType& cache_ad)
+        , class MatType>
+inline double reset_autodiff(ADExprType& ad_expr, 
+                             Eigen::MatrixBase<MatType>& adjoints,
+                             Eigen::MatrixBase<MatType>& tp_adjoints)
 {
-    // reset adjoints
-    adjoints.zeros();
-    for (auto& v : cache_ad) { v.reset_adjoint(); }
-    // compute current gradient
+    adjoints.setZero();
+    tp_adjoints.setZero();
     return ad::autodiff(ad_expr);
 }
 
 /**
  * Leapfrog algorithm.
- * Expects theta, theta_adj, r to be submatrix views of Armadillo matrix.
- * However, any matrix library supporting arithmetic
- * operations like +,-, * (scalar) should work.
+ * Expects theta, theta_adj, tp_adj, r to be Eigen column-like objects.
  *
- * Updates theta, theta_adj, and r to contain the new leaped values
+ * Updates theta, theta_adj, tp_adj, and r to contain the new leaped values
  * and adjoints.
  *
  * @param ad_expr       AD expression representing L(theta)
@@ -40,6 +37,7 @@ double reset_autodiff(ADExprType& ad_expr,
  *                      and adjoints are placed into theta_adj.
  * @param theta         theta at which we want to start leaping
  * @param theta_adj     adjoint for theta. If not reusing, resets adjoints first.
+ * @param tp_adj        adjoints for transformed parameters. If not reusing, resets adjoints first.
  * @param r             momentum vector to start leaping
  * @param m_handler     momentum handler to compute correct dkinetic/dr
  * @param epsilon       step size
@@ -50,19 +48,18 @@ double reset_autodiff(ADExprType& ad_expr,
  */
 template <class ADExprType
         , class MatType
-        , class ADVecType
         , class MomentumHandlerType>
-double leapfrog(ADExprType& ad_expr,
-                MatType& theta,
-                MatType& theta_adj,
-                ADVecType& cache_ad,
-                MatType& r,
-                const MomentumHandlerType& m_handler,
-                double epsilon,
-                bool reuse_adj)
+inline double leapfrog(ADExprType& ad_expr,
+                       Eigen::MatrixBase<MatType>& theta,
+                       Eigen::MatrixBase<MatType>& theta_adj,
+                       Eigen::MatrixBase<MatType>& tp_adj,
+                       Eigen::MatrixBase<MatType>& r,
+                       const MomentumHandlerType& m_handler,
+                       double epsilon,
+                       bool reuse_adj)
 {
     if (!reuse_adj) {
-        reset_autodiff(ad_expr, theta_adj, cache_ad);
+        reset_autodiff(ad_expr, theta_adj, tp_adj);
     }
     const double half_step = epsilon/2.;
     r += half_step * theta_adj;
@@ -70,7 +67,7 @@ double leapfrog(ADExprType& ad_expr,
     theta += epsilon * m_handler.dkinetic_dr(r);
 
     const double new_potential = 
-        -reset_autodiff(ad_expr, theta_adj, cache_ad);
+        -reset_autodiff(ad_expr, theta_adj, tp_adj);
     r += half_step * theta_adj;
 
     return new_potential;

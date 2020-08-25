@@ -10,11 +10,10 @@ endif()
 ######################################################
 
 add_executable(util_unittest
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/ad_boost/bounded_inv_transform_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/ad_boost/lower_inv_transform_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/ad_boost/cov_inv_transform_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/util/traits/concept_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/traits/dist_expr_traits_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/traits/var_expr_traits_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/traits/var_traits_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/traits/shape_traits_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/util/iterator/counting_iterator_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/util/iterator/range_unittest.cpp
     )
@@ -46,14 +45,25 @@ add_test(util_unittest util_unittest)
 ######################################################
 
 add_executable(expr_unittest
-    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/param_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/data_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/constraint/bounded_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/constraint/lower_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/constraint/pos_def_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/binary_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/constant_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/binop_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/data_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/dot_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/for_each_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/glue_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/op_eq_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/param_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/sqrt_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/tparam_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/unary_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/bernoulli_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/cauchy_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/normal_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/uniform_unittest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/wishart_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/model/model_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/expr_builder_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/integration/dist_inttest.cpp
@@ -90,7 +100,6 @@ add_test(expr_unittest expr_unittest)
 add_executable(math_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/math/welford_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/math/density_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/math/math_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/math/autocorrelation_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/math/ess_unittest.cpp
     )

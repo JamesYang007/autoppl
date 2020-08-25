@@ -1,5 +1,6 @@
 #pragma once
 #include <autoppl/util/traits/type_traits.hpp>
+#include <fastad_bits/util/shape_traits.hpp>
 #if __cplusplus <= 201703L
 #include <autoppl/util/traits/concept.hpp>
 #else
@@ -9,65 +10,35 @@
 
 namespace ppl {
 
-inline constexpr size_t DIM_SCALAR = 0;
-inline constexpr size_t DIM_VECTOR = 1;
-inline constexpr size_t DIM_MATRIX = 2;
-
 /**
  * Class tags to determine which shape a Data or Param is expected to be.
  */
-struct scl { static constexpr size_t dim = DIM_SCALAR; };
-struct vec { static constexpr size_t dim = DIM_VECTOR; };
-struct mat { static constexpr size_t dim = DIM_MATRIX; };
+using scl = ad::scl;
+using vec = ad::vec;
+using mat = ad::mat;
 
 namespace util {
 
 template <class T>
-struct shape_traits
-{
-    using shape_t = typename T::shape_t;
-};
+using shape_traits = ad::util::shape_traits<T>;
 
 #if __cplusplus <= 201703L
 
-/**
- * C++17 version of concepts to check var properties.
- * - var_traits must be well-defined under type T
- * - T must be explicitly convertible to its value_t
- * - not possible to get overloads
- */
+template <class T>
+inline constexpr bool is_scl_v = ad::util::is_scl_v<T>;
 
 template <class T>
-inline constexpr bool is_scl_v =
-    has_type_shape_t_v<T> &&
-    std::is_same_v<get_type_shape_t_t<T>, ppl::scl> &&
-    has_func_size_v<const T>
-    ;
-DEFINE_ASSERT_ONE_PARAM(is_scl_v);
+inline constexpr bool is_vec_v = ad::util::is_vec_v<T>;
 
 template <class T>
-inline constexpr bool is_vec_v =
-    has_type_shape_t_v<T> &&
-    std::is_same_v<get_type_shape_t_t<T>, ppl::vec> &&
-    has_func_size_v<const T>
-    ;
-DEFINE_ASSERT_ONE_PARAM(is_vec_v);
-
-template <class T>
-inline constexpr bool is_mat_v =
-    has_type_shape_t_v<T> &&
-    std::is_same_v<get_type_shape_t_t<T>, ppl::mat> &&
-    has_func_size_v<const T>
-    ;
-DEFINE_ASSERT_ONE_PARAM(is_mat_v);
+inline constexpr bool is_mat_v = ad::util::is_mat_v<T>;
 
 template <class T>
 inline constexpr bool is_shape_v =
     is_scl_v<T> ||
     is_vec_v<T> ||
-    is_mat_v<T>
+    is_mat_v<T> 
     ;
-DEFINE_ASSERT_ONE_PARAM(is_shape_v);
 
 #else
 
@@ -133,30 +104,32 @@ inline constexpr bool is_shape_tag_v =
     std::is_same_v<T, ppl::mat>
     ;
 
+/**
+ * Helper metaprogramming tools for Eigen-related types.
+ */
 namespace details {
 
-template <class S1
-        , class S2
-        , bool=is_shape_tag_v<S1> && is_shape_tag_v<S2>>
-struct max_shape;
+template <class V, class T>
+struct var;
 
-template <class S1, class S2>
-struct max_shape<S1, S2, true>
-{
-    using type = std::conditional_t<
-        S1::dim >= S2::dim,
-        S1,
-        S2>;
+template <class V>
+struct var<V, scl> { using type = V; };
+
+template <class V>
+struct var<V, vec> 
+{ 
+    using type = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1>>; 
+};
+
+template <class V>
+struct var<V, mat> 
+{ 
+    using type = Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, Eigen::Dynamic>>; 
 };
 
 } // namespace details
-
-/**
- * Returns the type whose shape has more dimension.
- * Undefined behavior if S1 and S2 are not shape tags.
- */
-template <class S1, class S2>
-using max_shape_t = typename details::max_shape<S1, S2>::type;
+template <class V, class T>
+using var_t = typename details::var<V, T>::type;
 
 } // namespace util
 } // namespace ppl

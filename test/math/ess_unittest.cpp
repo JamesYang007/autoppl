@@ -7,56 +7,61 @@ namespace math {
 struct ess_fixture : ::testing::Test
 {
 protected:
+    std::vector<Eigen::MatrixXd> v;
+    std::vector<std::reference_wrapper<const Eigen::MatrixXd>> v_ref;
+    ess_fixture()
+        : v(3, {6,2})
+        , v_ref()
+    {
+        for (auto& m : v) { v_ref.emplace_back(m); }
+    }
 };
 
 TEST_F(ess_fixture, test)
 {
-    arma::cube samples(6,2,3);
+    v[0](0,0) = 2;
+    v[0](1,0) = 3;
+    v[0](2,0) = 5;
+    v[0](3,0) = 6;
+    v[0](4,0) = 9;
+    v[0](5,0) = 10;
 
-    samples(0,0,0) = 2;
-    samples(1,0,0) = 3;
-    samples(2,0,0) = -1;
-    samples(3,0,0) = 2;
-    samples(4,0,0) = 5;
-    samples(5,0,0) = 10;
+    v[0](0,1) = 1;
+    v[0](1,1) = 2;
+    v[0](2,1) = 3;
+    v[0](3,1) = 4;
+    v[0](4,1) = 5;
+    v[0](5,1) = 6;
 
-    samples(0,1,0) = 1;
-    samples(1,1,0) = 2;
-    samples(2,1,0) = 3;
-    samples(3,1,0) = 4;
-    samples(4,1,0) = 5;
-    samples(5,1,0) = 6;
+    v[1](0,0) = 1;
+    v[1](1,0) = 1;
+    v[1](2,0) = 2;
+    v[1](3,0) = 5;
+    v[1](4,0) = 4;
+    v[1](5,0) = 7;
 
-    samples(0,0,1) = 1;
-    samples(1,0,1) = -1;
-    samples(2,0,1) = 2;
-    samples(3,0,1) = 5;
-    samples(4,0,1) = 4;
-    samples(5,0,1) = 7;
+    v[1](0,1) = 2;
+    v[1](1,1) = 5;
+    v[1](2,1) = 6;
+    v[1](3,1) = 7;
+    v[1](4,1) = -2;
+    v[1](5,1) = 4;
 
-    samples(0,1,1) = 2;
-    samples(1,1,1) = -1;
-    samples(2,1,1) = 1;
-    samples(3,1,1) = 4;
-    samples(4,1,1) = 2;
-    samples(5,1,1) = -2;
+    v[2](0,0) = 1;
+    v[2](1,0) = -1;
+    v[2](2,0) = 0;
+    v[2](3,0) = 0;
+    v[2](4,0) = 3;
+    v[2](5,0) = -2;
 
-    samples(0,0,2) = 1;
-    samples(1,0,2) = -1;
-    samples(2,0,2) = 0;
-    samples(3,0,2) = 0;
-    samples(4,0,2) = 3;
-    samples(5,0,2) = -2;
+    v[2](0,1) = 0;
+    v[2](1,1) = -1;
+    v[2](2,1) = 1;
+    v[2](3,1) = 4;
+    v[2](4,1) = 2;
+    v[2](5,1) = 6;
 
-    samples(0,1,2) = 0;
-    samples(1,1,2) = -1;
-    samples(2,1,2) = 1;
-    samples(3,1,2) = 4;
-    samples(4,1,2) = 2;
-    samples(5,1,2) = -2;
-
-    arma::vec ESS = ess(samples);
-    ESS.print("ESS");
+    Eigen::VectorXd ESS = ess(v_ref);
 }
 
 } // namespace math

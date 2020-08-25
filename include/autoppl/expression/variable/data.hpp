@@ -1,11 +1,9 @@
 #pragma once
-#include <functional>
-#include <fastad_bits/node.hpp>
-#include <armadillo>
+#include <Eigen/Dense>
+#include <fastad_bits/reverse/core/constant.hpp>
 #include <autoppl/util/traits/var_traits.hpp>
 #include <autoppl/util/traits/shape_traits.hpp>
 #include <autoppl/util/traits/var_expr_traits.hpp>
-#include <autoppl/util/functional.hpp>
 
 #define PPL_DATA_SHAPE_UNSUPPORTED \
     "Unsupported shape for Data. "
@@ -13,30 +11,6 @@
     "Unsupported shape for DataView. "
 
 namespace ppl {
-namespace details {
-
-/**
- * Helper metatool to get underlying value type of a matrix.
- * Specialized for armadillo matrix types.
- * Otherwise, assume the object has member alias value_type.
- */
-template <class MatType>
-struct mat_value_type
-{
-    using type = typename MatType::value_type;
-};
-
-template <class T>
-struct mat_value_type<arma::Mat<T>>
-{
-    using type = T;
-};
-
-template <class T>
-using mat_value_type_t = typename
-    mat_value_type<T>::type;
-
-} // namespace details
 
 /**
  * DataView is a class that only views data values.
@@ -63,154 +37,156 @@ struct DataView<ValueType, ppl::scl>:
     util::DataBase<DataView<ValueType, ppl::scl>>
 {
     using value_t = ValueType;
-    using const_pointer_t = const value_t*;
+    using var_t = value_t;
     using id_t = const void*;
     using shape_t = ppl::scl;
     static constexpr bool has_param = false;
-    static constexpr size_t fixed_size = 1;
-    using index_t = uint32_t;
 
-    DataView(const value_t& v) noexcept
-        : value_ptr_{&v} 
+    DataView(const value_t* begin) noexcept
+        : var_{begin} 
         , id_{this}
     {}
 
-    template <class VecType
-            , class F = util::identity>
-    value_t value(const VecType&,
-                  size_t=0,
-                  F = F()) const 
-    { return *value_ptr_; }
+    template <class Func>
+    void traverse(Func&&) const {}
 
-    constexpr size_t size() const { return fixed_size; }
+    const var_t& eval() const { return get(); }
+    const var_t& get() const { return *var_; }
+
+    constexpr size_t size() const { return 1; }
+    constexpr size_t rows() const { return 1; }
+    constexpr size_t cols() const { return 1; }
     id_t id() const { return id_; }
 
-    template <class VecADVarType>
-    auto to_ad(const VecADVarType&,
-               const VecADVarType&,
-               size_t=0) const 
-    { return ad::constant(*value_ptr_); }
+    template <class PtrPackType>
+    auto ad(const PtrPackType&) const
+    { return ad::constant(*var_); }
 
-    index_t set_cache_offset(index_t idx) const 
-    { return idx; }
+    template <class PtrType>
+    void bind(PtrType begin) 
+    { 
+        static_cast<void>(begin);
+        if constexpr (std::is_convertible_v<PtrType, value_t*>) {
+            var_ = begin; 
+        }
+    }
+
+    void activate_refcnt() const {}
 
 private:
-    const_pointer_t value_ptr_;
+    const var_t* var_;
     id_t id_;
 };
 
-template <class VecType>
-struct DataView<VecType, ppl::vec> :
-    util::VarExprBase<DataView<VecType, ppl::vec>>,
-    util::DataBase<DataView<VecType, ppl::vec>>
+template <class ValueType>
+struct DataView<ValueType, ppl::vec> :
+    util::VarExprBase<DataView<ValueType, ppl::vec>>,
+    util::DataBase<DataView<ValueType, ppl::vec>>
 {
-    using vec_t = VecType;
-    using vec_const_pointer_t = const vec_t*;
-    using value_t = typename vec_t::value_type;
+    using value_t = ValueType;
+    using var_t = Eigen::Map<const Eigen::Matrix<value_t, Eigen::Dynamic, 1>>;
     using id_t = const void*;
     using shape_t = ppl::vec;
-    using index_t = uint32_t;
     static constexpr bool has_param = false;
-    static constexpr size_t fixed_size = 0;
 
-    DataView(const vec_t& v) noexcept
-        : vec_ptr_{&v}
+    DataView(const value_t* begin,
+             size_t rows) noexcept
+        : var_(begin, rows)
         , id_{this}
     {}
 
-    template <class PVecType
-            , class F = util::identity>
-    value_t value(const PVecType&,
-                  size_t i,
-                  F = F()) const 
-    { return (*vec_ptr_)[i]; }
-
-    size_t size() const { return vec_ptr_->size(); }
-
+    const var_t& eval() const { return get(); }
+    const var_t& get() const { return var_; }
+    size_t size() const { return var_.size(); }
+    size_t rows() const { return var_.rows(); }
+    constexpr size_t cols() const { return 1; }
     id_t id() const { return id_; }
 
-    template <class VecADVarType>
-    auto to_ad(const VecADVarType&,
-               const VecADVarType&,
-               size_t i) const 
-    { return ad::constant((*vec_ptr_)[i]); }
+    template <class PtrPackType>
+    auto ad(const PtrPackType&) const
+    { return ad::constant_view(var_.data(), size()); }
 
-    index_t set_cache_offset(index_t idx) const 
-    { return idx; }
+    template <class PtrType>
+    void bind(PtrType begin) 
+    { 
+        static_cast<void>(begin);
+        if constexpr (std::is_convertible_v<PtrType, value_t*>) {
+            new (&var_) var_t(begin, size()); 
+        }
+    }
+
+    void activate_refcnt() const {}
 
 private:
-    vec_const_pointer_t vec_ptr_;
+    var_t var_;
     id_t id_;
 };
 
-template <class MatType>
-struct DataView<MatType, ppl::mat> :
-    util::VarExprBase<DataView<MatType, ppl::mat>>,
-    util::DataBase<DataView<MatType, ppl::mat>>
+template <class ValueType>
+struct DataView<ValueType, ppl::mat> :
+    util::VarExprBase<DataView<ValueType, ppl::mat>>,
+    util::DataBase<DataView<ValueType, ppl::mat>>
 {
-    using mat_t = MatType;
-    using mat_const_pointer_t = const mat_t*;
-    using value_t = details::mat_value_type_t<MatType>;
+    using value_t = ValueType;
+    using var_t = Eigen::Map<const Eigen::Matrix<value_t, Eigen::Dynamic, Eigen::Dynamic>>;
     using id_t = const void*;
     using shape_t = ppl::mat;
-    using index_t = uint32_t;
     static constexpr bool has_param = false;
-    static constexpr size_t fixed_size = 0;
 
-    DataView(const mat_t& m) noexcept
-        : mat_ptr_{&m}
+    DataView(const value_t* begin,
+             size_t rows,
+             size_t cols) noexcept
+        : var_(begin, rows, cols)
         , id_{this}
     {}
 
-    template <class PVecType
-            , class F = util::identity>
-    value_t value(const PVecType&,
-                  size_t i,
-                  size_t j,
-                  F = F()) const 
-    { return (*mat_ptr_)(i,j); }
-
-    size_t size() const { return mat_ptr_->n_elem; }
-    size_t nrows() const { return mat_ptr_->n_rows; }
-    size_t ncols() const { return mat_ptr_->n_cols; }
-
+    const var_t& eval() const { return get(); }
+    const var_t& get() const { return var_; }
+    size_t size() const { return var_.size(); }
+    size_t rows() const { return var_.rows(); }
+    size_t cols() const { return var_.cols(); }
     id_t id() const { return id_; }
 
-    template <class VecADVarType>
-    auto to_ad(const VecADVarType&,
-               const VecADVarType&,
-               size_t i,
-               size_t j) const 
-    { return ad::constant((*mat_ptr_)(i,j)); }
+    template <class PtrPackType>
+    auto ad(const PtrPackType&) const
+    { return ad::constant_view(var_.data(), rows(), cols()); }
 
-    index_t set_cache_offset(index_t idx) const 
-    { return idx; }
+    template <class PtrType>
+    void bind(PtrType begin) 
+    { 
+        static_cast<void>(begin);
+        if constexpr (std::is_convertible_v<PtrType, value_t*>) {
+            new (&var_) var_t(begin, rows(), cols()); 
+        }
+    }
+
+    void activate_refcnt() const {}
 
 private:
-    mat_const_pointer_t mat_ptr_;
+    var_t var_;
     id_t id_;
 };
 
 /**
  * Data a user-friendly wrapper of DataView.
  * It is a DataView (it views itself).
- * The difference is that it owns a container of values.
+ * The difference is that it owns the container of values.
  * This will usually be used as a quick means to add
  * values directly into a data object. 
- * Otherwise, using DataView through the helper function ppl::make_data_view.
+ *
+ * A Data is not a variable expression, but a DataView is.
+ * This means any model expression that references Data objects will
+ * not create copies of underlying container.
  *
  * @tparam  ValueType   underlying value type (usually double or int)
  * @tparam  ShapeType   one of the three shape tags.
- *                      Currently ppl::mat is not supported.
- *                      Note that it is supported for DataView.
  */
 
 template <class ValueType
         , class ShapeType = ppl::scl>
 struct Data
 {
-    static_assert(util::is_scl_v<ShapeType> ||
-                  util::is_vec_v<ShapeType>,
+    static_assert(util::is_shape_v<ShapeType>,
                   PPL_DATA_SHAPE_UNSUPPORTED);
 };
 
@@ -218,23 +194,19 @@ struct Data
 template <class ValueType>
 struct Data<ValueType, ppl::scl>:
     DataView<ValueType, ppl::scl>,
-    util::VarExprBase<Data<ValueType, ppl::scl>>,
     util::DataBase<Data<ValueType, ppl::scl>>
 {
     using base_t = DataView<ValueType, ppl::scl>;
     using typename base_t::value_t;
-    using typename base_t::shape_t;
-    using typename base_t::id_t;
-    using base_t::value;
-    using base_t::size;
-    using base_t::id;
-    using base_t::to_ad;
+    using base_t::get;
 
     Data(value_t v) noexcept
-        : base_t(value_)
+        : base_t(&value_)
         , value_(v)
     {}
     Data() noexcept : Data(0) {}
+
+    auto& get() { return value_; }
 
 private:
     value_t value_;  // store value associated with data
@@ -243,42 +215,48 @@ private:
 // Specialization: vector
 template <class ValueType>
 struct Data<ValueType, ppl::vec>: 
-    DataView<std::vector<ValueType>, ppl::vec>,
-    util::VarExprBase<Data<ValueType, ppl::vec>>,
+    DataView<ValueType, ppl::vec>,
     util::DataBase<Data<ValueType, ppl::vec>>
 {
-    using base_t = DataView<std::vector<ValueType>, ppl::vec>;
+    using base_t = DataView<ValueType, ppl::vec>;
     using typename base_t::value_t;
-    using typename base_t::shape_t;
-    using typename base_t::id_t;
-    using base_t::value;
-    using base_t::size;
-    using base_t::id;
-    using base_t::to_ad;
-
-    Data(std::initializer_list<value_t> l) noexcept
-        : base_t(vec_)
-        , vec_(l)
-    {}
+    using base_t::bind;
+    using base_t::get;
 
     Data(size_t n)
-        : base_t(vec_)
+        : base_t(nullptr, n)
         , vec_(n)
-    {}
+    { this->bind(vec_.data()); }
 
-    Data() noexcept : Data(0) {}
-
-    void push_back(value_t x) { vec_.push_back(x); }
+    auto& get() { return vec_; }
 
 private:
-    std::vector<value_t> vec_;
+    using vec_t = Eigen::Matrix<value_t, Eigen::Dynamic, 1>;
+    vec_t vec_;
 };
 
-// TODO: Specialization: mat-like
+// Specialization: matrix
+template <class ValueType>
+struct Data<ValueType, ppl::mat>: 
+    DataView<ValueType, ppl::mat>,
+    util::DataBase<Data<ValueType, ppl::mat>>
+{
+    using base_t = DataView<ValueType, ppl::mat>;
+    using typename base_t::value_t;
+    using base_t::bind;
+    using base_t::get;
 
-template <class ShapeType = ppl::scl, class Container>
-inline constexpr auto make_data_view(const Container& x) 
-{ return DataView<Container, ShapeType>(x); }
+    Data(size_t rows, size_t cols)
+        : base_t(nullptr, rows, cols)
+        , mat_(rows, cols)
+    { this->bind(mat_.data()); }
+
+    auto& get() { return mat_; }
+
+private:
+    using mat_t = Eigen::Matrix<value_t, Eigen::Dynamic, Eigen::Dynamic>;
+    mat_t mat_;
+};
 
 } // namespace ppl
 

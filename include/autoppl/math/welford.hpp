@@ -1,6 +1,6 @@
 #pragma once
 #include <type_traits>
-#include <armadillo>
+#include <Eigen/Dense>
 
 namespace ppl {
 namespace math {
@@ -12,10 +12,10 @@ namespace math {
 struct WelfordVar
 {
     WelfordVar(size_t n_params)
-        : m_{n_params, 2, arma::fill::zeros}
+        : m_{n_params, 2}
         , mean_{m_.col(0)}
         , m2n_{m_.col(1)}
-    {}
+    { m_.setZero(); }
 
     /*
      * Update sample mean and sample variance with new sample x.
@@ -25,24 +25,11 @@ struct WelfordVar
     {
         ++n_;
         auto delta = x - mean_;
-        mean_ += delta/static_cast<double>(n_);
-        m2n_ += delta % (x - mean_);
+        mean_ += (1./static_cast<double>(n_)) * delta;
+        m2n_ += (delta.array() * (x - mean_).array()).matrix();
     }
 
-    /**
-     * Populate v with sample variance vector.
-     * If sample size is not greater than 1, v is zeroed out.
-     */
-    template <class MatType>
-    void get_variance(MatType& v)
-    { 
-        if (n_ > 1) {
-            v = m2n_/static_cast<double>(n_ - 1); 
-        } else {
-            v.zeros();
-        }
-    }
-
+    const auto& get_variance() const { return m2n_; }
     size_t get_n_samples() const { return n_; }
 
     /**
@@ -51,12 +38,12 @@ struct WelfordVar
      */
     void reset()
     {
-        m_.zeros();
+        m_.setZero();
         n_ = 0;
     }
 
 private:
-    arma::mat m_; 
+    Eigen::MatrixXd m_; 
 
     using col_t = std::decay_t<decltype(m_.col(0))>;
     col_t mean_;

@@ -1,33 +1,27 @@
 #pragma once
 #include <array>
-#include <autoppl/expression/variable/data.hpp>
-#include <autoppl/expression/variable/param.hpp>
+#include <testutil/base_fixture.hpp>
+#include <fastad_bits/reverse/core/var.hpp>
 
 namespace ppl {
 namespace expr {
 
 template <class ValueType>
-struct dist_fixture_base  {
+struct dist_fixture_base: base_fixture<ValueType>
+{
 protected:
     static constexpr size_t vec_size = 3;
-    static constexpr size_t offset_max_size = 3;
+    static constexpr size_t info_max_size = 3;
 
-    using value_t = ValueType;
-    using pointer_t = value_t*;
-    using vec_t = std::vector<value_t>;
-    using vec_pointer_t = std::array<pointer_t, 3*vec_size>;
+    using base_t = base_fixture<ValueType>;
+    using typename base_t::value_t;
+    using typename base_t::info_pack_t;
 
-    using dv_scl_t = DataView<value_t, ppl::scl>;
-    using dv_vec_t = DataView<vec_t, ppl::vec>;
-    using pv_scl_t = ParamView<pointer_t, ppl::scl>;
-    using pv_vec_t = ParamView<vec_pointer_t, ppl::vec>;
-    using id_t = typename util::var_traits<dv_scl_t>::id_t;
-    using index_t = typename util::param_traits<pv_scl_t>::index_t;
+    using vec_t = std::array<value_t, vec_size>; 
+    using mat_t = std::vector<value_t>;
     using ad_vec_t = std::vector<ad::Var<value_t>>;
 
-    std::array<index_t, offset_max_size> offsets = {0};
-    vec_pointer_t storage = {nullptr}; 
-    std::vector<ad::Var<value_t>> cache;
+    std::array<info_pack_t, info_max_size> infos;
 };
 
 } // namespace expr

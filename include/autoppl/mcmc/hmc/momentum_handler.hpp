@@ -1,4 +1,5 @@
 #pragma once
+#include <random>
 #include <autoppl/mcmc/hmc/var_adapter.hpp>
 
 namespace ppl {
@@ -19,26 +20,35 @@ struct MomentumHandler<unit_var>
     using adapter_policy_t = unit_var;
 
     // Constructor takes in size_t for consistent API with other specializations.
-    MomentumHandler(size_t=0) {}
+    MomentumHandler(size_t=0) 
+        : dist(0., 1.)
+    {}
 
     /*
      * Sample from N(0, I)
      */
-    template <class MatType>
-    void sample(MatType& rho) const
-    { rho.randn(); }
+    template <class MatType
+            , class GenType>
+    void sample(Eigen::MatrixBase<MatType>& rho,
+                GenType& gen) 
+    { 
+        rho = MatType::NullaryExpr(rho.rows(), 
+                [&]() { return dist(gen); });
+    }
 
     /**
      * Compute corresponding kinetic energy
      */
     template <class MatType>
-    double kinetic(const MatType& rho) const
-    { return 0.5 * arma::dot(rho, rho); }
+    double kinetic(const Eigen::MatrixBase<MatType>& rho) const
+    { return 0.5 * rho.squaredNorm(); }
 
     template <class MatType>
     const MatType& dkinetic_dr(const MatType& rho) const
     { return rho; }
 
+private:
+    std::normal_distribution<> dist;
 };
 
 /**
@@ -48,37 +58,45 @@ template <>
 struct MomentumHandler<diag_var>
 {
     using adapter_policy_t = diag_var;
-    using variance_t = arma::vec;
+    using variance_t = Eigen::VectorXd;
 
     // initialize m inverse to be identity 
     MomentumHandler(size_t n_params)
-        : m_inverse_(n_params, arma::fill::ones)
-    {}
+        : dist(0., 1.)
+        , m_inverse_(n_params)
+    {
+        m_inverse_.setOnes();
+    }
 
     /**
      * Sample from N(0, M) where M inverse ~ sample variance matrix
      */
-    template <class MatType>
-    void sample(MatType& rho) const
+    template <class MatType
+            , class GenType>
+    void sample(Eigen::MatrixBase<MatType>& rho,
+                GenType& gen) 
     { 
-        rho.randn(); 
-        rho /= arma::sqrt(m_inverse_);
+        rho = MatType::NullaryExpr(rho.rows(), 
+                [&]() { return dist(gen); });
+        rho.array() /= m_inverse_.array().sqrt();
     }
 
     /**
      * Compute corresponding kinetic energy
      */
     template <class MatType>
-    double kinetic(const MatType& rho) const
-    { return 0.5 * arma::dot(rho, m_inverse_ % rho); }
+    double kinetic(const Eigen::MatrixBase<MatType>& rho) const
+    { return 0.5 * rho.dot(dkinetic_dr(rho)); }
 
     template <class MatType>
-    arma::vec dkinetic_dr(const MatType& rho) const
-    { return m_inverse_ % rho; }
+    auto dkinetic_dr(const Eigen::MatrixBase<MatType>& rho) const
+    { return (m_inverse_.array() * rho.array()).matrix(); }
 
     variance_t& get_m_inverse() { return m_inverse_; }
+    const variance_t& get_m_inverse() const { return m_inverse_; }
 
 private:
+    std::normal_distribution<> dist;
     variance_t m_inverse_;
 };
 

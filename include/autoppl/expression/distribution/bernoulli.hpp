@@ -1,9 +1,7 @@
 #pragma once
 #include <cassert>
-#include <autoppl/util/traits/var_expr_traits.hpp>
-#include <autoppl/util/traits/dist_expr_traits.hpp>
-#include <autoppl/util/functional.hpp>
-#include <autoppl/util/iterator/counting_iterator.hpp>
+#include <fastad_bits/reverse/stat/bernoulli.hpp>
+#include <autoppl/util/traits/traits.hpp>
 #include <autoppl/expression/distribution/dist_utils.hpp>
 #include <autoppl/math/density.hpp>
 
@@ -12,6 +10,7 @@
 
 namespace ppl {
 namespace expr {
+namespace dist {
 namespace details {
 
 /**
@@ -56,8 +55,7 @@ inline constexpr bool bern_valid_dim_v =
 } // namespace details
 
 /**
- * Bernoulli is a generic expression representing the
- * Bernoulli distribution.
+ * Bernoulli is a generic expression representing the Bernoulli distribution.
  * Its parameter type PType must satisfy variable expression.
  * It is tagged as a discrete distribution and satisfies
  * distribution expression.
@@ -73,197 +71,102 @@ inline constexpr bool bern_valid_dim_v =
 template <class PType>
 struct Bernoulli : util::DistExprBase<Bernoulli<PType>>
 {
-    static_assert(util::is_var_expr_v<PType>);
-    static_assert(details::bern_valid_param_dim_v<PType>,
+private:
+    using p_t = PType;
+
+    static_assert(util::is_var_expr_v<p_t>);
+    static_assert(details::bern_valid_param_dim_v<p_t>,
                   PPL_DIST_SHAPE_MISMATCH
                   PPL_BERNOULLI_PARAM_SHAPE
                   );
 
+public:
     using value_t = util::disc_param_t;
-    using param_value_t = typename util::var_expr_traits<PType>::value_t;
-    using base_t = util::DistExprBase<Bernoulli<PType>>;
-    using index_t = uint32_t;
+    using param_value_t = typename util::var_expr_traits<p_t>::value_t;
+    using base_t = util::DistExprBase<Bernoulli<p_t>>;
     using typename base_t::dist_value_t;
 
-    Bernoulli(const PType& p)
+    Bernoulli(const p_t& p)
         : p_{p} {}
 
-    template <class VarType
-            , class PVecType
-            , class F = util::identity>
-    dist_value_t pdf(const VarType& x,
-                     const PVecType& pvalues,
-                     F f = F()) const 
+    template <class XType>
+    dist_value_t pdf(const XType& x) 
     {
-        static_assert(util::is_var_v<VarType>);
-        static_assert(details::bern_valid_dim_v<VarType, PType>,
+        static_assert(util::is_dist_assignable_v<XType>);
+        static_assert(details::bern_valid_dim_v<XType, p_t>,
                       PPL_DIST_SHAPE_MISMATCH);
-        return pdf_indep([&](size_t i) {
-                            return math::bernoulli_pdf(
-                                    x.value(pvalues, i, f), 
-                                    p_.value(pvalues, i, f));
-                          }, x.size());
+        return math::bernoulli_pdf(x.get(), p_.eval());
     }
 
-    template <class VarType
-            , class PVecType
-            , class F = util::identity>
-    dist_value_t log_pdf(const VarType& x,
-                         const PVecType& pvalues,
-                         F f = F()) const 
+    template <class XType>
+    dist_value_t log_pdf(const XType& x) 
     {
-        static_assert(util::is_var_v<VarType>);
-        static_assert(details::bern_valid_dim_v<VarType, PType>,
+        static_assert(util::is_dist_assignable_v<XType>);
+        static_assert(details::bern_valid_dim_v<XType, p_t>,
                       PPL_DIST_SHAPE_MISMATCH);
-        return pdf_indep([&](size_t i) {
-                            return math::bernoulli_log_pdf(
-                                    x.value(pvalues, i, f), 
-                                    p_.value(pvalues, i, f));
-                          }, x.size());
+        return math::bernoulli_log_pdf(x.get(), p_.eval());
     }
 
-    template <class VarType, class VecADVarType>
-    auto ad_log_pdf(const VarType& x,
-                    const VecADVarType& ad_vars,
-                    const VecADVarType& cache) const
+    template <class XType
+            , class PtrPackType>
+    auto ad_log_pdf(const XType& x,
+                    const PtrPackType& pack) const
     { 
-        // discrete version of log pdf when 0 < p < 1
-        auto p_within_range_disc = [&](const auto& x_ad,
-                                       const auto& cache_p) {
-            return ad::if_else(
-                    x_ad == ad::constant(0.),
-                    ad::log(ad::constant(1.)-cache_p),
-                    ad::if_else(
-                        x_ad == ad::constant(1.),
-                        ad::log(cache_p),
-                        ad::constant(math::neg_inf<param_value_t>)
-                        )
-                );
-        };
+        return ad::bernoulli_adj_log_pdf(x.ad(pack),
+                                         p_.ad(pack));
+    }
 
-        // continuous version of log pdf when 0 < p < 1
-        auto p_within_range_cont = [&](const auto& x_ad,
-                                       const auto& cache_p) {
-            return ad::constant<param_value_t>(x.size()) * (
-                        x_ad * ad::log(cache_p) +
-                        (ad::constant(1.) - x_ad) * 
-                        ad::log(ad::constant(1.) - cache_p)
-                    );
-        };
-
-        auto scalar_expr_gen = [](const auto& x_ad,
-                                  const auto& cache_p,
-                                  auto p_within_range) {
-            auto&& clip_upper = ad::if_else(
-                    cache_p >= ad::constant(1.),
-                    ad::if_else(
-                        x_ad == ad::constant(1.),
-                        ad::constant(0.),
-                        ad::constant(math::neg_inf<param_value_t>)
-                        ),
-                    p_within_range(x_ad, cache_p)
-                );
-
-            auto&& clipped_log_pdf = ad::if_else(
-                    cache_p <= ad::constant(0.),
-                    ad::if_else(
-                        x_ad == ad::constant(0.),
-                        ad::constant(0.),
-                        ad::constant(math::neg_inf<param_value_t>)
-                        ),
-                    clip_upper
-                );
-
-            return clipped_log_pdf;
-        };
-
-        // Case 1: x -> scl, p -> scl
-        if constexpr (util::is_scl_v<VarType> &&
-                      util::is_scl_v<PType>) {
-            static_cast<void>(p_within_range_cont);
-            return (cache[offset_] = p_.to_ad(ad_vars, cache),
-                    scalar_expr_gen(x.to_ad(ad_vars, cache), 
-                                    cache[offset_], 
-                                    p_within_range_disc));
-        }
-
-        // Case 2: x -> vec, p -> scl
-        // HUGE optimization especially when x is data,
-        // which is the only time this should ever get called anyway.
-        else if constexpr (util::is_vec_v<VarType> &&
-                           util::is_scl_v<PType>) {
-            static_cast<void>(p_within_range_disc);
-            auto&& x_mean = ad::sum(util::counting_iterator<>(0),
-                                    util::counting_iterator<>(x.size()),
-                                    [&](auto i) {
-                                        return x.to_ad(ad_vars, cache, i);
-                                    }) / ad::constant<param_value_t>(x.size());
-
-            return (cache[offset_] = x_mean,
-                    cache[offset_+1] = p_.to_ad(ad_vars, cache),
-                    scalar_expr_gen(cache[offset_],
-                                    cache[offset_+1],
-                                    p_within_range_cont)
-                   );
-        }
-
-        // Case 3: x -> vec, p -> vec
-        else {
-            assert(x.size() == p_.size());
-            static_cast<void>(p_within_range_cont);
-            return ad::sum(util::counting_iterator<>(0),
-                           util::counting_iterator<>(x.size()),
-                           [&](auto i) {
-                               return (cache[offset_+i] = p_.to_ad(ad_vars, cache, i),
-                                       scalar_expr_gen(x.to_ad(ad_vars, cache, i),
-                                                       cache[offset_+i],
-                                                       p_within_range_disc));
-                           });
+    template <class PtrPackType>
+    void bind(const PtrPackType& pack)
+    { 
+        static_cast<void>(pack);
+        if constexpr (p_t::has_param) {
+            p_.bind(pack);
         }
     }
 
-    /**
-     * Requires at most 2 cache variables when p is scalar.
-     * When variable is vector but PType scalar,
-     * we need to cache the sum of the variable elements.
-     * Otherwise, we need to cache every element.
-     */
-    index_t set_cache_offset(index_t idx) 
-    {
-        idx = p_.set_cache_offset(idx);
+    void activate_refcnt() const 
+    { p_.activate_refcnt(); }
 
-        if constexpr (util::is_scl_v<PType>) {
-            offset_ = idx;
-            return offset_ + 2;
+    template <class XType, class GenType>
+    bool prune(XType& x, GenType&) const {
+        using x_t = std::decay_t<XType>;
+        static_assert(util::is_param_v<x_t>);
+        if constexpr (util::is_scl_v<x_t>) {
+            bool needs_prune = (x.get() != 0) && (x.get() != 1); 
+            if (needs_prune) x.get() = 0;
+            return needs_prune; 
+        } else if constexpr (util::is_vec_v<x_t>){
+            auto xa = x.get().array();
+            bool needs_prune = ((xa != 0).min(xa != 1)).any();
+            if (needs_prune) x.get().setZero();
+            return needs_prune;
         }
-        else if constexpr (util::is_vec_v<PType>) {
-            offset_ = idx;
-            return offset_ + p_.size();
-        }
-
-        return idx;
     }
-
-    template <class PVecType
-            , class F = util::identity>
-    value_t min(const PVecType&, 
-                size_t=0,
-                F = F()) const 
-    { return 0; }
-
-    template <class PVecType
-            , class F = util::identity>
-    value_t max(const PVecType&, 
-                size_t=0,
-                F = F()) const 
-    { return 1; }
 
 private:
-    index_t offset_;
-    PType p_;
+    p_t p_;
 };
 
+} // namespace dist
 } // namespace expr
+
+/**
+ * Builds a Bernoulli expression only when the parameter
+ * is a valid discrete distribution parameter type.
+ * See var_expr.hpp for more information.
+ */
+template <class ProbType
+        , class = std::enable_if_t<
+            util::is_valid_dist_param_v<ProbType>
+        > >
+inline constexpr auto bernoulli(const ProbType& p_expr)
+{
+    using p_t = util::convert_to_param_t<ProbType>;
+    p_t wrap_p_expr = p_expr;
+    return expr::dist::Bernoulli(wrap_p_expr);
+}
+
 } // namespace ppl
 
 #undef PPL_BERNOULLI_PARAM_SHAPE

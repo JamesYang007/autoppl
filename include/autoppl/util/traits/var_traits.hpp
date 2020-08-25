@@ -3,26 +3,33 @@
 #include <autoppl/util/traits/type_traits.hpp>
 #include <autoppl/util/traits/var_expr_traits.hpp>
 #include <autoppl/util/traits/concept.hpp>
-#include <autoppl/util/functional.hpp>
-
-/*
- * We say Param or Data, etc. are vars.
- */
 
 namespace ppl {
 namespace util {
 
 template <class T>
-struct ParamBase : BaseCRTP<T>
+struct VarBase : BaseCRTP<T>
 { using BaseCRTP<T>::self; };
 
 template <class T>
-struct DataBase : BaseCRTP<T>
-{ using BaseCRTP<T>::self; };
+struct ParamBase : VarBase<T>
+{};
+
+template <class T>
+struct TParamBase : VarBase<T>
+{};
+
+template <class T>
+struct DataBase : VarBase<T>
+{};
 
 template <class T>
 inline constexpr bool param_is_base_of_v =
     std::is_base_of_v<ParamBase<T>, T>;
+
+template <class T>
+inline constexpr bool tparam_is_base_of_v =
+    std::is_base_of_v<TParamBase<T>, T>;
 
 template <class T>
 inline constexpr bool data_is_base_of_v =
@@ -35,8 +42,6 @@ private:
     using base_t = var_expr_traits<VarType>;
 public:
     using id_t = typename VarType::id_t;
-    using vec_t = get_type_vec_t_t<VarType>;
-    using mat_t = get_type_mat_t_t<VarType>;
     static constexpr bool is_cont_v = util::is_cont_v<typename base_t::value_t>;
     static constexpr bool is_disc_v = util::is_disc_v<typename base_t::value_t>;
 
@@ -47,9 +52,12 @@ public:
 template <class VarType>
 struct param_traits : var_traits<VarType>
 {
-    using pointer_t = typename VarType::pointer_t;
-    using const_pointer_t = typename VarType::const_pointer_t;
+    using constraint_t = typename VarType::constraint_t;
 };
+
+template <class VarType>
+struct tparam_traits : var_traits<VarType>
+{};
 
 template <class VarType>
 struct data_traits : var_traits<VarType>
@@ -57,51 +65,40 @@ struct data_traits : var_traits<VarType>
 
 #if __cplusplus <= 201703L
 
-DEFINE_ASSERT_ONE_PARAM(param_is_base_of_v);
-DEFINE_ASSERT_ONE_PARAM(data_is_base_of_v);
-
 template <class T>
 inline constexpr bool is_param_v = 
-    // T itself is a parameter-like variable
-    is_var_expr_v<T> &&
     param_is_base_of_v<T> &&
     has_type_id_t_v<T> &&
-    has_type_pointer_t_v<T> &&
-    has_type_const_pointer_t_v<T> &&
+    has_func_id_v<const T>
+    ;
+
+template <class T>
+inline constexpr bool is_tparam_v = 
+    tparam_is_base_of_v<T> &&
+    has_type_id_t_v<T> &&
     has_func_id_v<const T>
     ;
 
 template <class T>
 inline constexpr bool is_data_v = 
-    is_var_expr_v<T> &&
     data_is_base_of_v<T> &&
     has_type_id_t_v<T> &&
     has_func_id_v<const T>
     ;
 
+// A variable is one that can be assigned a distribution,
+// i.e. a random variable.
 template <class T>
 inline constexpr bool is_var_v = 
     is_param_v<T> || 
+    is_tparam_v<T> ||
     is_data_v<T>
     ;
-DEFINE_ASSERT_ONE_PARAM(is_var_v);
 
 template <class T>
-inline constexpr bool assert_is_param_v = 
-    assert_is_var_expr_v<T> &&
-    assert_param_is_base_of_v<T> &&
-    assert_has_type_pointer_t_v<T> &&
-    assert_has_type_const_pointer_t_v<T> &&
-    assert_has_type_id_t_v<T> &&
-    assert_has_func_id_v<const T>
-    ;
-
-template <class T>
-inline constexpr bool assert_is_data_v = 
-    assert_is_var_expr_v<T> &&
-    assert_data_is_base_of_v<T> &&
-    assert_has_type_id_t_v<T> &&
-    assert_has_func_id_v<const T>
+inline constexpr bool is_dist_assignable_v =
+    is_param_v<T> ||
+    is_data_v<T>
     ;
 
 #else 
@@ -122,31 +119,47 @@ concept param_c =
     param_is_base_of_v<T> &&
     requires () {
         typename var_traits<T>::id_t;
-        typename param_traits<T>::pointer_t;
-        typename param_traits<T>::const_pointer_t;
     } &&
-    requires (T x, const T cx, size_t i,
-              typename param_traits<T>::index_t offset) {
-        { x.set_offset(offset) } -> std::same_as<
-                typename var_traits<T>::index_t 
-                >;
-        { cx.storage(i) } -> std::convertible_to<typename param_traits<T>::pointer_t>;
+    requires (T x, const T cx, size_t i) {
+        { cx.id() } -> std::same_as<typename var_traits<T>::id_t>;
+    }
+    ;
+
+template <class T>
+concept tparam_c = 
+    var_expr_c<T> &&
+    tparam_is_base_of_v<T> &&
+    requires () {
+        typename var_traits<T>::id_t;
+    } &&
+    requires (T x, const T cx, size_t i) {
         { cx.id() } -> std::same_as<typename var_traits<T>::id_t>;
     }
     ;
 
 template <class T>
 concept var_c = 
-    data_c<T> ||
-    param_c<T>
+    param_c<T> ||
+    tparam_c<T> ||
+    data_c<T>
     ;   
+
+template <class T>
+concept dist_assignable_c =
+    param_c<T> ||
+    data_c<T>
+    ;
 
 template <class T>
 concept is_data_v = data_c<T>;
 template <class T>
 concept is_param_v = param_c<T>;
 template <class T>
+concept is_tparam_v = tparam_c<T>;
+template <class T>
 concept is_var_v = var_c<T>;
+template <class T>
+concept is_dist_assignable_v = dist_assignable_c<T>;
 
 #endif
 

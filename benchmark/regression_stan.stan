@@ -5,9 +5,9 @@ data {
   vector[N] y;
 }
 parameters {
+  real s;
   real alpha;
   vector[K] beta;
-  real s;
 }
 model {
   s ~ uniform(0.5, 8);

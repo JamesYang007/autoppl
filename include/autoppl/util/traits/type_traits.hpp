@@ -73,21 +73,5 @@ inline constexpr bool is_cont_v = std::is_floating_point_v<T>;
 template <class T>
 inline constexpr bool is_disc_v = std::is_integral_v<T>;
 
-/**
- * Mock types used to check concepts
- */
-
-/**
- * MockVector satisfies the following properties:
- * - operator[](size_t) defined (return value does not matter)
- */
-template <class T>
-struct MockVector
-{
-    T& operator[](size_t);
-    const T& operator[](size_t) const;
-};
-
-
 } // namespace util
 } // namespace ppl

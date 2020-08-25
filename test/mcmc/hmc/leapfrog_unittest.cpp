@@ -1,11 +1,8 @@
 #include "gtest/gtest.h"
 #include <vector>
 #include <fastad>
-#include <armadillo>
-#include <autoppl/util/traits/mock_types.hpp>
 #include <autoppl/mcmc/hmc/leapfrog.hpp>
 #include <autoppl/mcmc/hmc/momentum_handler.hpp>
-#include <autoppl/mcmc/hmc/ad_utils.hpp>
 
 namespace ppl {
 namespace mcmc {
@@ -20,13 +17,13 @@ protected:
     static constexpr size_t n_params = 3;
     static constexpr size_t n_args = 4;
     std::vector<ad::Var<double>> v;
-    std::vector<ad::Var<double>> cache_ad; // not used, but API requires
 
     // create matrix to store theta, adjoints, and momentum
-    arma::mat mat;
-    using submat_t = std::decay_t<decltype(mat.unsafe_col(0))>;
+    Eigen::MatrixXd mat;
+    using submat_t = std::decay_t<decltype(mat.col(0))>;
     submat_t theta;
     submat_t theta_adj;
+    submat_t tp_adj;
     submat_t r;
 
     MomentumHandler<unit_var> m_handler;
@@ -35,14 +32,16 @@ protected:
 
     leapfrog_fixture() 
         : v(n_params)
-        , cache_ad(0)
         , mat(n_params, n_args)
-        , theta(mat.unsafe_col(0))
-        , theta_adj(mat.unsafe_col(1))
-        , r(mat.unsafe_col(3))
+        , theta(mat.col(0))
+        , theta_adj(mat.col(1))
+        , tp_adj(mat.col(2))
+        , r(mat.col(3))
     {
-        // bind AD variables to theta and theta_adj
-        ad_bind_storage(v, theta, theta_adj);
+        for (size_t i = 0; i < v.size(); ++i) {
+            v[i].bind(&theta[i]);
+            v[i].bind_adj(&theta_adj[i]);
+        }
 
         // initialization of values
         // adjoints are initialized with known values to
@@ -50,14 +49,16 @@ protected:
         theta[0] = 1.; theta[1] = 2.; theta[2] = 3.;
         theta_adj[0] = 1.; theta_adj[1] = 2.; theta_adj[2] = 3.;
         r[0] = -1.; r[1] = 0.; r[2] = 1.;
+
+        tp_adj.setZero();
     }
 };
 
 TEST_F(leapfrog_fixture, leapfrog_no_reuse_adj)
 {
-    auto ad_expr = (v[0] * v[1] + v[2]);
+    auto ad_expr = ad::bind(v[0] * v[1] + v[2]);
     double ham = leapfrog(
-            ad_expr, theta, theta_adj, cache_ad,
+            ad_expr, theta, theta_adj, tp_adj,
             r, m_handler, epsilon, false);
 
     EXPECT_DOUBLE_EQ(ham, -19.);
@@ -74,9 +75,9 @@ TEST_F(leapfrog_fixture, leapfrog_no_reuse_adj)
 
 TEST_F(leapfrog_fixture, leapfrog_reuse_adj)
 {
-    auto ad_expr = (v[0] * v[1] + v[2]);
+    auto ad_expr = ad::bind(v[0] * v[1] + v[2]);
     double ham = leapfrog(
-            ad_expr, theta, theta_adj, cache_ad,
+            ad_expr, theta, theta_adj, tp_adj,
             r, m_handler, epsilon, true);
 
     EXPECT_DOUBLE_EQ(ham, -17.);

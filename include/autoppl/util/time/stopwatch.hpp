@@ -4,18 +4,11 @@
 namespace ppl {
 namespace util {
 
-template <class ClockType=std::chrono::high_resolution_clock>
+template <class ClockType=std::chrono::steady_clock>
 struct StopWatch
 {
-    void start()
-    {
-        start_ = ClockType::now();
-    }
-
-    void stop()
-    {
-        end_ = ClockType::now();
-    }
+    void start() { start_ = ClockType::now(); }
+    void stop() { end_ = ClockType::now(); }
 
     double elapsed() const
     {

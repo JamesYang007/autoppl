@@ -7,42 +7,42 @@ namespace math {
 struct autocorrelation_fixture : ::testing::Test
 {
 protected:
-
     static constexpr double tol = 1e-15;
 
     template <class T>
-    auto brute_force(const arma::Mat<T>& x) 
+    auto brute_force(const Eigen::MatrixBase<T>& x) 
     {
-        arma::Mat<T> x_cent = x;
-        arma::Mat<T> x_mean = arma::mean(x,0);
-        x_cent.each_row([&](arma::rowvec& row) {
-                    row -= x_mean;
-                });
+        using value_t = typename T::Scalar;
+        using mat_t = Eigen::Matrix<value_t, Eigen::Dynamic, Eigen::Dynamic>;
+        mat_t x_cent = x;
+        x_cent.rowwise() -= x.colwise().mean();
 
-        arma::Mat<T> ac(arma::size(x), arma::fill::zeros);
-        for (size_t j = 0; j < ac.n_cols; ++j) {
+        mat_t ac(x.rows(), x.cols());
+        ac.setZero();
+
+        for (int j = 0; j < ac.cols(); ++j) {
             auto col = ac.col(j);
-            for (size_t i = 0; i < ac.n_rows; ++i) {
-                for (size_t k = i; k < ac.n_rows; ++k) {
+            for (int i = 0; i < ac.rows(); ++i) {
+                for (int k = i; k < ac.rows(); ++k) {
                     col(i) += x_cent(k,j) * x_cent(k-i,j);
                 }
-                col(i) /= (ac.n_rows * ac.n_rows * 2.);
+                col(i) /= (ac.rows() * ac.rows() * 2.);
             }
         }
 
-        ac.each_col([](arma::vec& col) {
-                    col /= col(0);
-                });
+        for (int j = 0; j < ac.cols(); ++j) {
+            ac.col(j) /= ac.col(j)(0);
+        }
 
         return ac;
     }
 
     template <class T>
-    void check_results(const arma::Mat<T>& ac1,
-                       const arma::Mat<T>& ac2)
+    void check_results(const Eigen::MatrixBase<T>& ac1,
+                       const Eigen::MatrixBase<T>& ac2)
     {
-        for (size_t i = 0; i < ac1.n_rows; ++i) {
-            for (size_t j = 0; j < ac1.n_cols; ++j) {
+        for (int i = 0; i < ac1.rows(); ++i) {
+            for (int j = 0; j < ac1.cols(); ++j) {
                 EXPECT_NEAR(ac1(i,j), ac2(i,j), tol);
             }
         }
@@ -51,30 +51,25 @@ protected:
 
 TEST_F(autocorrelation_fixture, one_vec_three)
 {
-    arma::mat x(3,1,arma::fill::zeros);
+    Eigen::MatrixXd x(3,1);
     x(0,0) = 2; 
     x(1,0) = 3; 
     x(2,0) = -1;     
 
-    arma::mat ac = autocorrelation(x);
-    arma::mat ac_true = brute_force(x);
+    Eigen::MatrixXd ac = autocorrelation(x);
+    Eigen::MatrixXd ac_true = brute_force(x);
     
     check_results(ac, ac_true);
 }
 
 TEST_F(autocorrelation_fixture, two_vec_seven)
 {
-    arma::mat x(7,2,arma::fill::zeros);
-    std::vector<double> x0({1.,-3.,2.,5.,1.,-0.32,0.32});
-    std::vector<double> x1({8.9,0.1,-0.2,0.32,1.32,0.3,-0.001});
+    Eigen::MatrixXd x(7,2);
+    x.col(0) << 1.,-3.,2.,5.,1.,-0.32,0.32;
+    x.col(1) << 8.9,0.1,-0.2,0.32,1.32,0.3,-0.001;
 
-    for (size_t i = 0; i < x.n_rows; ++i) {
-        x(i,0) = x0[i];
-        x(i,1) = x1[i];
-    }
-
-    arma::mat ac = autocorrelation(x);
-    arma::mat ac_true = brute_force(x);
+    Eigen::MatrixXd ac = autocorrelation(x);
+    Eigen::MatrixXd ac_true = brute_force(x);
 
     check_results(ac, ac_true);
 }

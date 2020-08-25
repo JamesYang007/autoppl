@@ -7,6 +7,7 @@ namespace math {
 struct welford_fixture : ::testing::Test
 {
 protected:
+    using vec_t = Eigen::VectorXd;
 };
 
 TEST_F(welford_fixture, ctor)
@@ -18,14 +19,15 @@ TEST_F(welford_fixture, ctor)
 TEST_F(welford_fixture, update_one)
 {
     WelfordVar wel(3);
-    arma::vec v(3), x(3, arma::fill::zeros);
+    vec_t v(3), x(3);
+    x.setZero();
 
     x[0] = 1;
     wel.update(x);
 
     EXPECT_EQ(wel.get_n_samples(), static_cast<size_t>(1));
 
-    wel.get_variance(v);
+    v = wel.get_variance();
     EXPECT_DOUBLE_EQ(v[0], 0.);
     EXPECT_DOUBLE_EQ(v[1], 0.);
     EXPECT_DOUBLE_EQ(v[2], 0.);
@@ -34,7 +36,7 @@ TEST_F(welford_fixture, update_one)
 TEST_F(welford_fixture, update_two)
 {
     WelfordVar wel(2);
-    arma::vec v(2), x(2, arma::fill::zeros);
+    vec_t v(2), x(2);
 
     x[0] = 1; x[1] = 0;
     wel.update(x);
@@ -43,7 +45,7 @@ TEST_F(welford_fixture, update_two)
 
     EXPECT_EQ(wel.get_n_samples(), static_cast<size_t>(2));
 
-    wel.get_variance(v);
+    v = wel.get_variance() / (wel.get_n_samples() - 1);
     EXPECT_DOUBLE_EQ(v[0], 0.25);
     EXPECT_DOUBLE_EQ(v[1], 0.25);
 }

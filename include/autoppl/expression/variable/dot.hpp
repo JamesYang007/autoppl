@@ -1,29 +1,25 @@
 #pragma once
-#include <array>
-#include <fastad_bits/node.hpp>
-#include <autoppl/util/traits/var_expr_traits.hpp>
-#include <autoppl/util/functional.hpp>
-#include <autoppl/util/iterator/counting_iterator.hpp>
+#include <fastad_bits/reverse/core/dot.hpp>
+#include <autoppl/util/traits/traits.hpp>
 
 #define PPL_DOT_MAT_VEC \
     "Dot product is only supported for matrix as lhs argument " \
-    "and a vector as rhs argument. "
+    "and a matrix or vector as rhs argument. "
 
 namespace ppl {
 namespace expr {
+namespace var {
 
 /**
  * This class represents a dot product between a matrix
  * expression and a vector expression.
  * No other combination of shapes is allowed to be represented currently
  * (compiler error if user attempts to pass in other shapes).
- * 
- * This expression is currently not optimized for fixed-size matrix
- * AND fixed-size vector - it is always assumed to be sized dynamically.
  *
  * @tparam LHSVarExprType   lhs variable expression type
  * @tparam RHSVarExprType   rhs variable expression type
  */
+
 template <class LHSVarExprType
         , class RHSVarExprType>
 class DotNode:
@@ -32,25 +28,20 @@ class DotNode:
     using lhs_t = LHSVarExprType;
     using rhs_t = RHSVarExprType;
 
-public:
 	static_assert(util::is_var_expr_v<lhs_t>);
 	static_assert(util::is_var_expr_v<rhs_t>);
     static_assert(util::is_mat_v<lhs_t> &&
-                  util::is_vec_v<rhs_t>, 
+                  (util::is_vec_v<rhs_t> || util::is_mat_v<rhs_t>), 
                   PPL_DOT_MAT_VEC);
 
+public:
 	using value_t = std::common_type_t<
 		typename util::var_expr_traits<lhs_t>::value_t,
 		typename util::var_expr_traits<rhs_t>::value_t
 			>;
-    using shape_t = ppl::vec;
-    using index_t = uint32_t;
-
+    using shape_t = ad::core::details::dot_shape_t<lhs_t, rhs_t>;
     static constexpr bool has_param = 
         lhs_t::has_param || rhs_t::has_param;
-
-    // currently set to 0 to force-treat as non-fixed size
-    static constexpr size_t fixed_size = 0;
 
 	DotNode(const lhs_t& lhs, 
             const rhs_t& rhs)
@@ -58,89 +49,70 @@ public:
         , rhs_{rhs}
     {}
 
-    template <class PVecType
-            , class F = util::identity>
-    value_t value(const PVecType& pvalues, 
-                  size_t i,
-                  F f = F()) const 
-    {
-        value_t dot = 0;
-        for (size_t j = 0; j < rhs_.size(); ++j) {
-            dot += lhs_.value(pvalues, i, j, f) *
-                    rhs_.value(pvalues, j, f); 
-        }
-        return dot;
-    }
+    template <class Func>
+    void traverse(Func&&) const {}
 
-    size_t size() const { return lhs_.nrows(); }
+    auto eval() { return lhs_.eval() * rhs_.eval(); }
+    auto get() { return lhs_.get() * rhs_.get(); }
+    size_t size() const { return rows() * cols(); }
+    size_t rows() const { return lhs_.rows(); }
+    size_t cols() const { return rhs_.cols(); }
 
-    /**
-     * Returns ad expression of the dot-product for ith element.
-     *
-     * NOTES: 
-     *
-     * - only defined behavior when user can guarantee that first element
-     *   is computed before any other element. If so, order
-     *   of evaluation for other elements does not matter.
-     *
-     * - user must guarantee that if there are multiple AD expressions built
-     *   from this object and sharing the same cache, the cache adjoints are reset
-     *   after each backward evaluation of the expressions.
-     *   Forward evaluations do not require any resets.
-     *   
-     * - user cannot forward evaluate one expr, forward evaluate another,
-     *   then reverse evaluate the former, since the second forward evaluation
-     *   will have overwritten the cache variables.
-     */
-    template <class VecADVarType>
-    auto to_ad(const VecADVarType& vars,
-               const VecADVarType& cache,
-               size_t i) const
+    template <class PtrPackType>
+    auto ad(const PtrPackType& pack) const
     {  
-
-        auto to_glue = [&](auto k) { 
-            return (cache[offset_+k] = 
-                    rhs_.to_ad(vars, cache, k));
-        };
-        auto fev = (i == 0) ? ad::for_each(
-                                util::counting_iterator<>(0),
-                                util::counting_iterator<>(rhs_.size()),
-                                to_glue) :
-                              ad::for_each(
-                                util::counting_iterator<>(0),
-                                util::counting_iterator<>(0),
-                                to_glue);
-
-        return (fev,
-                ad::sum(util::counting_iterator<>(0),
-                        util::counting_iterator<>(rhs_.size()),
-                        [&, i](auto j) {
-                           return lhs_.to_ad(vars, cache, i, j) *
-                                   cache[offset_+j];
-                        })
-                );
-
+        return ad::dot(lhs_.ad(pack), 
+                       rhs_.ad(pack));
     }
 
-    /**
-     * Requires vector (RHS) length number of AD variables from cache.
-     * Each AD variable will cache the results for rhs's expression evaluations.
-     */
-    index_t set_cache_offset(index_t offset) 
-    {
-        offset = lhs_.set_cache_offset(offset);
-        offset = rhs_.set_cache_offset(offset);
-        offset_ = offset;
-        return offset_ + rhs_.size(); 
+    template <class PtrPackType>
+    void bind(const PtrPackType& pack)
+    { 
+        if constexpr (lhs_t::has_param) {
+            lhs_.bind(pack);
+        }
+        if constexpr (rhs_t::has_param) {
+            rhs_.bind(pack);
+        }
+    }
+
+    void activate_refcnt() const { 
+        lhs_.activate_refcnt();
+        rhs_.activate_refcnt();
     }
 
 private:
     lhs_t lhs_;
     rhs_t rhs_;
-    index_t offset_;
 };
 
+} // namespace var
 } // namespace expr
+
+/**
+ * Builds a dot product expression for two expressions.
+ */
+template <class LHSVarExprType
+        , class RHSVarExprType
+        , class = std::enable_if_t<
+            (util::is_var_v<LHSVarExprType> ||
+             util::is_var_expr_v<LHSVarExprType>) &&
+            (util::is_var_v<RHSVarExprType> ||
+             util::is_var_expr_v<RHSVarExprType>)
+        > >
+inline constexpr auto dot(const LHSVarExprType& lhs,
+                          const RHSVarExprType& rhs)
+{
+	using lhs_t = util::convert_to_param_t<LHSVarExprType>;
+    using rhs_t = util::convert_to_param_t<RHSVarExprType>;
+
+   	lhs_t wrap_lhs_expr = lhs;
+    rhs_t wrap_rhs_expr = rhs;
+    
+    return expr::var::DotNode<lhs_t, rhs_t>(
+            wrap_lhs_expr, wrap_rhs_expr);
+}
+
 } // namespace ppl
 
 #undef PPL_DOT_MAT_VEC

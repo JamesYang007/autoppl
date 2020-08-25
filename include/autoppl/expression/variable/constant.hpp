@@ -1,19 +1,19 @@
 #pragma once
-#include <fastad_bits/node.hpp>
+#include <fastad_bits/reverse/core/constant.hpp>
 #include <autoppl/util/traits/var_expr_traits.hpp>
-#include <autoppl/util/functional.hpp>
 
 #define PPL_CONSTANT_SHAPE_UNSUPPORTED \
     "Unsupported shape for constants. "
 
 namespace ppl {
 namespace expr {
+namespace var {
 
 template <class ValueType
         , class ShapeType=ppl::scl>
 struct Constant
 {
-    static_assert(util::is_scl_v<ShapeType>,
+    static_assert(!util::is_shape_v<ShapeType>,
                   PPL_CONSTANT_SHAPE_UNSUPPORTED);
 };
 
@@ -23,34 +23,88 @@ struct Constant<ValueType, ppl::scl>:
 {
     using value_t = ValueType;
     using shape_t = ppl::scl;
-    using index_t = uint32_t;
     static constexpr bool has_param = false;
-    static constexpr size_t fixed_size = 1;
 
     Constant(value_t c) : c_{c} {}
 
-    template <class PVecType
-            , class F = util::identity>
-    value_t value(const PVecType&, 
-                  size_t=0,
-                  F = F()) const 
-    { return c_; }
+    template <class Func>
+    void traverse(Func&&) const {}
 
-    constexpr size_t size() const { return fixed_size; }
+    value_t eval() const { return c_; }
+    value_t get() const { return c_; }
+    constexpr size_t size() const { return 1; }
 
-    template <class VecADVarType>
-    auto to_ad(const VecADVarType&,
-               const VecADVarType&,
-               size_t = 0) const
+    template <class PtrPackType>
+    auto ad(const PtrPackType&) const
     { return ad::constant(c_); }
 
-    index_t set_cache_offset(index_t idx) const 
-    { return idx; }
+    void activate_refcnt() const {}
 
 private:
     value_t c_;
 };
 
+template <class ValueType>
+struct Constant<ValueType, ppl::vec>:
+    util::VarExprBase<Constant<ValueType, ppl::vec>>
+{
+    using value_t = ValueType;
+    using shape_t = ppl::vec;
+    static constexpr bool has_param = false;
+
+    template <class T>
+    Constant(const Eigen::EigenBase<T>& c) : c_{c} {}
+
+    template <class Func>
+    void traverse(Func&&) const {}
+
+    const auto& eval() const { return c_; }
+    const auto& get() const { return c_; }
+    size_t size() const { return c_.size(); }
+    size_t rows() const { return c_.rows(); }
+    constexpr size_t cols() const { return 1; }
+
+    template <class PtrPackType>
+    auto ad(const PtrPackType&) const
+    { return ad::constant_view(c_.data(), rows()); }
+
+    void activate_refcnt() const {}
+
+private:
+    Eigen::Matrix<value_t, Eigen::Dynamic, 1> c_;
+};
+
+template <class ValueType>
+struct Constant<ValueType, ppl::mat>:
+    util::VarExprBase<Constant<ValueType, ppl::mat>>
+{
+    using value_t = ValueType;
+    using shape_t = ppl::mat;
+    static constexpr bool has_param = false;
+
+    template <class T>
+    Constant(const Eigen::EigenBase<T>& c) : c_{c} {}
+
+    template <class Func>
+    void traverse(Func&&) const {}
+
+    const auto& eval() const { return c_; }
+    const auto& get() const { return c_; }
+    size_t size() const { return c_.size(); }
+    size_t rows() const { return c_.rows(); }
+    size_t cols() const { return c_.cols(); }
+
+    template <class PtrPackType>
+    auto ad(const PtrPackType&) const
+    { return ad::constant_view(c_.data(), rows(), cols()); }
+
+    void activate_refcnt() const {}
+
+private:
+    Eigen::Matrix<value_t, Eigen::Dynamic, Eigen::Dynamic> c_;
+};
+
+} // namespace var
 } // namespace expr
 } // namespace ppl
 
