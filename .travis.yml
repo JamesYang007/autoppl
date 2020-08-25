@@ -126,13 +126,14 @@ jobs:
                          'python', 'cmake', 'flex', 'bison']
 
           script: 
-            - git clone --depth 1 --branch Release_1_8_20 https://github.com/doxygen/doxygen.git ~/doxygen
-            - cd ~/doxygen
+            - git clone --depth 1 --branch Release_1_8_20 https://github.com/doxygen/doxygen.git
+            - cd doxygen 
             - mkdir build
             - cd build
             - cmake -G "Unix Makefiles" ..
             - make
             - sudo make install
+            - cd ../../
             - /usr/local/bin/doxygen -v
             - /usr/local/bin/doxygen docs/doxygen/Doxyfile
 
