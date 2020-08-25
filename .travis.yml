@@ -125,11 +125,11 @@ jobs:
               packages: ['g++-9', 'libstdc++6', 'build-essential']
 
           script: 
-            - wget http://doxygen.nl/files/doxygen-1.8.18.linux.bin.tar.gz
-            - tar -xvf doxygen-1.8.18.linux.bin.tar.gz
-            - doxygen-1.8.18/bin/doxygen -v
-            - doxygen-1.8.18/bin/doxygen docs/doxygen/Doxyfile
-            - rm -r doxygen-1.8.18 doxygen-1.8.18.linux.bin.tar.gz
+            - wget http://doxygen.nl/files/doxygen-1.8.20.linux.bin.tar.gz
+            - tar -xvf doxygen-1.8.20.linux.bin.tar.gz
+            - doxygen-1.8.20/bin/doxygen -v
+            - doxygen-1.8.20/bin/doxygen docs/doxygen/Doxyfile
+            - rm -r doxygen-1.8.20 doxygen-1.8.20.linux.bin.tar.gz
 
           deploy:
             provider: pages
