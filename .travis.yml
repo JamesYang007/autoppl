@@ -133,6 +133,8 @@ jobs:
             - cmake -G "Unix Makefiles" ..
             - make
             - sudo make install
+            - /usr/local/bin/doxygen -v
+            - /usr/local/bin/doxygen docs/doxygen/Doxyfile
 
           deploy:
             provider: pages
