@@ -122,14 +122,17 @@ jobs:
           addons:
             apt:
               sources: ['ubuntu-toolchain-r-test']
-              packages: ['g++-9', 'libstdc++6', 'build-essential']
+              packages: ['g++-9', 'libstdc++6', 'build-essential', 
+                         'python', 'cmake', 'flex', 'bison']
 
           script: 
-            - wget http://doxygen.nl/files/doxygen-1.8.20.linux.bin.tar.gz
-            - tar -xvf doxygen-1.8.20.linux.bin.tar.gz
-            - doxygen-1.8.20/bin/doxygen -v
-            - doxygen-1.8.20/bin/doxygen docs/doxygen/Doxyfile
-            - rm -r doxygen-1.8.20 doxygen-1.8.20.linux.bin.tar.gz
+            - git clone --depth 1 --branch Release_1_8_20 https://github.com/doxygen/doxygen.git ~/doxygen
+            - cd ~/doxygen
+            - mkdir build
+            - cd build
+            - cmake -G "Unix Makefiles" ..
+            - make
+            - sudo make install
 
           deploy:
             provider: pages
