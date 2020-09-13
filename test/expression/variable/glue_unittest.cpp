@@ -15,7 +15,7 @@ struct glue_fixture:
     ::testing::Test
 {
 protected:
-    using scl_binary_t = BinaryNode<ad::math::Add,
+    using scl_binary_t = BinaryNode<ad::core::Add,
                                     scl_pv_t,
                                     scl_c_t>;
 	using scl_op_eq_t = OpEqNode<Eq, 

@@ -416,10 +416,12 @@ void nuts_(ProgramType& program,
             constrained.data(), visit.data() ));
 
     // bind every AD expression to the same cache line
-    Eigen::VectorXd ad_cache_line(theta_bb_ad_expr.bind_size());
-    theta_bb_ad_expr.bind(ad_cache_line.data());
-    theta_ff_ad_expr.bind(ad_cache_line.data());
-    theta_curr_ad_expr.bind(ad_cache_line.data());
+    auto size_pack = theta_bb_ad_expr.bind_cache_size();
+    Eigen::VectorXd ad_val_buf(size_pack(0));
+    Eigen::VectorXd ad_adj_buf(size_pack(1));
+    theta_bb_ad_expr.bind_cache({ad_val_buf.data(), ad_adj_buf.data()});
+    theta_ff_ad_expr.bind_cache({ad_val_buf.data(), ad_adj_buf.data()});
+    theta_curr_ad_expr.bind_cache({ad_val_buf.data(), ad_adj_buf.data()});
     
     // initializes first sample into theta_curr
     // TODO: allow users to choose how to initialize first point?

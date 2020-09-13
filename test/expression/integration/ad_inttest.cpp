@@ -12,7 +12,6 @@
 #include <autoppl/expression/variable/for_each.hpp>
 #include <autoppl/expression/variable/op_eq.hpp>
 #include <autoppl/expression/variable/glue.hpp>
-#include <autoppl/expression/variable/sqrt.hpp>
 #include <autoppl/util/ad_boost/bounded_inv_transform.hpp>
 #include <autoppl/util/ad_boost/lower_inv_transform.hpp>
 #include <autoppl/util/ad_boost/cov_inv_transform.hpp>

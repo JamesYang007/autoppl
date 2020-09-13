@@ -35,7 +35,8 @@ protected:
     vs_transform_t vs_transform;
     vv_transform_t vv_transform;
 
-    std::vector<value_t> val_buf;
+    Eigen::VectorXd val_buf;
+    Eigen::VectorXd adj_buf;
 
     lower_inv_transform_fixture()
         : scl_x()
@@ -64,12 +65,14 @@ protected:
 
         vec_x_c_val.setZero();
 
-        val_buf.resize(ss_transform.bind_size());
-        val_buf.resize(vs_transform.bind_size());
-        val_buf.resize(vv_transform.bind_size());
-        ss_transform.bind(val_buf.data());
-        vs_transform.bind(val_buf.data());
-        vv_transform.bind(val_buf.data());
+        auto max_pack = ss_transform.bind_cache_size();
+        max_pack = max_pack.max(vs_transform.bind_cache_size());
+        max_pack = max_pack.max(vv_transform.bind_cache_size());
+        val_buf.resize(max_pack(0));
+        adj_buf.resize(max_pack(1));
+        ss_transform.bind_cache({val_buf.data(), adj_buf.data()});
+        vs_transform.bind_cache({val_buf.data(), adj_buf.data()});
+        vv_transform.bind_cache({val_buf.data(), adj_buf.data()});
     }
     
 };
@@ -107,7 +110,7 @@ TEST_F(lower_inv_transform_fixture, ss_lower_inv_transform_beval)
     // refcnt number of evaluations.
     ss_transform.feval();  
     ss_transform.feval();  
-    ss_transform.beval(seed, 0, 0, util::beval_policy::single);
+    ss_transform.beval(seed);
 
     auto& dx = scl_x.get_adj();
     EXPECT_DOUBLE_EQ(dx, seed * actual);
@@ -143,17 +146,16 @@ TEST_F(lower_inv_transform_fixture, vs_lower_inv_transform_beval)
     // refcnt number of evaluations.
     vs_transform.feval();  
     vs_transform.feval();  
-    vs_transform.beval(seed, 0, 0, util::beval_policy::single);
-    vs_transform.beval(seed, 2, 0, util::beval_policy::single);
+    vs_transform.beval(seed);
 
     auto& dx = vec_x.get_adj();
 
     for (int i = 0; i < dx.size(); ++i) {
-        value_t adj = (i == 0 || i == 2) ? seed * actual(i) : 0;
+        value_t adj = seed * actual(i);
         EXPECT_DOUBLE_EQ(dx(i), adj);
     }
 
-    EXPECT_DOUBLE_EQ(scl_lower.get_adj(), 2 * seed); // because we bevaled twice
+    EXPECT_DOUBLE_EQ(scl_lower.get_adj(), seed * vec_x.size());
 }
 
 TEST_F(lower_inv_transform_fixture, vv_lower_inv_transform_feval)
@@ -185,16 +187,15 @@ TEST_F(lower_inv_transform_fixture, vv_lower_inv_transform_beval)
     // refcnt number of evaluations.
     vv_transform.feval();  
     vv_transform.feval();  
-    vv_transform.beval(seed, 0, 0, util::beval_policy::single);
-    vv_transform.beval(seed, 2, 0, util::beval_policy::single);
+    vv_transform.beval(seed);
 
     auto& dx = vec_x.get_adj();
 
     for (int i = 0; i < dx.size(); ++i) {
-        value_t adj = (i == 0 || i == 2) ? seed * actual(i) : 0;
+        value_t adj = seed * actual(i);
         EXPECT_DOUBLE_EQ(dx(i), adj);
 
-        adj = (i == 0 || i == 2) ? seed : 0;
+        adj = seed;
         EXPECT_DOUBLE_EQ(vec_lower.get_adj()(i), adj);
     }
 }

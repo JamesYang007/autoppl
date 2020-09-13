@@ -23,7 +23,7 @@ template <class LHSType, class RHSType
 inline constexpr auto operator+(const LHSType& lhs,
 	                            const RHSType& rhs)
 { 
-    return expr::var::details::operator_helper<ad::math::Add>(lhs, rhs);
+    return expr::var::details::operator_helper<ad::core::Add>(lhs, rhs);
 }
 
 template <class LHSType, class RHSType
@@ -35,7 +35,7 @@ template <class LHSType, class RHSType
 inline constexpr auto operator-(const LHSType& lhs, 
                                 const RHSType& rhs)
 {
-    return expr::var::details::operator_helper<ad::math::Sub>(lhs, rhs);
+    return expr::var::details::operator_helper<ad::core::Sub>(lhs, rhs);
 }
 
 template <class LHSType, class RHSType
@@ -47,7 +47,7 @@ template <class LHSType, class RHSType
 inline constexpr auto operator*(const LHSType& lhs, 
                                 const RHSType& rhs)
 {
-    return expr::var::details::operator_helper<ad::math::Mul>(lhs, rhs);
+    return expr::var::details::operator_helper<ad::core::Mul>(lhs, rhs);
 }
 
 template <class LHSType, class RHSType
@@ -59,7 +59,7 @@ template <class LHSType, class RHSType
 inline constexpr auto operator/(const LHSType& lhs, 
                                 const RHSType& rhs)
 {
-    return expr::var::details::operator_helper<ad::math::Div>(lhs, rhs);
+    return expr::var::details::operator_helper<ad::core::Div>(lhs, rhs);
 }
 
 // operator+=, -=, *=, /=

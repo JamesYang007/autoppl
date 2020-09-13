@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <fastad_bits/reverse/core/var.hpp>
 #include <fastad_bits/reverse/core/var_view.hpp>
-#include <autoppl/util/value.hpp>
 #include <autoppl/util/ad_boost/bounded_inv_transform.hpp>
 
 namespace ad {
@@ -76,7 +75,8 @@ protected:
     vvs_logj_t vvs_logj;
     vvv_logj_t vvv_logj;
 
-    std::vector<value_t> val_buf;
+    Eigen::VectorXd val_buf;
+    Eigen::VectorXd adj_buf;
 
     bounded_inv_transform_fixture()
         : scl_x()
@@ -105,27 +105,30 @@ protected:
 
         vec_x_c_val.setZero();
 
-        val_buf.resize(sss_transform.bind_size());
-        val_buf.resize(vss_transform.bind_size());
-        val_buf.resize(vsv_transform.bind_size());
-        val_buf.resize(vvs_transform.bind_size());
-        val_buf.resize(vvv_transform.bind_size());
-        val_buf.resize(sss_logj.bind_size());
-        val_buf.resize(vss_logj.bind_size());
-        val_buf.resize(vsv_logj.bind_size());
-        val_buf.resize(vvs_logj.bind_size());
-        val_buf.resize(vvv_logj.bind_size());
+        auto max_pack = sss_transform.bind_cache_size();
+        max_pack = max_pack.max(vss_transform.bind_cache_size());
+        max_pack = max_pack.max(vsv_transform.bind_cache_size());
+        max_pack = max_pack.max(vvs_transform.bind_cache_size());
+        max_pack = max_pack.max(vvv_transform.bind_cache_size());
+        max_pack = max_pack.max(sss_logj.bind_cache_size());
+        max_pack = max_pack.max(vss_logj.bind_cache_size());
+        max_pack = max_pack.max(vsv_logj.bind_cache_size());
+        max_pack = max_pack.max(vvs_logj.bind_cache_size());
+        max_pack = max_pack.max(vvv_logj.bind_cache_size());
+
+        val_buf.resize(max_pack(0));
+        adj_buf.resize(max_pack(1));
         
-        sss_transform.bind(val_buf.data());
-        vss_transform.bind(val_buf.data());
-        vsv_transform.bind(val_buf.data());
-        vvs_transform.bind(val_buf.data());
-        vvv_transform.bind(val_buf.data());
-        sss_logj.bind(val_buf.data());
-        vss_logj.bind(val_buf.data());
-        vsv_logj.bind(val_buf.data());
-        vvs_logj.bind(val_buf.data());
-        vvv_logj.bind(val_buf.data());
+        sss_transform.bind_cache({val_buf.data(), adj_buf.data()});
+        vss_transform.bind_cache({val_buf.data(), adj_buf.data()});
+        vsv_transform.bind_cache({val_buf.data(), adj_buf.data()});
+        vvs_transform.bind_cache({val_buf.data(), adj_buf.data()});
+        vvv_transform.bind_cache({val_buf.data(), adj_buf.data()});
+        sss_logj.bind_cache({val_buf.data(), adj_buf.data()});
+        vss_logj.bind_cache({val_buf.data(), adj_buf.data()});
+        vsv_logj.bind_cache({val_buf.data(), adj_buf.data()});
+        vvs_logj.bind_cache({val_buf.data(), adj_buf.data()});
+        vvv_logj.bind_cache({val_buf.data(), adj_buf.data()});
     }
 
     template <class T>
@@ -133,7 +136,7 @@ protected:
     {
         using std::exp;
         using Eigen::exp;
-        return 1. / (1. + exp(-ppl::util::to_array(y)));
+        return 1. / (1. + exp(-util::to_array(y)));
     }
 
     template <class T>
@@ -153,8 +156,8 @@ protected:
     auto dinv_transform(const T& y,
                         const Lower& lower,
                         const Upper& upper) {
-        auto a = ppl::util::to_array(lower);
-        auto b = ppl::util::to_array(upper);
+        auto a = util::to_array(lower);
+        auto b = util::to_array(upper);
         return (b-a) * dinv_logit(y);
     }
 
@@ -172,8 +175,8 @@ protected:
     auto ddinv_transform(const T& y,
                          const Lower& lower,
                          const Upper& upper) {
-        auto a = ppl::util::to_array(lower);
-        auto b = ppl::util::to_array(upper);
+        auto a = util::to_array(lower);
+        auto b = util::to_array(upper);
         return (b-a) * ddinv_logit(y);
     }
 
@@ -202,8 +205,8 @@ protected:
     template <class Lower, class Upper>
     auto dlogj_inv_transform_dl(const Lower& lower,
                                 const Upper& upper) {
-        auto a = ppl::util::to_array(lower);
-        auto b = ppl::util::to_array(upper);
+        auto a = util::to_array(lower);
+        auto b = util::to_array(upper);
         return -1. / (b - a);
     }
 
@@ -250,32 +253,31 @@ protected:
 
         transform.feval();  
         transform.feval();  
-        transform.beval(seed, 0, 0, util::beval_policy::single);
-        transform.beval(seed, 2, 0, util::beval_policy::single);
+        transform.beval(seed);
 
         auto& dx = vec_x.get_adj();
         for (int i = 0; i < dx.size(); ++i) {
-            value_t adj = (i == 0 || i == 2) ? seed * actual(i) : 0;
-            EXPECT_DOUBLE_EQ(dx(i), adj);
+            value_t adj = seed * actual(i);
+            EXPECT_NEAR(dx(i), adj, tol);
         }
 
         Eigen::VectorXd dl = dinv_transform_dl(vec_x.get());
         if constexpr (util::is_scl_v<LowerType>) {
-            EXPECT_DOUBLE_EQ(lower.get_adj(), seed * (dl(0) + dl(2)));
+            EXPECT_NEAR(lower.get_adj(), seed * dl.sum(), tol);
         } else {
             for (int i = 0; i < dl.size(); ++i) {
-                value_t adj = (i == 0 || i == 2) ? seed * dl(i) : 0;
-                EXPECT_DOUBLE_EQ(lower.get_adj()(i), adj);
+                value_t adj = seed * dl(i);
+                EXPECT_NEAR(lower.get_adj()(i), adj, tol);
             }
         }
 
         Eigen::VectorXd du = dinv_transform_du(vec_x.get());
         if constexpr (util::is_scl_v<UpperType>) {
-            EXPECT_DOUBLE_EQ(upper.get_adj(), seed * (du(0) + du(2)));
+            EXPECT_NEAR(upper.get_adj(), seed * du.sum(), tol);
         } else {
             for (int i = 0; i < du.size(); ++i) {
-                value_t adj = (i == 0 || i == 2) ? seed * du(i) : 0;
-                EXPECT_DOUBLE_EQ(upper.get_adj()(i), adj);
+                value_t adj = seed * du(i);
+                EXPECT_NEAR(upper.get_adj()(i), adj, tol);
             }
         }
     }
@@ -312,7 +314,7 @@ protected:
         transform.feval();
         transform.feval();
         logj.feval();
-        logj.beval(seed, 0, 0, util::beval_policy::single);
+        logj.beval(seed);
         
         auto& dx = vec_x.get_adj();
 
@@ -376,7 +378,7 @@ TEST_F(bounded_inv_transform_fixture, sss_bounded_inv_transform_beval)
     // refcnt number of evaluations.
     sss_transform.feval();  
     sss_transform.feval();  
-    sss_transform.beval(seed, 0, 0, util::beval_policy::single);
+    sss_transform.beval(seed);
 
     auto& dx = scl_x.get_adj();
     EXPECT_DOUBLE_EQ(dx, seed * actual);
@@ -446,7 +448,7 @@ TEST_F(bounded_inv_transform_fixture, logj_sss_bounded_inv_transform_beval)
     sss_transform.feval();
     sss_transform.feval();
     sss_logj.feval();
-    sss_logj.beval(seed, 0, 0, util::beval_policy::single);
+    sss_logj.beval(seed);
     
     value_t dx = scl_x.get_adj();
     EXPECT_DOUBLE_EQ(dx, seed * actual);

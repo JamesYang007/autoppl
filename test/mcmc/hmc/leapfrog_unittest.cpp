@@ -39,8 +39,7 @@ protected:
         , r(mat.col(3))
     {
         for (size_t i = 0; i < v.size(); ++i) {
-            v[i].bind(&theta[i]);
-            v[i].bind_adj(&theta_adj[i]);
+            v[i].bind({&theta[i], &theta_adj[i]});
         }
 
         // initialization of values

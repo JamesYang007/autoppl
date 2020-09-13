@@ -1,7 +1,10 @@
 #pragma once
 #include <fastad_bits/reverse/core/expr_base.hpp>
-#include <fastad_bits/reverse/core/value_view.hpp>
+#include <fastad_bits/reverse/core/value_adj_view.hpp>
 #include <fastad_bits/util/type_traits.hpp>
+#include <fastad_bits/util/size_pack.hpp>
+#include <fastad_bits/util/value.hpp>
+#include <autoppl/util/ad_boost/value.hpp>
 
 namespace ad {
 namespace boost {
@@ -28,8 +31,8 @@ inline constexpr void lower_inv_transform(const UCType& uc,
 template <class ExprType
         , class LowerType>
 struct LowerInvTransformNode:
-    core::ValueView<typename util::expr_traits<ExprType>::value_t, 
-                    typename util::expr_traits<ExprType>::shape_t>,
+    core::ValueAdjView<typename util::expr_traits<ExprType>::value_t, 
+                       typename util::expr_traits<ExprType>::shape_t>,
     core::ExprBase<LowerInvTransformNode<ExprType, LowerType>>
 {
 private:
@@ -45,18 +48,18 @@ private:
                     >);
 
 public:
-    using value_view_t = core::ValueView<expr_value_t, expr_shape_t>;
-    using typename value_view_t::value_t;
-    using typename value_view_t::shape_t;
-    using typename value_view_t::var_t;
-    using value_view_t::bind;
+    using value_adj_view_t = core::ValueAdjView<expr_value_t, expr_shape_t>;
+    using typename value_adj_view_t::value_t;
+    using typename value_adj_view_t::shape_t;
+    using typename value_adj_view_t::var_t;
+    using typename value_adj_view_t::ptr_pack_t;
 
     LowerInvTransformNode(const expr_t& expr,
                           const lower_t& lower,
                           value_t* c_val,
                           size_t* visit_cnt,
                           size_t refcnt)
-        : value_view_t(c_val, expr.rows(), expr.cols())
+        : value_adj_view_t(c_val, nullptr, expr.rows(), expr.cols())
         , expr_{expr}
         , lower_{lower}
         , v_val_{visit_cnt}
@@ -65,43 +68,52 @@ public:
 
     const var_t& feval()
     {
+        auto&& lower = lower_.feval();
         ++*v_val_;
         if (*v_val_ == 1) {
             auto&& uc_val = expr_.feval();
-            auto&& lower = lower_.feval();
             lower_inv_transform(uc_val, lower, this->get());
         }
         *v_val_ = *v_val_ % refcnt_;
         return this->get();
     }
 
-    void beval(value_t seed, size_t i, size_t j, util::beval_policy pol)
+    template <class T>
+    void beval(const T& seed)
     {
-        if (seed == 0) return;
-        lower_.beval(seed, i, j, pol);
-        expr_.beval(seed * (this->get(i,j) - lower_.get(i,j)), i, j, pol);
-    }
-
-    value_t* bind(value_t* begin)
-    {
-        value_t* next = begin;
-        if constexpr (!util::is_var_view_v<expr_t>) {
-            next = expr_.bind(next);
+        auto&& a_val = util::to_array(this->get());
+        auto&& a_adj = util::to_array(this->get_adj());
+        auto&& a_lower = util::to_array(lower_.get());
+        a_adj = seed;
+        if constexpr (util::is_scl_v<lower_t>) {
+            lower_.beval(sum(a_adj));
+        } else {
+            lower_.beval(a_adj);
         }
-        if constexpr (!util::is_var_view_v<lower_t>) {
-            next = lower_.bind(next);
-        }
-        return next;
+        expr_.beval(a_adj * (a_val - a_lower));
     }
 
-    constexpr size_t bind_size() const
+    ptr_pack_t bind_cache(ptr_pack_t begin)
     {
-        return single_bind_size() +
-                expr_.bind_size() +
-                lower_.bind_size();
+        begin = expr_.bind_cache(begin);
+        begin = lower_.bind_cache(begin);
+        auto val = begin.val;
+        begin.val = this->data();
+        begin = this->bind(begin);
+        begin.val = val;
+        return begin;
     }
 
-    constexpr size_t single_bind_size() const { return 0; }
+    util::SizePack bind_cache_size() const
+    {
+        return single_bind_cache_size() +
+                expr_.bind_cache_size() +
+                lower_.bind_cache_size();
+    }
+
+    util::SizePack single_bind_cache_size() const { 
+        return {0,this->size()}; 
+    }
 
 private:
     expr_t expr_;

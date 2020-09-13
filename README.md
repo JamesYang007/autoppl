@@ -733,10 +733,10 @@ and perform NUTS.
 
 The runtimes have similar log-like behavior,
 but it is clear that STAN (dotted lines) takes far longer
-in both sampling and warmup times by a factor of about 5-6.
+in both sampling and warmup times by a factor of about 6.5-7.
 As for ESS/s, upon comparing by colors (corresponding to a parameter)
 between dotted (STAN) and solid (AutoPPL) lines,
-we see that AutoPPL has uniformly larger ESS/s by a factor of 5-6 as well.
+we see that AutoPPL has uniformly larger ESS/s by a factor of 6.5-7 as well.
 This difference quickly becomes more noticeable as sample size grows.
 From these plots and that sampling results were identical
 show that the drastic difference in ESS/s is simply from faster

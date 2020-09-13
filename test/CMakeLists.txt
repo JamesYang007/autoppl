@@ -56,7 +56,6 @@ add_executable(expr_unittest
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/glue_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/op_eq_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/param_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/sqrt_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/tparam_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/variable/unary_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/expression/distribution/bernoulli_unittest.cpp

@@ -1,5 +1,5 @@
 #pragma once
-#include <fastad_bits/reverse/core/math.hpp>
+#include <fastad_bits/reverse/core/binary.hpp>
 #include <autoppl/util/traits/traits.hpp>
 
 #define PPL_BINOP_EQUAL_FIXED_SIZE \

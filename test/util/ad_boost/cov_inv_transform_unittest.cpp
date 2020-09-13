@@ -31,7 +31,8 @@ protected:
     transform_t transform_expr;
     logj_transform_t logj_transform_expr;
 
-    std::vector<value_t> val_buf;
+    Eigen::VectorXd val_buf;
+    Eigen::VectorXd adj_buf;
 
     cov_inv_transform_fixture()
         : x(pos_def_t::size(rows))
@@ -51,10 +52,12 @@ protected:
         lower.setZero();
         val.setZero();
 
-        val_buf.resize(transform_expr.bind_size());
-        val_buf.resize(logj_transform_expr.bind_size());
-        transform_expr.bind(val_buf.data());
-        logj_transform_expr.bind(val_buf.data());
+        auto max_pack = transform_expr.bind_cache_size();
+        max_pack = max_pack.max(logj_transform_expr.bind_cache_size());
+        val_buf.resize(max_pack(0));
+        adj_buf.resize(max_pack(1));
+        transform_expr.bind_cache({val_buf.data(), adj_buf.data()});
+        logj_transform_expr.bind_cache({val_buf.data(), adj_buf.data()});
     }
 };
 
@@ -92,8 +95,7 @@ TEST_F(cov_inv_transform_fixture, cov_inv_transform_beval)
     // refcnt number of evaluations.
     transform_expr.feval();  
     transform_expr.feval();  
-    transform_expr.beval(seed, 1, 0, util::beval_policy::single);
-    transform_expr.beval(seed, 2, 2, util::beval_policy::single);
+    transform_expr.beval(seed);
 
     auto& z = lower;
     auto& dx = x.get_adj();
@@ -119,8 +121,11 @@ TEST_F(cov_inv_transform_fixture, cov_inv_transform_beval)
         }
     };
 
-    update(1, 0);
-    update(2, 2);
+    for (size_t i = 0; i < rows; ++i) {
+        for (size_t j = 0; j < rows; ++j) {
+            update(i, j);
+        }
+    }
 
     EXPECT_EQ(dx.size(), actual.size());
     for (int k = 0; k < actual.size(); ++k) {
@@ -147,7 +152,7 @@ TEST_F(cov_inv_transform_fixture, logj_cov_inv_transform_beval)
     transform_expr.feval();
     transform_expr.feval();
     logj_transform_expr.feval();
-    logj_transform_expr.beval(seed, 0, 0, util::beval_policy::single);
+    logj_transform_expr.beval(seed);
 
     size_t k = 0;
     for (size_t j = 0; j < rows; ++j) {

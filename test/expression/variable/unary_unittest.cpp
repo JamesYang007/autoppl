@@ -12,7 +12,7 @@ struct unary_fixture:
     ::testing::Test
 {
 protected:
-    using op_t = ad::math::Exp;
+    using op_t = ad::core::Exp;
     using scl_unary_t = UnaryNode<op_t, scl_pv_t>;
     using vec_unary_t = UnaryNode<op_t, vec_pv_t>;
 

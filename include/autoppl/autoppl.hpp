@@ -12,7 +12,6 @@
 #include "expression/variable/glue.hpp"
 #include "expression/variable/op_eq.hpp"
 #include "expression/variable/param.hpp"
-#include "expression/variable/sqrt.hpp"
 #include "expression/variable/tparam.hpp"
 #include "expression/variable/unary.hpp"
 

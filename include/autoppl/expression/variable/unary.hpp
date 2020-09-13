@@ -1,5 +1,5 @@
 #pragma once
-#include <fastad_bits/reverse/core/math.hpp>
+#include <fastad_bits/reverse/core/unary.hpp>
 #include <autoppl/util/traits/traits.hpp>
 
 namespace ppl {
@@ -95,7 +95,7 @@ private:
     {   \
         using expr_t = util::convert_to_param_t<ExprType>;  \
         expr_t wrap_expr = expr;    \
-        using unary_t = expr::var::UnaryNode<ad::math::strct, expr_t>;  \
+        using unary_t = expr::var::UnaryNode<ad::core::strct, expr_t>;  \
         return unary_t(wrap_expr);  \
     }
 
@@ -107,5 +107,6 @@ PPL_UNARY_FUNC(acos, Arccos)
 PPL_UNARY_FUNC(atan, Arctan)
 PPL_UNARY_FUNC(exp, Exp)
 PPL_UNARY_FUNC(log, Log)
+PPL_UNARY_FUNC(sqrt, Sqrt)
 
 } // namespace ppl

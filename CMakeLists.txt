@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.7)
 project("AutoPPL"
-        VERSION 1.1
+        VERSION 1.1.0
         DESCRIPTION "C++ template library for probabilistic programming."
         LANGUAGES C CXX)
 

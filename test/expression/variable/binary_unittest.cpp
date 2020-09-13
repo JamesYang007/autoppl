@@ -17,16 +17,16 @@ struct binary_fixture :
     ::testing::Test
 {
 protected:
-	using scl_binary_t = BinaryNode<ad::math::Add, 
+	using scl_binary_t = BinaryNode<ad::core::Add, 
                                       scl_pv_t, 
                                       scl_pv_t>;
-	using scl_vec_binary_t = BinaryNode<ad::math::Add, 
+	using scl_vec_binary_t = BinaryNode<ad::core::Add, 
                                       scl_pv_t, 
                                       vec_pv_t>;
-	using vec_binary_t = BinaryNode<ad::math::Add, 
+	using vec_binary_t = BinaryNode<ad::core::Add, 
                                       vec_pv_t, 
                                       vec_pv_t>;
-	using mat_binary_t = BinaryNode<ad::math::Add, 
+	using mat_binary_t = BinaryNode<ad::core::Add, 
                                       mat_pv_t, 
                                       mat_pv_t>;
 

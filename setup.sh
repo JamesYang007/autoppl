@@ -25,6 +25,7 @@ fi
 if [ ! -d "$fastadpath" ]; then
     git clone https://github.com/JamesYang007/FastAD.git $fastadpath
     cd $fastadpath
+    git checkout tags/v3.2.1
     ./setup.sh
     ./clean-build.sh release -DFASTAD_ENABLE_TEST=OFF \
         -DCMAKE_INSTALL_PREFIX=".." # installs into build
